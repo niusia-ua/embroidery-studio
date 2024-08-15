@@ -30,7 +30,7 @@
     },
     "bundle": {
       "active": true,
-      "targets": "all",
+      "targets": "msi",
       "identifier": "studio.embroidery",
       "icon": [
         "icons/32x32.png",
