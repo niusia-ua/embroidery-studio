@@ -6,7 +6,7 @@
     "distDir": "../dist"
   },
   "package": {
-    "productName": "embroidery-studio",
+    "productName": "Embroidery Studio",
     "version": "0.0.0"
   },
   "tauri": {
