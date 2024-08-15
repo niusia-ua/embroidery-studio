@@ -17,12 +17,6 @@
       },
       "path": {
         "all": true
-      },
-      "fs": {
-        "exists": true,
-        "readFile": true,
-        "writeFile": true,
-        "scope": ["$RESOURCE/*"]
       }
     },
     "windows": [
