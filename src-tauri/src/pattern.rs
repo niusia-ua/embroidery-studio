@@ -12,11 +12,13 @@ pub fn load_pattern(file_path: &str) -> Result<Pattern> {
   let pattern_format = PatternFormat::try_from(file_path.extension())?;
   match pattern_format {
     PatternFormat::XSD => xsd::parse_pattern(file_path),
+    PatternFormat::OXS => oxs::parse_pattern(file_path),
   }
 }
 
 enum PatternFormat {
   XSD,
+  OXS,
 }
 
 impl TryFrom<Option<&OsStr>> for PatternFormat {
@@ -25,8 +27,9 @@ impl TryFrom<Option<&OsStr>> for PatternFormat {
   fn try_from(value: Option<&OsStr>) -> Result<Self, Self::Error> {
     if let Some(extension) = value {
       let extension = extension.to_str().unwrap();
-      match extension {
+      match extension.to_lowercase().as_str() {
         "xsd" => Ok(Self::XSD),
+        "oxs" | "xml" => Ok(Self::OXS),
         _ => Err(Error::UnsupportedPatternType {
           extension: extension.to_uppercase(),
         }),
@@ -115,7 +118,7 @@ struct PartStitch {
   kind: PartStitchKind,
 }
 
-#[derive(Debug, PartialEq, Serialize)]
+#[derive(Debug, PartialEq, Clone, Copy, Serialize)]
 enum PartStitchDirection {
   Forward,
   Backward,
@@ -132,7 +135,7 @@ struct Node {
   x: f64,
   y: f64,
   rotated: bool,
-  palindex: usize,
+  palindex: u8,
   kind: NodeKind,
 }
 
@@ -146,7 +149,7 @@ enum NodeKind {
 struct Line {
   x: (f64, f64),
   y: (f64, f64),
-  palindex: usize,
+  palindex: u8,
   kind: LineKind,
 }
 

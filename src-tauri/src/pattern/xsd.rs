@@ -625,7 +625,7 @@ fn read_joints(cursor: &mut Cursor, joints_count: u16) -> Result<(Vec<Node>, Vec
         cursor.seek(SeekFrom::Current(2))?;
         let (x, y) = cursor.read_fractional_coors()?;
         cursor.seek(SeekFrom::Current(4))?;
-        let palindex = cursor.read_u8()? as usize;
+        let palindex = cursor.read_u8()?;
         cursor.seek(SeekFrom::Current(1))?;
         nodes.push(Node {
           x,
@@ -640,7 +640,7 @@ fn read_joints(cursor: &mut Cursor, joints_count: u16) -> Result<(Vec<Node>, Vec
         cursor.seek(SeekFrom::Current(2))?;
         let (x1, y1) = cursor.read_fractional_coors()?;
         let (x2, y2) = cursor.read_fractional_coors()?;
-        let palindex: usize = cursor.read_u8()?.into();
+        let palindex = cursor.read_u8()?.into();
         cursor.seek(SeekFrom::Current(1))?;
         let kind = if joint_kind == XsdJointKind::Back {
           LineKind::Back
@@ -668,7 +668,7 @@ fn read_joints(cursor: &mut Cursor, joints_count: u16) -> Result<(Vec<Node>, Vec
       XsdJointKind::Bead => {
         cursor.seek(SeekFrom::Current(2))?;
         let (x, y) = cursor.read_fractional_coors()?;
-        let palindex = cursor.read_u8()? as usize;
+        let palindex = cursor.read_u8()?;
         cursor.seek(SeekFrom::Current(1))?;
         let rotated = match cursor.read_u16::<LittleEndian>()? {
           90 | 270 => true,

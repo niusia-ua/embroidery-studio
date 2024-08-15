@@ -24,7 +24,7 @@
             filters: [
               {
                 name: "Cross Stitch Pattern",
-                extensions: ["xsd"],
+                extensions: ["xsd", "oxs", "xml"],
               },
             ],
           });
