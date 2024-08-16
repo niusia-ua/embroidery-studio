@@ -4,6 +4,7 @@ import Aura from "@primevue/themes/aura";
 
 import "primeflex/primeflex.css";
 import "primeicons/primeicons.css";
+import "./assets/styles.css";
 
 import App from "./App.vue";
 
