@@ -41,7 +41,7 @@ export interface Bead {
 }
 
 export interface Fabric {
-  stitchePerInch: [number, number];
+  stitchesPerInch: [number, number];
   kind: string;
   name: string;
   color: string;

@@ -13,6 +13,10 @@
   "dependencies": {
     "@primevue/themes": "^4.0.4",
     "@tauri-apps/api": "^1",
+    "pinia": "^2.2.2",
+    "pixi-cull": "^2.1.1",
+    "pixi-viewport": "^5.0.3",
+    "pixi.js": "^7.4.2",
     "primeflex": "^3.3.1",
     "primeicons": "^7.0.0",
     "primevue": "^4.0.4",

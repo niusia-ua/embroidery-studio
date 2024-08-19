@@ -57,7 +57,7 @@ pub fn parse_pattern(path: &Path) -> Result<Pattern> {
       .map(|stitch| FullStitch {
         x: stitch.x,
         y: stitch.y,
-        palindex: stitch.palindex,
+        palindex: stitch.palindex - 1,
         kind: FullStitchKind::Full,
       })
       .collect(),
@@ -67,15 +67,15 @@ pub fn parse_pattern(path: &Path) -> Result<Pattern> {
       .flat_map(|stitch| {
         let mut stitches = vec![];
         let direction = match stitch.direction {
-          1 | 4 => PartStitchDirection::Forward,
-          2 | 3 => PartStitchDirection::Backward,
+          1 | 3 => PartStitchDirection::Backward,
+          2 | 4 => PartStitchDirection::Forward,
           _ => panic!("Unknown part stitch direction"),
         };
         if stitch.palindex1 != 0 {
           stitches.push(PartStitch {
             x: stitch.x,
             y: stitch.y,
-            palindex: stitch.palindex1,
+            palindex: stitch.palindex1 - 1,
             kind: PartStitchKind::Half,
             direction,
           });
@@ -84,7 +84,7 @@ pub fn parse_pattern(path: &Path) -> Result<Pattern> {
           stitches.push(PartStitch {
             x: stitch.x,
             y: stitch.y,
-            palindex: stitch.palindex2,
+            palindex: stitch.palindex2 - 1,
             kind: PartStitchKind::Half,
             direction,
           });
@@ -98,7 +98,7 @@ pub fn parse_pattern(path: &Path) -> Result<Pattern> {
           .map(|obj| PartStitch {
             x: obj.x1,
             y: obj.y1,
-            palindex: obj.palindex,
+            palindex: obj.palindex - 1,
             kind: PartStitchKind::Quarter,
             direction: PartStitchDirection::Forward,
           }),
@@ -110,7 +110,7 @@ pub fn parse_pattern(path: &Path) -> Result<Pattern> {
       .map(|stitch| Line {
         x: (stitch.x1, stitch.x2),
         y: (stitch.y1, stitch.y2),
-        palindex: stitch.palindex,
+        palindex: stitch.palindex - 1,
         kind: LineKind::Back,
       })
       .collect(),
@@ -127,7 +127,7 @@ pub fn parse_pattern(path: &Path) -> Result<Pattern> {
           x: obj.x1,
           y: obj.y1,
           rotated: false,
-          palindex: obj.palindex,
+          palindex: obj.palindex - 1,
           kind,
         }
       })
