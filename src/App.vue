@@ -1,6 +1,17 @@
 <template>
   <div class="h-full flex flex-column">
-    <Menubar :model="menuOptions" class="border-noround border-none border-bottom-1" />
+    <Toolbar class="border-noround border-none border-bottom-1 p-0">
+      <template #start>
+        <ToolbarTieredMenuButton
+          id="general_menu"
+          :button="{ icon: 'pi pi-bars' }"
+          :tiered-menu="{ model: menuOptions }"
+        />
+      </template>
+
+      <!-- <template #end> <SplitButton label="Save"></SplitButton></template> -->
+    </Toolbar>
+
     <div ref="root" class="h-full overflow-hidden"></div>
   </div>
 </template>
@@ -10,10 +21,11 @@
   import { Simple as SimpleCull } from "pixi-cull";
   import { Viewport } from "pixi-viewport";
   import { Application, Container, Graphics, LINE_CAP, Polygon } from "pixi.js";
-  import Menubar from "primevue/menubar";
   import type { MenuItem } from "primevue/menuitem";
+  import Toolbar from "primevue/toolbar";
   import { onMounted, ref } from "vue";
   import { loadPattern } from "./commands/pattern";
+  import ToolbarTieredMenuButton from "./components/ToolbarTieredMenuButton.vue";
   import { usePatternStore } from "./stores/pattern";
   import { useAppStateStore } from "./stores/state";
   import type { FullStitch, Line, Node, PartStitch, PatternProperties } from "./types/pattern";
@@ -62,12 +74,7 @@
       },
     ],
   };
-  const menuOptions = ref<MenuItem[]>([
-    {
-      icon: "pi pi-bars",
-      items: [fileOptions],
-    },
-  ]);
+  const menuOptions = ref<MenuItem[]>([fileOptions]);
 
   const root = ref<HTMLElement>();
   const pixi = new Application({ backgroundAlpha: 0 });
