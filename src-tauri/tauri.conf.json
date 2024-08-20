@@ -11,6 +11,16 @@
   },
   "tauri": {
     "allowlist": {
+      "window": {
+        "close": true,
+        "hide": true,
+        "show": true,
+        "maximize": true,
+        "minimize": true,
+        "unmaximize": true,
+        "unminimize": true,
+        "startDragging": true
+      },
       "dialog": {
         "open": true,
         "save": true
@@ -22,7 +32,8 @@
     "windows": [
       {
         "title": "Embroidery Studio",
-        "maximized": true
+        "maximized": true,
+        "decorations": false
       }
     ],
     "security": {

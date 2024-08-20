@@ -1,6 +1,10 @@
 <template>
   <div class="h-full flex flex-column">
-    <Toolbar class="border-noround border-none border-bottom-1 p-0">
+    <Toolbar
+      class="border-noround border-none border-bottom-1 p-0"
+      draggable="true"
+      @dragstart="() => appWindow.startDragging()"
+    >
       <template #start>
         <ToolbarTieredMenuButton
           id="general_menu"
@@ -9,7 +13,9 @@
         />
       </template>
 
-      <!-- <template #end> <SplitButton label="Save"></SplitButton></template> -->
+      <template #end>
+        <WindowControls />
+      </template>
     </Toolbar>
 
     <div ref="root" class="h-full overflow-hidden"></div>
@@ -18,6 +24,7 @@
 
 <script lang="ts" setup>
   import { open } from "@tauri-apps/api/dialog";
+  import { appWindow } from "@tauri-apps/api/window";
   import { Simple as SimpleCull } from "pixi-cull";
   import { Viewport } from "pixi-viewport";
   import { Application, Container, Graphics, LINE_CAP, Polygon } from "pixi.js";
@@ -26,6 +33,7 @@
   import { onMounted, ref } from "vue";
   import { loadPattern } from "./commands/pattern";
   import ToolbarTieredMenuButton from "./components/ToolbarTieredMenuButton.vue";
+  import WindowControls from "./components/WindowControls.vue";
   import { usePatternStore } from "./stores/pattern";
   import { useAppStateStore } from "./stores/state";
   import type { FullStitch, Line, Node, PartStitch, PatternProperties } from "./types/pattern";
