@@ -18,7 +18,17 @@
       </template>
     </Toolbar>
 
-    <div ref="root" class="h-full overflow-hidden"></div>
+    <Splitter :gutter-size="2" class="h-full overflow-hidden border-noround border-none">
+      <SplitterPanel :min-size="5" :size="15">
+        <Suspense>
+          <PalettePanel :palette="patternStore.pattern?.palette ?? []" />
+        </Suspense>
+      </SplitterPanel>
+
+      <SplitterPanel :min-size="85" :size="85">
+        <div ref="root" class="h-full"></div>
+      </SplitterPanel>
+    </Splitter>
   </div>
 </template>
 
@@ -29,9 +39,12 @@
   import { Viewport } from "pixi-viewport";
   import { Application, Container, Graphics, LINE_CAP, Polygon } from "pixi.js";
   import type { MenuItem } from "primevue/menuitem";
+  import Splitter from "primevue/splitter";
+  import SplitterPanel from "primevue/splitterpanel";
   import Toolbar from "primevue/toolbar";
   import { onMounted, ref } from "vue";
   import { loadPattern } from "./commands/pattern";
+  import PalettePanel from "./components/PalettePanel.vue";
   import ToolbarTieredMenuButton from "./components/ToolbarTieredMenuButton.vue";
   import WindowControls from "./components/WindowControls.vue";
   import { usePatternStore } from "./stores/pattern";

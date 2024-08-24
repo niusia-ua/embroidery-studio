@@ -27,6 +27,10 @@
       },
       "path": {
         "all": true
+      },
+      "fs": {
+        "readFile": true,
+        "scope": ["$RESOURCE/**/*"]
       }
     },
     "windows": [
