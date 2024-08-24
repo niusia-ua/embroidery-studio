@@ -34,7 +34,7 @@ fn parses_oxs_pattern() {
       number: String::from("DMC    943"),
       name: String::from("Turquoise VY DK"),
       color: String::from("23725C"),
-      blends: vec![],
+      blends: None,
     }
   );
   assert_eq!(
@@ -44,7 +44,7 @@ fn parses_oxs_pattern() {
       number: String::from("DMC    367"),
       name: String::from("Pistachio Green dark"),
       color: String::from("406647"),
-      blends: vec![],
+      blends: None,
     }
   );
 

@@ -281,8 +281,12 @@ fn read_palette_item(cursor: &mut Cursor) -> Result<PaletteItem> {
 
 /// Reads the blend colors of the palette item.
 /// Used only in the `read_palette_item` function.
-fn read_blends(cursor: &mut Cursor) -> Result<Vec<Blend>> {
+fn read_blends(cursor: &mut Cursor) -> Result<Option<Vec<Blend>>> {
   let blends_count: usize = cursor.read_u16::<LittleEndian>()?.into();
+  if blends_count == 0 {
+    cursor.seek(SeekFrom::Current(4 * 12 + 4))?;
+    return Ok(None);
+  }
   let mut blends: Vec<Blend> = Vec::with_capacity(blends_count);
   for i in 0..XSD_BLEND_COLORS_NUMBER {
     let blend_color = read_blend_item(cursor)?;
@@ -293,7 +297,7 @@ fn read_blends(cursor: &mut Cursor) -> Result<Vec<Blend>> {
     }
   }
   read_blend_strands(cursor, &mut blends)?;
-  Ok(blends)
+  Ok(Some(blends))
 }
 
 /// Reads a single blend color.

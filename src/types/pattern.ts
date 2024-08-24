@@ -26,7 +26,7 @@ export interface PaletteItem {
   number: string;
   name: string;
   color: string;
-  blends: Blend[];
+  blends?: Blend[];
 }
 
 export interface Blend {

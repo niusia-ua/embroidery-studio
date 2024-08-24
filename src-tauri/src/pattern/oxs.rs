@@ -48,7 +48,7 @@ pub fn parse_pattern(path: &Path) -> Result<Pattern> {
         number: item.number.clone(),
         name: item.name.clone(),
         color: item.color.clone(),
-        blends: vec![],
+        blends: None,
       })
       .collect(),
 

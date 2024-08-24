@@ -75,7 +75,8 @@ struct PaletteItem {
   number: String,
   name: String,
   color: String,
-  blends: Vec<Blend>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  blends: Option<Vec<Blend>>,
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize)]

@@ -105,28 +105,28 @@ fn reads_palette() {
       number: String::from("310"),
       name: String::from("Black"),
       color: String::from("2C3225"),
-      blends: vec![],
+      blends: None,
     },
     PaletteItem {
       vendor_id: 143,
       number: String::from("9224"),
       name: String::from("ПНК Кирова"),
       color: String::from("B40032"),
-      blends: vec![],
+      blends: None,
     },
     PaletteItem {
       vendor_id: 203,
       number: String::from("62038"),
       name: String::from("Frosted Aquamarine"),
       color: String::from("A6D3D9"),
-      blends: vec![],
+      blends: None,
     },
     PaletteItem {
       vendor_id: 252,
       number: String::from("57"),
       name: String::from(""),
       color: String::from("93D0D3"),
-      blends: vec![
+      blends: Some(vec![
         Blend {
           vendor_id: 0,
           number: String::from("964"),
@@ -137,7 +137,7 @@ fn reads_palette() {
           number: String::from("3766"),
           strands: 1,
         },
-      ],
+      ]),
     },
   ];
   for (loaded, expected) in loaded_palette.iter().zip(expected_palette.iter()) {
@@ -448,7 +448,7 @@ fn parses_xsd_pattern() {
       number: String::from("943"),
       name: String::from("Bright Green-MD"),
       color: String::from("1B997F"),
-      blends: vec![],
+      blends: None,
     }
   );
   assert_eq!(
@@ -458,7 +458,7 @@ fn parses_xsd_pattern() {
       number: String::from("00968"),
       name: String::from("Red"),
       color: String::from("C74761"),
-      blends: vec![],
+      blends: None,
     }
   );
 
