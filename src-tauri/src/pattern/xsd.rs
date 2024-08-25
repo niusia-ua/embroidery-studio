@@ -376,7 +376,7 @@ fn read_stitches(
   let stitches = map_stitches_data_into_stitches(
     stitches_data,
     small_stitch_buffers,
-    xsd_pattern_properties.width,
+    xsd_pattern_properties.width as usize,
   )?;
   Ok(stitches)
 }
@@ -492,7 +492,7 @@ fn read_small_stitch_buffers(
 fn map_stitches_data_into_stitches(
   stitches_data: Vec<i32>,
   small_stitch_buffers: Vec<SmallStitchBuffer>,
-  pattern_width: u16,
+  pattern_width: usize,
 ) -> Result<(Vec<FullStitch>, Vec<PartStitch>)> {
   let mut fullstitches = Vec::new();
   let mut partstitches = Vec::new();
@@ -505,8 +505,8 @@ fn map_stitches_data_into_stitches(
       continue;
     }
 
-    let x = ((i as u16) % pattern_width) as f64;
-    let y = ((i as u16) / pattern_width) as f64;
+    let x = (i % pattern_width) as f64;
+    let y = (i / pattern_width) as f64;
 
     if stitch_buffer[3] == 0 {
       fullstitches.push(FullStitch {
