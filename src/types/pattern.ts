@@ -22,7 +22,7 @@ export interface PatternInfo {
 }
 
 export interface PaletteItem {
-  vendorId: number;
+  brand: string;
   number: string;
   name: string;
   color: string;
@@ -30,7 +30,7 @@ export interface PaletteItem {
 }
 
 export interface Blend {
-  vendorId: number;
+  brand: string;
   number: string;
   strands: number;
 }

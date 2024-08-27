@@ -101,39 +101,39 @@ fn reads_palette() {
   let loaded_palette = read_palette(&mut cursor, 4).unwrap();
   let expected_palette = vec![
     PaletteItem {
-      vendor_id: 0,
+      brand: String::from("DMC"),
       number: String::from("310"),
       name: String::from("Black"),
       color: String::from("2C3225"),
       blends: None,
     },
     PaletteItem {
-      vendor_id: 143,
+      brand: String::from("PNK Kirova"),
       number: String::from("9224"),
       name: String::from("ПНК Кирова"),
       color: String::from("B40032"),
       blends: None,
     },
     PaletteItem {
-      vendor_id: 203,
+      brand: String::from("Mill Hill Frosted Glass Seed Bead"),
       number: String::from("62038"),
       name: String::from("Frosted Aquamarine"),
       color: String::from("A6D3D9"),
       blends: None,
     },
     PaletteItem {
-      vendor_id: 252,
+      brand: String::from("Blends"),
       number: String::from("57"),
       name: String::from(""),
       color: String::from("93D0D3"),
       blends: Some(vec![
         Blend {
-          vendor_id: 0,
+          brand: String::from("DMC"),
           number: String::from("964"),
           strands: 1,
         },
         Blend {
-          vendor_id: 0,
+          brand: String::from("DMC"),
           number: String::from("3766"),
           strands: 1,
         },
@@ -152,7 +152,7 @@ fn reads_blend() {
   ];
   let loaded = read_blend_item(&mut Cursor::new(buf)).unwrap();
   let expected = Blend {
-    vendor_id: 0,
+    brand: String::from("DMC"),
     number: String::from("310"),
     strands: 0,
   };
@@ -164,13 +164,13 @@ fn reads_blends_strands() {
   let buf = vec![0x01, 0x02, 0x00, 0x00];
   let mut blends = vec![
     Blend {
-      vendor_id: 0,
-      number: String::from("000"),
+      brand: String::new(),
+      number: String::new(),
       strands: 0,
     },
     Blend {
-      vendor_id: 0,
-      number: String::from("000"),
+      brand: String::new(),
+      number: String::new(),
       strands: 0,
     },
   ];
@@ -444,7 +444,7 @@ fn parses_xsd_pattern() {
   assert_eq!(
     pattern.palette[0],
     PaletteItem {
-      vendor_id: 0,
+      brand: String::from("DMC"),
       number: String::from("943"),
       name: String::from("Bright Green-MD"),
       color: String::from("1B997F"),
@@ -454,7 +454,7 @@ fn parses_xsd_pattern() {
   assert_eq!(
     pattern.palette[7],
     PaletteItem {
-      vendor_id: 200,
+      brand: String::from("Mill Hill Glass Seed Bead"),
       number: String::from("00968"),
       name: String::from("Red"),
       color: String::from("C74761"),

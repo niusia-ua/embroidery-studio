@@ -43,12 +43,15 @@ pub fn parse_pattern(path: &Path) -> Result<Pattern> {
     palette: palette
       .iter()
       .skip(1) // Skip the fabric.
-      .map(|item| PaletteItem {
-        vendor_id: 0,
-        number: item.number.clone(),
-        name: item.name.clone(),
-        color: item.color.clone(),
-        blends: None,
+      .map(|item| {
+        let bn: Vec<&str> = item.number.split(" ").collect();
+        PaletteItem {
+          brand: bn.first().unwrap().to_string(),
+          number: bn.last().unwrap().to_string(),
+          name: item.name.clone(),
+          color: item.color.clone(),
+          blends: None,
+        }
       })
       .collect(),
 

@@ -20,9 +20,7 @@
 
     <Splitter :gutter-size="2" class="h-full overflow-hidden border-noround border-none">
       <SplitterPanel :min-size="5" :size="15">
-        <Suspense>
-          <PalettePanel :palette="patternStore.pattern?.palette ?? []" />
-        </Suspense>
+        <PalettePanel :palette="patternStore.pattern?.palette ?? []" />
       </SplitterPanel>
 
       <SplitterPanel :min-size="85" :size="85">

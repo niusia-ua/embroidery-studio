@@ -70,8 +70,7 @@ struct PatternInfo {
 
 #[derive(Debug, PartialEq, Serialize)]
 struct PaletteItem {
-  #[serde(rename = "vendorId")]
-  vendor_id: u8,
+  brand: String,
   number: String,
   name: String,
   color: String,
@@ -81,8 +80,7 @@ struct PaletteItem {
 
 #[derive(Debug, PartialEq, Clone, Serialize)]
 struct Blend {
-  #[serde(rename = "vendorId")]
-  vendor_id: u8,
+  brand: String,
   number: String,
   strands: u8,
 }

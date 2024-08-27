@@ -80,8 +80,6 @@
 
 <script setup lang="ts">
   import type { Blend, PaletteItem } from "#/types/pattern";
-  import { readTextFile } from "@tauri-apps/api/fs";
-  import { resolveResource } from "@tauri-apps/api/path";
   import Button from "primevue/button";
   import Checkbox from "primevue/checkbox";
   import Listbox from "primevue/listbox";
@@ -94,13 +92,6 @@
   }
 
   const props = defineProps<PalettePanelProps>();
-
-  interface VendorInfo {
-    title: string;
-  }
-
-  const vendorsPath = await resolveResource("resources/colors/vendors.json");
-  const vendors: Record<number, VendorInfo> = JSON.parse(await readTextFile(vendorsPath));
 
   const selectedPaletteItem = ref<PaletteItem | null>(null);
 
@@ -115,8 +106,8 @@
   function paletteItemTitle(pi: PaletteItem) {
     if (paletteSettings.colorOnly) return "";
     const components = [];
-    if (paletteSettings.showVendor) components.push(vendors[pi.vendorId]?.title ?? "unknown");
-    if (pi.blends.length) {
+    if (paletteSettings.showVendor) components.push(pi.brand);
+    if (pi.blends) {
       components.push(
         pi.blends
           .map(blendTitle)
@@ -134,10 +125,10 @@
     return components.join(" ");
   }
 
-  function blendTitle({ vendorId, number }: Blend) {
+  function blendTitle({ brand, number }: Blend) {
     if (paletteSettings.colorOnly) return "";
     const components = [];
-    if (paletteSettings.showVendor) components.push(vendors[vendorId]?.title ?? "unknown");
+    if (paletteSettings.showVendor) components.push(brand ?? "unknown");
     if (paletteSettings.showNumber) components.push(number);
     return components.join(" ");
   }

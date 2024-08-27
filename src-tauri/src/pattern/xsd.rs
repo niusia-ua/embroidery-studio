@@ -8,6 +8,7 @@ use std::{
   fs,
   io::{self, Read, Seek, SeekFrom},
   path::Path,
+  sync::LazyLock,
 };
 
 use byteorder::{LittleEndian, ReadBytesExt};
@@ -18,6 +19,11 @@ use super::*;
 #[cfg(test)]
 #[path = "xsd.test.rs"]
 mod xsd_tests;
+
+static PM_FLOSS_BRANDS: LazyLock<std::collections::HashMap<u8, String>> = LazyLock::new(|| {
+  let pm_floss_brands = include_str!("./pm_floss_brands.json");
+  serde_json::from_str(pm_floss_brands).unwrap()
+});
 
 const XSD_VALID_SIGNATURE: u16 = 1296;
 const XSD_COLOR_NUMBER_LENGTH: usize = 11;
@@ -263,7 +269,8 @@ fn read_palette(cursor: &mut Cursor, palette_size: usize) -> Result<Vec<PaletteI
 /// Reads a single palette item.
 fn read_palette_item(cursor: &mut Cursor) -> Result<PaletteItem> {
   cursor.seek(SeekFrom::Current(2))?;
-  let vendor_id = cursor.read_u8()?;
+  let brand_id = cursor.read_u8()?;
+  let brand = PM_FLOSS_BRANDS.get(&brand_id).unwrap().to_owned();
   let number = cursor.read_cstring(XSD_COLOR_NUMBER_LENGTH)?;
   let name = cursor.read_cstring(XSD_COLOR_NAME_LENGTH)?;
   let color = cursor.read_hex_color()?;
@@ -271,7 +278,7 @@ fn read_palette_item(cursor: &mut Cursor) -> Result<PaletteItem> {
   let blends = read_blends(cursor)?;
   cursor.seek(SeekFrom::Current(10))?;
   Ok(PaletteItem {
-    vendor_id,
+    brand,
     name,
     number,
     color,
@@ -303,8 +310,10 @@ fn read_blends(cursor: &mut Cursor) -> Result<Option<Vec<Blend>>> {
 /// Reads a single blend color.
 /// Used only in the `read_blends` function.
 fn read_blend_item(cursor: &mut Cursor) -> Result<Blend> {
+  let brand_id = cursor.read_u8()?;
+  let brand_id = if brand_id == 255 { 0 } else { brand_id };
   Ok(Blend {
-    vendor_id: cursor.read_u8()?,
+    brand: PM_FLOSS_BRANDS.get(&brand_id).unwrap().to_owned(),
     number: cursor.read_cstring(XSD_COLOR_NUMBER_LENGTH)?,
     strands: 0, // The actual value will be set when calling `read_blend_strands`.
   })

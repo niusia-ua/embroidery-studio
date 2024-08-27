@@ -30,8 +30,8 @@ fn parses_oxs_pattern() {
   assert_eq!(
     pattern.palette[0],
     PaletteItem {
-      vendor_id: 0,
-      number: String::from("DMC    943"),
+      brand: String::from("DMC"),
+      number: String::from("943"),
       name: String::from("Turquoise VY DK"),
       color: String::from("23725C"),
       blends: None,
@@ -40,8 +40,8 @@ fn parses_oxs_pattern() {
   assert_eq!(
     pattern.palette[6],
     PaletteItem {
-      vendor_id: 0,
-      number: String::from("DMC    367"),
+      brand: String::from("DMC"),
+      number: String::from("367"),
       name: String::from("Pistachio Green dark"),
       color: String::from("406647"),
       blends: None,
