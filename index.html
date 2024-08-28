@@ -9,5 +9,11 @@
   <body class="m-0 w-screen h-screen overflow-hidden">
     <div id="app" class="h-full"></div>
     <script type="module" src="/src/main.ts"></script>
+    <script>
+      if (window.location.hostname === "tauri.localhost") {
+        // Disables a system context menu in production.
+        document.addEventListener("contextmenu", (e) => e.preventDefault());
+      }
+    </script>
   </body>
 </html>
