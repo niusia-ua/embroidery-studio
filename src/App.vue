@@ -18,7 +18,7 @@
       </template>
     </Toolbar>
 
-    <Splitter :gutter-size="2" class="h-full overflow-hidden border-noround border-none">
+    <Splitter :gutter-size="2" class="h-full border-noround border-none">
       <SplitterPanel :min-size="5" :size="15">
         <PalettePanel :palette="patternStore.pattern?.palette ?? []" />
       </SplitterPanel>
