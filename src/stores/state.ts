@@ -3,6 +3,7 @@ import { reactive } from "vue";
 
 export interface AppState {
   selectedTool: string;
+  selectedPaletteItem?: string;
 }
 
 export const useAppStateStore = defineStore("embroidery-studio-state", () => {

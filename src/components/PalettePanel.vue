@@ -1,6 +1,6 @@
 <template>
   <Listbox
-    v-model="selectedPaletteItem"
+    v-model="appState.state.selectedPaletteItem"
     :options="props.palette"
     scroll-height="100%"
     pt:root:class="surface-ground"
@@ -79,6 +79,7 @@
 </template>
 
 <script setup lang="ts">
+  import { useAppStateStore } from "#/stores/state";
   import type { Blend, PaletteItem } from "#/types/pattern";
   import Button from "primevue/button";
   import Checkbox from "primevue/checkbox";
@@ -93,7 +94,7 @@
 
   const props = defineProps<PalettePanelProps>();
 
-  const selectedPaletteItem = ref<PaletteItem | null>(null);
+  const appState = useAppStateStore();
 
   function contrastTextColor(hex: string) {
     const r = parseInt(hex.substring(0, 2), 16);
