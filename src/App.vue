@@ -42,9 +42,9 @@
   import Toolbar from "primevue/toolbar";
   import { onMounted, ref } from "vue";
   import { loadPattern } from "./commands/pattern";
-  import DropdownTieredMenu from "./components/DropdownTieredMenu.vue";
   import PalettePanel from "./components/PalettePanel.vue";
-  import WindowControls from "./components/WindowControls.vue";
+  import DropdownTieredMenu from "./components/toolbar/DropdownTieredMenu.vue";
+  import WindowControls from "./components/toolbar/WindowControls.vue";
   import { usePatternStore } from "./stores/pattern";
   import { useAppStateStore } from "./stores/state";
   import type { FullStitch, Line, Node, PartStitch, PatternProperties } from "./types/pattern";
