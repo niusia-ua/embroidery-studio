@@ -1,6 +1,7 @@
 import { PrimeVue } from "@primevue/core";
 import Aura from "@primevue/themes/aura";
 import { createPinia } from "pinia";
+import { createPersistedState } from "pinia-plugin-persistedstate";
 import { createApp } from "vue";
 
 import "primeflex/primeflex.css";
@@ -9,9 +10,10 @@ import "./assets/styles.css";
 
 import App from "./App.vue";
 
-const app = createApp(App);
 const pinia = createPinia();
+pinia.use(createPersistedState({ storage: sessionStorage, auto: true }));
 
+const app = createApp(App);
 app.use(pinia);
 app.use(PrimeVue, {
   theme: { preset: Aura },
