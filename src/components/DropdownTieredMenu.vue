@@ -17,13 +17,13 @@
   import TieredMenu, { type TieredMenuProps } from "primevue/tieredmenu";
   import { ref } from "vue";
 
-  interface ToolbarTieredMenuButtonProps {
+  interface DropdownTieredMenuProps {
     id: string;
     button?: ButtonProps;
     tieredMenu?: TieredMenuProps;
   }
 
-  const props = defineProps<ToolbarTieredMenuButtonProps>();
+  const props = defineProps<DropdownTieredMenuProps>();
   const menu = ref<typeof TieredMenu>();
 
   function toggleMenu(event: Event) {
