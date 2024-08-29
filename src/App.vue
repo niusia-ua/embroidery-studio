@@ -11,6 +11,7 @@
           :button="{ icon: 'pi pi-bars' }"
           :tiered-menu="{ model: menuOptions }"
         />
+        <ToolSelector />
       </template>
 
       <template #end>
@@ -44,6 +45,7 @@
   import { loadPattern } from "./commands/pattern";
   import PalettePanel from "./components/PalettePanel.vue";
   import DropdownTieredMenu from "./components/toolbar/DropdownTieredMenu.vue";
+  import ToolSelector from "./components/toolbar/ToolSelector.vue";
   import WindowControls from "./components/toolbar/WindowControls.vue";
   import { usePatternStore } from "./stores/pattern";
   import { useAppStateStore } from "./stores/state";
