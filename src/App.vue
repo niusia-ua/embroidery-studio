@@ -11,7 +11,7 @@
           :button="{ icon: 'pi pi-bars' }"
           :tiered-menu="{ model: menuOptions }"
         />
-        <ToolSelector />
+        <StitchToolSelector />
       </template>
 
       <template #end>
@@ -36,7 +36,7 @@
   import { appWindow } from "@tauri-apps/api/window";
   import { Simple as SimpleCull } from "pixi-cull";
   import { Viewport } from "pixi-viewport";
-  import { Application, Container, Graphics, LINE_CAP, Polygon } from "pixi.js";
+  import { Application, Container, Graphics, LINE_CAP, Point, Polygon } from "pixi.js";
   import type { MenuItem } from "primevue/menuitem";
   import Splitter from "primevue/splitter";
   import SplitterPanel from "primevue/splitterpanel";
@@ -45,11 +45,23 @@
   import { loadPattern } from "./commands/pattern";
   import PalettePanel from "./components/PalettePanel.vue";
   import DropdownTieredMenu from "./components/toolbar/DropdownTieredMenu.vue";
-  import ToolSelector from "./components/toolbar/ToolSelector.vue";
+  import StitchToolSelector from "./components/toolbar/StitchToolSelector.vue";
   import WindowControls from "./components/toolbar/WindowControls.vue";
   import { usePatternStore } from "./stores/pattern";
   import { useAppStateStore } from "./stores/state";
-  import type { FullStitch, Line, Node, PartStitch, PatternProperties } from "./types/pattern";
+  import {
+    FullStitchKind,
+    LineKind,
+    NodeKind,
+    PartStitchDirection,
+    PartStitchKind,
+    type FullStitch,
+    type Line,
+    type Node,
+    type PartStitch,
+    type PatternProperties,
+    type StitchKind,
+  } from "./types/pattern";
   import type { GridSettings } from "./types/view";
   import { studioDocumentDir } from "./utils/common";
 
@@ -72,8 +84,7 @@
             ],
           });
           if (file === null || Array.isArray(file)) return;
-          const pattern = await loadPattern(file);
-          patternStore.pattern = pattern;
+          patternStore.pattern = await loadPattern(file);
           drawPattern();
         },
       },
@@ -152,6 +163,8 @@
 
     // @ts-expect-error There is type mismatch here, but it is actually working as expected.
     root.value!.appendChild(pixi.view);
+
+    drawPattern();
   });
 
   function drawPattern() {
@@ -283,7 +296,7 @@
       .endFill().geometry,
   };
 
-  function drawNode({ x, y, palindex, rotation, kind }: Node) {
+  function drawNode({ x, y, palindex, rotated, kind }: Node) {
     const graphics = new Graphics(NODE_GEOMETRY[kind]);
     // Actually, we create node graphics in a larger size so that they have more points.
     // We need to divide the size by 10 to display them in the correct size.
@@ -292,7 +305,7 @@
     graphics.width /= 10;
     graphics.tint = patternStore.pattern!.palette[palindex].color;
     graphics.position.set(x, y);
-    if (rotation) graphics.angle = 90;
+    if (rotated) graphics.angle = 90;
     stages.nodes.addChild(graphics);
   }
 
@@ -310,5 +323,106 @@
       .lineStyle({ width: 0.2, color, cap })
       .lineTo(start.x, start.y);
     stages.lines.addChild(graphics);
+  }
+
+  // A start point used for drawing lines.
+  let startPoint: Point | null = null;
+
+  viewport.addEventListener("mousedown", (e) => (startPoint = viewport.toWorld(e.global)));
+  viewport.addEventListener("mouseup", (e) => {
+    if (!patternStore.pattern || !stateStore.state.selectedPaletteItem || !startPoint) return;
+
+    const point = viewport.toWorld(e.global);
+    if (isOutsideOfPattern(point, patternStore.pattern.properties)) return;
+
+    const x = Math.trunc(point.x);
+    const y = Math.trunc(point.y);
+    const xr = point.x - x;
+    const yr = point.y - y;
+
+    const palindex = patternStore.pattern.palette.indexOf(stateStore.state.selectedPaletteItem);
+    const kind = stateStore.state.selectedStitchTool;
+    switch (kind) {
+      case FullStitchKind.Full:
+      case FullStitchKind.Petite: {
+        const fullstitch: FullStitch = {
+          x: adjustStitchCoordinate(x, xr, kind),
+          y: adjustStitchCoordinate(y, yr, kind),
+          palindex,
+          kind,
+        };
+        patternStore.pattern.fullstitches.push(fullstitch);
+        drawFullStitch(fullstitch);
+        break;
+      }
+
+      case PartStitchKind.Half:
+      case PartStitchKind.Quarter: {
+        const direction =
+          (xr < 0.5 && yr > 0.5) || (xr > 0.5 && yr < 0.5)
+            ? PartStitchDirection.Forward
+            : PartStitchDirection.Backward;
+        const partstitch: PartStitch = {
+          x: adjustStitchCoordinate(x, xr, kind),
+          y: adjustStitchCoordinate(y, yr, kind),
+          palindex,
+          kind,
+          direction,
+        };
+        patternStore.pattern.partstitches.push(partstitch);
+        drawPartStitch(partstitch);
+        break;
+      }
+
+      case LineKind.Back:
+      case LineKind.Straight: {
+        const startX = Math.trunc(startPoint.x);
+        const startY = Math.trunc(startPoint.y);
+
+        const line: Line = {
+          x: [
+            adjustStitchCoordinate(startX, startPoint.x - startX, kind),
+            adjustStitchCoordinate(x, xr, kind),
+          ],
+          y: [
+            adjustStitchCoordinate(startY, startPoint.y - startY, kind),
+            adjustStitchCoordinate(y, yr, kind),
+          ],
+          palindex,
+          kind,
+        };
+        patternStore.pattern.lines.push(line);
+        drawLine(line);
+        break;
+      }
+
+      case NodeKind.FrenchKnot:
+      case NodeKind.Bead: {
+        const node: Node = {
+          x: adjustStitchCoordinate(x, xr, kind),
+          y: adjustStitchCoordinate(y, yr, kind),
+          palindex,
+          kind,
+          rotated: e.ctrlKey,
+        };
+        patternStore.pattern.nodes.push(node);
+        drawNode(node);
+        break;
+      }
+    }
+
+    startPoint = null;
+  });
+
+  function isOutsideOfPattern({ x, y }: Point, { width, height }: PatternProperties) {
+    return x < 0 || y < 0 || x >= width || y >= height;
+  }
+
+  function adjustStitchCoordinate(value: number, decimalPortion: number, kind: StitchKind): number {
+    if (kind === FullStitchKind.Full || kind === PartStitchKind.Half) return value;
+    if (kind === FullStitchKind.Petite || kind === PartStitchKind.Quarter) {
+      return decimalPortion > 0.5 ? value + 0.5 : value;
+    }
+    return decimalPortion > 0.5 ? value + 1 : decimalPortion > 0.25 ? value + 0.5 : value;
   }
 </script>

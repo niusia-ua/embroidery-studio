@@ -64,10 +64,12 @@ export const PartStitchKind = { Half: "Half", Quarter: "Quarter" } as const;
 export type PartStitchDirection = keyof typeof PartStitchDirection;
 export const PartStitchDirection = { Forward: "Forward", Backward: "Backward" } as const;
 
-export type Node = StitchBase<NodeKind> & { rotation: boolean };
+export type Node = StitchBase<NodeKind> & { rotated: boolean };
 export type NodeKind = keyof typeof NodeKind;
 export const NodeKind = { FrenchKnot: "FrenchKnot", Bead: "Bead" } as const;
 
 export type Line = StitchBase<LineKind, [number, number]>;
 export type LineKind = keyof typeof LineKind;
 export const LineKind = { Back: "Back", Straight: "Straight" } as const;
+
+export type StitchKind = FullStitchKind | PartStitchKind | LineKind | NodeKind;
