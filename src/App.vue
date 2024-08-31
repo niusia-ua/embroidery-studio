@@ -42,7 +42,7 @@
   import SplitterPanel from "primevue/splitterpanel";
   import Toolbar from "primevue/toolbar";
   import { onMounted, ref } from "vue";
-  import { loadPattern } from "./commands/pattern";
+  import { loadPattern } from "./api/pattern";
   import PalettePanel from "./components/PalettePanel.vue";
   import DropdownTieredMenu from "./components/toolbar/DropdownTieredMenu.vue";
   import StitchToolSelector from "./components/toolbar/StitchToolSelector.vue";
