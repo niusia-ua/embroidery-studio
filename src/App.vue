@@ -134,7 +134,7 @@
   onMounted(() => {
     // Configuring the viewport.
     viewport.scale.set(10);
-    viewport.drag({ keyToPress: ["ControlLeft"], factor: 2 }).wheel();
+    viewport.drag({ keyToPress: ["ShiftLeft"], factor: 2 }).wheel();
     viewport.clampZoom({
       minScale: 1,
       maxScale: 100,
@@ -326,11 +326,11 @@
   }
 
   // A start point used for drawing lines.
-  let startPoint: Point | null = null;
+  let startPoint: Point = new Point();
 
   viewport.addEventListener("mousedown", (e) => (startPoint = viewport.toWorld(e.global)));
   viewport.addEventListener("mouseup", (e) => {
-    if (!patternStore.pattern || !stateStore.state.selectedPaletteItem || !startPoint) return;
+    if (!patternStore.pattern || !stateStore.state.selectedPaletteItem || e.shiftKey) return;
 
     const point = viewport.toWorld(e.global);
     if (isOutsideOfPattern(point, patternStore.pattern.properties)) return;
@@ -410,8 +410,6 @@
         break;
       }
     }
-
-    startPoint = null;
   });
 
   function isOutsideOfPattern({ x, y }: Point, { width, height }: PatternProperties) {
