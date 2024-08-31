@@ -63,7 +63,7 @@
     type StitchKind,
   } from "./types/pattern";
   import type { GridSettings } from "./types/view";
-  import { studioDocumentDir } from "./utils/common";
+  import { studioDocumentDir } from "./utils/path";
 
   const fileOptions: MenuItem = {
     label: "File",
