@@ -1,7 +1,8 @@
 <template>
   <Listbox
     v-model="appState.state.selectedPaletteItem"
-    :options="props.palette"
+    :options="props.palette ?? []"
+    empty-message="No palette items found"
     scroll-height="100%"
     pt:root:class="surface-ground"
     pt:list:class="gap-1"
@@ -89,7 +90,7 @@
   import { reactive, ref } from "vue";
 
   interface PalettePanelProps {
-    palette: PaletteItem[];
+    palette?: PaletteItem[];
   }
 
   const props = defineProps<PalettePanelProps>();
