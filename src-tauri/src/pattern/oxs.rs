@@ -8,7 +8,7 @@ use super::*;
 #[path = "oxs.test.rs"]
 mod oxs_tests;
 
-pub fn parse_pattern(path: &Path) -> Result<Pattern> {
+pub fn parse_pattern(path: impl AsRef<Path>) -> Result<Pattern> {
   let xml = fs::read_to_string(path)?;
   let pattern: OxsPattern = serde_xml_rs::from_str(&xml).unwrap();
 

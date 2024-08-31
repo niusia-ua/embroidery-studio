@@ -1,5 +1,5 @@
 use serde::Serialize;
-use std::{ffi::OsStr, path::Path};
+use std::{ffi::OsStr, path::PathBuf};
 
 use crate::error::*;
 
@@ -7,8 +7,7 @@ mod oxs;
 mod xsd;
 
 #[tauri::command]
-pub fn load_pattern(file_path: &str) -> Result<Pattern> {
-  let file_path = Path::new(file_path);
+pub fn load_pattern(file_path: PathBuf) -> Result<Pattern> {
   let pattern_format = PatternFormat::try_from(file_path.extension())?;
   match pattern_format {
     PatternFormat::XSD => xsd::parse_pattern(file_path),

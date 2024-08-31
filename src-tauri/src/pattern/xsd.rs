@@ -171,7 +171,7 @@ impl XsdRead for Cursor {
   }
 }
 
-pub fn parse_pattern(path: &Path) -> Result<Pattern> {
+pub fn parse_pattern(path: impl AsRef<Path>) -> Result<Pattern> {
   let buf = fs::read(path)?;
   let mut cursor = io::Cursor::new(buf);
 
