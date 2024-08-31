@@ -1,4 +1,5 @@
 <template>
+  <BlockUI :blocked="loading" full-screen />
   <div class="h-full flex flex-column">
     <Toolbar
       class="border-noround border-none border-bottom-1 p-0"
@@ -26,9 +27,12 @@
 
       <SplitterPanel :min-size="85" :size="85">
         <CanvasPanel v-if="patternStore.pattern" :pattern="patternStore.pattern" />
-        <Panel v-else header="No pattern loaded" class="w-3 border-none absolute top-50 left-50">
-          <p class="m-0">Open a pattern or create a new one to get started.</p>
-        </Panel>
+        <template v-else>
+          <ProgressSpinner v-if="loading" class="absolute top-50 left-50" />
+          <Panel v-else header="No pattern loaded" class="w-3 border-none absolute top-50 left-50">
+            <p class="m-0">Open a pattern or create a new one to get started.</p>
+          </Panel>
+        </template>
       </SplitterPanel>
     </Splitter>
   </div>
@@ -37,8 +41,10 @@
 <script lang="ts" setup>
   import { open } from "@tauri-apps/api/dialog";
   import { appWindow } from "@tauri-apps/api/window";
+  import BlockUI from "primevue/blockui";
   import type { MenuItem } from "primevue/menuitem";
   import Panel from "primevue/panel";
+  import ProgressSpinner from "primevue/progressspinner";
   import Splitter from "primevue/splitter";
   import SplitterPanel from "primevue/splitterpanel";
   import Toolbar from "primevue/toolbar";
@@ -71,7 +77,9 @@
             ],
           });
           if (file === null || Array.isArray(file)) return;
+          loading.value = true;
           patternStore.pattern = await loadPattern(file);
+          loading.value = false;
         },
       },
       {
@@ -95,4 +103,6 @@
   const menuOptions = ref<MenuItem[]>([fileOptions]);
 
   const patternStore = usePatternStore();
+
+  const loading = ref(false);
 </script>
