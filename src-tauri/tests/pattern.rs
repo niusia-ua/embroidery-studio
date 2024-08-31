@@ -8,7 +8,6 @@ fn parses_supported_pattern_formats() {
   let paths = fs::read_dir(resources).unwrap();
 
   for path in paths {
-    let path = path.unwrap().path();
-    assert!(load_pattern(path.to_str().unwrap()).is_ok());
+    assert!(load_pattern(path.unwrap().path()).is_ok());
   }
 }
