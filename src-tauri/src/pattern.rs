@@ -1,5 +1,5 @@
-use serde::Serialize;
-use std::{ffi::OsStr, path::PathBuf};
+use serde::{Serialize, Serializer};
+use std::{collections::BTreeMap, ffi::OsStr, path::PathBuf};
 
 use crate::error::*;
 
@@ -41,16 +41,54 @@ impl TryFrom<Option<&OsStr>> for PatternFormat {
   }
 }
 
+type StitchKey = Vec<u16>;
+
+trait Key {
+  fn key(&self) -> StitchKey;
+}
+
+#[derive(Debug)]
+struct Stitches<T> {
+  inner: BTreeMap<StitchKey, T>,
+}
+
+impl<T> Stitches<T> {
+  fn new() -> Self {
+    Self {
+      inner: BTreeMap::new(),
+    }
+  }
+
+  fn len(&self) -> usize {
+    self.inner.len()
+  }
+}
+
+impl<T: Clone + Serialize> Serialize for Stitches<T> {
+  fn serialize<S: Serializer>(&self, ser: S) -> Result<S::Ok, S::Error> {
+    let stitches: Vec<T> = self.inner.values().cloned().collect();
+    serde::Serialize::serialize(&stitches, ser)
+  }
+}
+
+impl<T: Key> FromIterator<T> for Stitches<T> {
+  fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
+    Self {
+      inner: BTreeMap::from_iter(iter.into_iter().map(|item| (item.key(), item))),
+    }
+  }
+}
+
 #[derive(Debug, Serialize)]
 pub struct Pattern {
   properties: PatternProperties,
   info: PatternInfo,
   palette: Vec<PaletteItem>,
   fabric: Fabric,
-  fullstitches: Vec<FullStitch>,
-  partstitches: Vec<PartStitch>,
-  nodes: Vec<Node>,
-  lines: Vec<Line>,
+  fullstitches: Stitches<FullStitch>,
+  partstitches: Stitches<PartStitch>,
+  nodes: Stitches<Node>,
+  lines: Stitches<Line>,
 }
 
 #[derive(Debug, PartialEq, Serialize)]
@@ -93,7 +131,7 @@ struct Fabric {
   color: String,
 }
 
-#[derive(Debug, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 struct FullStitch {
   x: f64,
   y: f64,
@@ -101,13 +139,22 @@ struct FullStitch {
   kind: FullStitchKind,
 }
 
-#[derive(Debug, PartialEq, Serialize)]
+impl Key for FullStitch {
+  fn key(&self) -> StitchKey {
+    match self.kind {
+      FullStitchKind::Full => vec![self.x as u16, self.y as u16],
+      FullStitchKind::Petite => vec![(self.x * 2.0) as u16, (self.y * 2.0) as u16],
+    }
+  }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Serialize)]
 enum FullStitchKind {
   Full,
   Petite,
 }
 
-#[derive(Debug, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 struct PartStitch {
   x: f64,
   y: f64,
@@ -116,19 +163,28 @@ struct PartStitch {
   kind: PartStitchKind,
 }
 
+impl Key for PartStitch {
+  fn key(&self) -> StitchKey {
+    match self.kind {
+      PartStitchKind::Half => vec![self.x as u16, self.y as u16],
+      PartStitchKind::Quarter => vec![(self.x * 2.0) as u16, (self.y * 2.0) as u16],
+    }
+  }
+}
+
 #[derive(Debug, PartialEq, Clone, Copy, Serialize)]
 enum PartStitchDirection {
   Forward,
   Backward,
 }
 
-#[derive(Debug, PartialEq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize)]
 enum PartStitchKind {
   Half,
   Quarter,
 }
 
-#[derive(Debug, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 struct Node {
   x: f64,
   y: f64,
@@ -137,13 +193,19 @@ struct Node {
   kind: NodeKind,
 }
 
-#[derive(Debug, PartialEq, Serialize)]
+impl Key for Node {
+  fn key(&self) -> StitchKey {
+    vec![(self.x * 2.0) as u16, (self.y * 2.0) as u16]
+  }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Serialize)]
 enum NodeKind {
   FrenchKnot,
   Bead,
 }
 
-#[derive(Debug, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 struct Line {
   x: (f64, f64),
   y: (f64, f64),
@@ -151,7 +213,18 @@ struct Line {
   kind: LineKind,
 }
 
-#[derive(Debug, PartialEq, Serialize)]
+impl Key for Line {
+  fn key(&self) -> StitchKey {
+    vec![
+      (self.x.0 * 2.0) as u16,
+      (self.y.0 * 2.0) as u16,
+      (self.x.1 * 2.0) as u16,
+      (self.y.1 * 2.0) as u16,
+    ]
+  }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Serialize)]
 enum LineKind {
   Back,
   Straight,

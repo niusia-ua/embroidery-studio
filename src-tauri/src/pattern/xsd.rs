@@ -221,10 +221,10 @@ pub fn parse_pattern(path: impl AsRef<Path>) -> Result<Pattern> {
       color: xsd_fabric.color,
       stitches_per_inch: xsd_pattern_properties.stitches_per_inch,
     },
-    fullstitches,
-    partstitches,
-    nodes,
-    lines,
+    fullstitches: Stitches::from_iter(fullstitches),
+    partstitches: Stitches::from_iter(partstitches),
+    nodes: Stitches::from_iter(nodes),
+    lines: Stitches::from_iter(lines),
   })
 }
 

@@ -55,86 +55,82 @@ pub fn parse_pattern(path: impl AsRef<Path>) -> Result<Pattern> {
       })
       .collect(),
 
-    fullstitches: fullstitches
-      .iter()
-      .map(|stitch| FullStitch {
-        x: stitch.x,
-        y: stitch.y,
-        palindex: stitch.palindex - 1,
-        kind: FullStitchKind::Full,
-      })
-      .collect(),
+    fullstitches: Stitches::from_iter(fullstitches.iter().map(|stitch| FullStitch {
+      x: stitch.x,
+      y: stitch.y,
+      palindex: stitch.palindex - 1,
+      kind: FullStitchKind::Full,
+    })),
 
-    partstitches: partstitches
-      .iter()
-      .flat_map(|stitch| {
-        let mut stitches = vec![];
-        let direction = match stitch.direction {
-          1 | 3 => PartStitchDirection::Backward,
-          2 | 4 => PartStitchDirection::Forward,
-          _ => panic!("Unknown part stitch direction"),
-        };
-        if stitch.palindex1 != 0 {
-          stitches.push(PartStitch {
-            x: stitch.x,
-            y: stitch.y,
-            palindex: stitch.palindex1 - 1,
-            kind: PartStitchKind::Half,
-            direction,
-          });
-        }
-        if stitch.palindex2 != 0 {
-          stitches.push(PartStitch {
-            x: stitch.x,
-            y: stitch.y,
-            palindex: stitch.palindex2 - 1,
-            kind: PartStitchKind::Half,
-            direction,
-          });
-        }
-        stitches
-      })
-      .chain(
-        objects
-          .iter()
-          .filter(|obj| obj.objecttype == "quarter")
-          .map(|obj| PartStitch {
+    partstitches: Stitches::from_iter(
+      partstitches
+        .iter()
+        .flat_map(|stitch| {
+          let mut stitches = vec![];
+          let direction = match stitch.direction {
+            1 | 3 => PartStitchDirection::Backward,
+            2 | 4 => PartStitchDirection::Forward,
+            _ => panic!("Unknown part stitch direction"),
+          };
+          if stitch.palindex1 != 0 {
+            stitches.push(PartStitch {
+              x: stitch.x,
+              y: stitch.y,
+              palindex: stitch.palindex1 - 1,
+              kind: PartStitchKind::Half,
+              direction,
+            });
+          }
+          if stitch.palindex2 != 0 {
+            stitches.push(PartStitch {
+              x: stitch.x,
+              y: stitch.y,
+              palindex: stitch.palindex2 - 1,
+              kind: PartStitchKind::Half,
+              direction,
+            });
+          }
+          stitches
+        })
+        .chain(
+          objects
+            .iter()
+            .filter(|obj| obj.objecttype == "quarter")
+            .map(|obj| PartStitch {
+              x: obj.x1,
+              y: obj.y1,
+              palindex: obj.palindex - 1,
+              kind: PartStitchKind::Quarter,
+              direction: PartStitchDirection::Forward,
+            }),
+        ),
+    ),
+
+    lines: Stitches::from_iter(backstitches.iter().map(|stitch| Line {
+      x: (stitch.x1, stitch.x2),
+      y: (stitch.y1, stitch.y2),
+      palindex: stitch.palindex - 1,
+      kind: LineKind::Back,
+    })),
+
+    nodes: Stitches::from_iter(
+      objects
+        .iter()
+        .filter(|obj| obj.objecttype.starts_with("bead") | (obj.objecttype == "knot"))
+        .map(|obj| {
+          let kind = match obj.objecttype.as_str() {
+            "knot" => NodeKind::FrenchKnot,
+            _ => NodeKind::Bead,
+          };
+          Node {
             x: obj.x1,
             y: obj.y1,
+            rotated: false,
             palindex: obj.palindex - 1,
-            kind: PartStitchKind::Quarter,
-            direction: PartStitchDirection::Forward,
-          }),
-      )
-      .collect(),
-
-    lines: backstitches
-      .iter()
-      .map(|stitch| Line {
-        x: (stitch.x1, stitch.x2),
-        y: (stitch.y1, stitch.y2),
-        palindex: stitch.palindex - 1,
-        kind: LineKind::Back,
-      })
-      .collect(),
-
-    nodes: objects
-      .iter()
-      .filter(|obj| obj.objecttype.starts_with("bead") | (obj.objecttype == "knot"))
-      .map(|obj| {
-        let kind = match obj.objecttype.as_str() {
-          "knot" => NodeKind::FrenchKnot,
-          _ => NodeKind::Bead,
-        };
-        Node {
-          x: obj.x1,
-          y: obj.y1,
-          rotated: false,
-          palindex: obj.palindex - 1,
-          kind,
-        }
-      })
-      .collect(),
+            kind,
+          }
+        }),
+    ),
   })
 }
 
