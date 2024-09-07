@@ -23,12 +23,15 @@
       </div>
     </template>
 
-    <template #option="{ option }">
+    <template #option="{ option, selected }">
       <div
         class="w-full h-2rem text-color px-2 py-1 white-space-nowrap overflow-hidden text-overflow-ellipsis select-none"
         :style="{
           backgroundColor: `#${option.color}`,
           color: `${contrastTextColor(option.color)} !important`,
+          boxShadow: selected
+            ? `inset 0 0 0 2px #${option.color}, inset 0 0 0 4px ${contrastTextColor(option.color)}`
+            : '',
         }"
       >
         {{ paletteItemTitle(option) }}
