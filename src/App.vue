@@ -22,11 +22,11 @@
 
     <Splitter :gutter-size="2" class="h-full border-noround border-none">
       <SplitterPanel :min-size="5" :size="15">
-        <PalettePanel :palette="patternStore.pattern?.palette" />
+        <PalettePanel :palette="pattern?.palette" />
       </SplitterPanel>
 
       <SplitterPanel :min-size="85" :size="85">
-        <CanvasPanel v-if="patternStore.pattern" :pattern="patternStore.pattern" />
+        <CanvasPanel v-if="pattern" :pattern="pattern" />
         <template v-else>
           <ProgressSpinner v-if="loading" class="absolute top-50 left-50" />
           <Panel v-else header="No pattern loaded" class="w-3 border-none absolute top-50 left-50">
@@ -55,7 +55,7 @@
   import DropdownTieredMenu from "./components/toolbar/DropdownTieredMenu.vue";
   import StitchToolSelector from "./components/toolbar/StitchToolSelector.vue";
   import WindowControls from "./components/toolbar/WindowControls.vue";
-  import { usePatternStore } from "./stores/pattern";
+  import type { Pattern } from "./types/pattern";
   import { studioDocumentDir } from "./utils/path";
 
   const fileOptions: MenuItem = {
@@ -78,7 +78,7 @@
           });
           if (file === null || Array.isArray(file)) return;
           loading.value = true;
-          patternStore.pattern = await loadPattern(file);
+          pattern.value = await loadPattern(file);
           loading.value = false;
         },
       },
@@ -102,7 +102,6 @@
   };
   const menuOptions = ref<MenuItem[]>([fileOptions]);
 
-  const patternStore = usePatternStore();
-
   const loading = ref(false);
+  const pattern = ref<Pattern>();
 </script>
