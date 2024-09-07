@@ -13,28 +13,31 @@ pub fn parse_pattern(path: impl AsRef<Path>) -> Result<Pattern> {
   let pattern: OxsPattern = serde_xml_rs::from_str(&xml).unwrap();
 
   let properties = &pattern.properties;
-  let palette = &pattern.palette.palette_item;
+  let palette = pattern.palette.as_ref();
   let fabric = palette.first().unwrap();
-  let fullstitches = &pattern.fullstitches.stitch;
-  let partstitches = &pattern.partstitches.partstitch;
-  let backstitches = &pattern.backstitches.backstitch;
-  let objects = &pattern.ornaments_inc_knots_and_beads.object;
+  let fullstitches = pattern.fullstitches.as_ref();
+  let partstitches = pattern.partstitches.as_ref();
+  let backstitches = pattern.backstitches.as_ref();
+  let ornaments = pattern.ornaments.as_ref();
 
   Ok(Pattern {
     properties: PatternProperties {
-      width: properties.chartwidth,
-      height: properties.chartheight,
+      width: properties.width,
+      height: properties.height,
     },
 
     info: PatternInfo {
-      title: properties.charttitle.clone(),
+      title: properties.title.clone(),
       author: properties.author.clone(),
       copyright: properties.copyright.clone(),
-      description: properties.instructions.clone(),
+      description: properties.description.clone(),
     },
 
     fabric: Fabric {
-      stitches_per_inch: (properties.stitchesperinch, properties.stitchesperinch_y),
+      stitches_per_inch: (
+        properties.stitches_per_inch_x,
+        properties.stitches_per_inch_y,
+      ),
       kind: String::new(),
       name: fabric.name.clone(),
       color: fabric.color.clone(),
@@ -93,12 +96,12 @@ pub fn parse_pattern(path: impl AsRef<Path>) -> Result<Pattern> {
           stitches
         })
         .chain(
-          objects
+          ornaments
             .iter()
-            .filter(|obj| obj.objecttype == "quarter")
+            .filter(|obj| obj.kind == "quarter")
             .map(|obj| PartStitch {
-              x: obj.x1,
-              y: obj.y1,
+              x: obj.x,
+              y: obj.y,
               palindex: obj.palindex - 1,
               kind: PartStitchKind::Quarter,
               direction: PartStitchDirection::Forward,
@@ -114,17 +117,17 @@ pub fn parse_pattern(path: impl AsRef<Path>) -> Result<Pattern> {
     })),
 
     nodes: Stitches::from_iter(
-      objects
+      ornaments
         .iter()
-        .filter(|obj| obj.objecttype.starts_with("bead") | (obj.objecttype == "knot"))
+        .filter(|obj| obj.kind.starts_with("bead") | (obj.kind == "knot"))
         .map(|obj| {
-          let kind = match obj.objecttype.as_str() {
+          let kind = match obj.kind.as_str() {
             "knot" => NodeKind::FrenchKnot,
             _ => NodeKind::Bead,
           };
           Node {
-            x: obj.x1,
-            y: obj.y1,
+            x: obj.x,
+            y: obj.y,
             rotated: false,
             palindex: obj.palindex - 1,
             kind,
@@ -141,49 +144,59 @@ struct OxsPattern {
   fullstitches: OxsFullStitches,
   partstitches: OxsPartStitches,
   backstitches: OxsBackStitches,
-  ornaments_inc_knots_and_beads: OxsObjects,
+  #[serde(rename = "ornaments_inc_knots_and_beads")]
+  ornaments: OxsOrnaments,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 struct OxsPatternProperties {
-  oxsversion: f64,
-  software: String,
-  software_version: String,
-  chartheight: u16,
-  chartwidth: u16,
-  charttitle: String,
+  #[serde(rename = "chartwidth")]
+  width: u16,
+  #[serde(rename = "chartheight")]
+  height: u16,
+
+  #[serde(rename = "charttitle")]
+  title: String,
   author: String,
   copyright: String,
-  instructions: String,
-  stitchesperinch: u16,
-  stitchesperinch_y: u16,
-  palettecount: u8,
+  #[serde(rename = "instructions")]
+  description: String,
+
+  #[serde(rename = "stitchesperinch")]
+  stitches_per_inch_x: u16,
+  #[serde(rename = "stitchesperinch_y")]
+  stitches_per_inch_y: u16,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 struct OxsPalette {
-  palette_item: Vec<OxsPaletteItem>,
+  #[serde(rename = "palette_item")]
+  items: Vec<OxsPaletteItem>,
+}
+
+impl AsRef<Vec<OxsPaletteItem>> for OxsPalette {
+  fn as_ref(&self) -> &Vec<OxsPaletteItem> {
+    &self.items
+  }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 struct OxsPaletteItem {
-  index: u8,
   number: String,
   name: String,
   color: String,
-  printcolor: String,
-  blendcolor: String,
-  comments: String,
-  strands: u8,
-  symbol: String,
-  dashpattern: String,
-  bsstrands: u8,
-  bscolor: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 struct OxsFullStitches {
-  stitch: Vec<OxsFullStitch>,
+  #[serde(rename = "stitch")]
+  items: Vec<OxsFullStitch>,
+}
+
+impl AsRef<Vec<OxsFullStitch>> for OxsFullStitches {
+  fn as_ref(&self) -> &Vec<OxsFullStitch> {
+    &self.items
+  }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -195,7 +208,14 @@ struct OxsFullStitch {
 
 #[derive(Debug, Serialize, Deserialize)]
 struct OxsPartStitches {
-  partstitch: Vec<OxsPartStitch>,
+  #[serde(rename = "partstitch")]
+  items: Vec<OxsPartStitch>,
+}
+
+impl AsRef<Vec<OxsPartStitch>> for OxsPartStitches {
+  fn as_ref(&self) -> &Vec<OxsPartStitch> {
+    &self.items
+  }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -209,7 +229,14 @@ struct OxsPartStitch {
 
 #[derive(Debug, Serialize, Deserialize)]
 struct OxsBackStitches {
-  backstitch: Vec<OxsBackStitch>,
+  #[serde(rename = "backstitch")]
+  items: Vec<OxsBackStitch>,
+}
+
+impl AsRef<Vec<OxsBackStitch>> for OxsBackStitches {
+  fn as_ref(&self) -> &Vec<OxsBackStitch> {
+    &self.items
+  }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -219,19 +246,29 @@ struct OxsBackStitch {
   x2: f64,
   y2: f64,
   palindex: u8,
-  objecttype: String,
-  sequence: u8,
+  #[serde(rename = "objecttype")]
+  kind: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct OxsObjects {
-  object: Vec<OxsObject>,
+struct OxsOrnaments {
+  #[serde(rename = "object")]
+  items: Vec<OxsOrnament>,
+}
+
+impl AsRef<Vec<OxsOrnament>> for OxsOrnaments {
+  fn as_ref(&self) -> &Vec<OxsOrnament> {
+    &self.items
+  }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct OxsObject {
-  x1: f64,
-  y1: f64,
+struct OxsOrnament {
+  #[serde(rename = "x1")]
+  x: f64,
+  #[serde(rename = "y1")]
+  y: f64,
   palindex: u8,
-  objecttype: String,
+  #[serde(rename = "objecttype")]
+  kind: String,
 }

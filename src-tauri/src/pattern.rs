@@ -46,14 +46,14 @@ impl TryFrom<Option<&OsStr>> for PatternFormat {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct Pattern {
-  pub(self) properties: PatternProperties,
-  pub(self) info: PatternInfo,
-  pub(self) palette: Vec<PaletteItem>,
-  pub(self) fabric: Fabric,
-  pub fullstitches: Stitches<FullStitch>,
-  pub partstitches: Stitches<PartStitch>,
-  pub nodes: Stitches<Node>,
-  pub lines: Stitches<Line>,
+  properties: PatternProperties,
+  info: PatternInfo,
+  palette: Vec<PaletteItem>,
+  fabric: Fabric,
+  fullstitches: Stitches<FullStitch>,
+  partstitches: Stitches<PartStitch>,
+  nodes: Stitches<Node>,
+  lines: Stitches<Line>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
