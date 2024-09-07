@@ -1,9 +1,14 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::fs;
+use std::{fs, sync::RwLock};
 
-use embroidery_studio::pattern;
+use tauri::Manager;
+
+use embroidery_studio::{
+  pattern::{self, events::setup_pattern_event_handlers},
+  state,
+};
 
 fn main() {
   tauri::Builder::default()
@@ -27,8 +32,12 @@ fn main() {
           }
         }
       }
+
+      setup_pattern_event_handlers(app.get_window("main").unwrap(), app.handle());
+
       Ok(())
     })
+    .manage(RwLock::new(state::AppState::new()))
     .invoke_handler(tauri::generate_handler![pattern::load_pattern])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
