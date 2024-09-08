@@ -16,6 +16,18 @@
         <StitchToolSelector />
       </template>
 
+      <template v-if="appStateStore.state.openedPatterns" #center>
+        <PatternSelector
+          @switch="
+            (patternPath) => {
+              loadPattern(patternPath);
+              // TODO: Store the selected palette item per opened pattern.
+              appStateStore.state.selectedPaletteItem = undefined;
+            }
+          "
+        />
+      </template>
+
       <template #end>
         <WindowControls />
       </template>
@@ -27,21 +39,19 @@
       </SplitterPanel>
 
       <SplitterPanel :min-size="85" :size="85">
+        <ProgressSpinner v-if="loading" class="absolute top-50 left-50" />
         <CanvasPanel v-if="pattern" :pattern="pattern" />
         <div v-else class="w-full h-full flex justify-content-center align-items-center relative">
-          <ProgressSpinner v-if="loading" />
-          <template v-else>
-            <Panel header="No pattern loaded" class="w-3 border-none">
-              <p class="m-0">Open a pattern or create a new one to get started.</p>
-            </Panel>
+          <Panel header="No pattern loaded" class="w-3 border-none">
+            <p class="m-0">Open a pattern or create a new one to get started.</p>
+          </Panel>
 
-            <!-- Credits -->
-            <div class="w-full absolute bottom-0">
-              <p class="my-2 text-xs text-center">
-                Developed with love in Ukraine | GNU General Public License v3.0 or later
-              </p>
-            </div>
-          </template>
+          <!-- Credits -->
+          <div class="w-full absolute bottom-0">
+            <p class="my-2 text-xs text-center">
+              Developed with love in Ukraine | GNU General Public License v3.0 or later
+            </p>
+          </div>
         </div>
       </SplitterPanel>
     </Splitter>
@@ -60,15 +70,19 @@
   import SplitterPanel from "primevue/splitterpanel";
   import Toolbar from "primevue/toolbar";
   import { useConfirm } from "primevue/useconfirm";
-  import { ref } from "vue";
-  import { loadPattern } from "./api/pattern";
+  import { onMounted, ref } from "vue";
+  import * as patternApi from "./api/pattern";
   import CanvasPanel from "./components/CanvasPanel.vue";
   import PalettePanel from "./components/PalettePanel.vue";
   import DropdownTieredMenu from "./components/toolbar/DropdownTieredMenu.vue";
+  import PatternSelector from "./components/toolbar/PatternSelector.vue";
   import StitchToolSelector from "./components/toolbar/StitchToolSelector.vue";
   import WindowControls from "./components/toolbar/WindowControls.vue";
+  import { useAppStateStore } from "./stores/state";
   import type { Pattern } from "./types/pattern";
   import { studioDocumentDir } from "./utils/path";
+
+  const appStateStore = useAppStateStore();
 
   const loading = ref(false);
   const pattern = ref<Pattern>();
@@ -83,7 +97,7 @@
         label: "Open",
         icon: "pi pi-file",
         command: async () => {
-          const file = await open({
+          const path = await open({
             defaultPath: await studioDocumentDir(),
             multiple: false,
             filters: [
@@ -93,23 +107,8 @@
               },
             ],
           });
-          if (file === null || Array.isArray(file)) return;
-          try {
-            loading.value = true;
-            pattern.value = await loadPattern(file);
-          } catch (err) {
-            confirm.require({
-              header: "Error",
-              message: err as string,
-              icon: "pi pi-info-circle",
-              acceptLabel: "OK",
-              acceptProps: { outlined: true },
-              rejectLabel: "Cancel",
-              rejectProps: { severity: "secondary", outlined: true },
-            });
-          } finally {
-            loading.value = false;
-          }
+          if (path === null || Array.isArray(path)) return;
+          await loadPattern(path);
         },
       },
       {
@@ -131,4 +130,29 @@
     ],
   };
   const menuOptions = ref<MenuItem[]>([fileOptions]);
+
+  onMounted(async () => {
+    const currentPattern = appStateStore.state.currentPattern;
+    if (currentPattern) await loadPattern(currentPattern.key);
+  });
+
+  async function loadPattern(path: string) {
+    try {
+      loading.value = true;
+      pattern.value = await patternApi.loadPattern(path);
+      appStateStore.addOpenedPattern(pattern.value.info.title, path);
+    } catch (err) {
+      confirm.require({
+        header: "Error",
+        message: err as string,
+        icon: "pi pi-info-circle",
+        acceptLabel: "OK",
+        acceptProps: { outlined: true },
+        rejectLabel: "Cancel",
+        rejectProps: { severity: "secondary", outlined: true },
+      });
+    } finally {
+      loading.value = false;
+    }
+  }
 </script>

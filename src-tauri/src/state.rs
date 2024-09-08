@@ -1,12 +1,16 @@
-use crate::pattern::Pattern;
+use std::collections::HashMap;
+
+use crate::pattern::{Pattern, PatternKey};
 
 pub struct AppState {
-  pub pattern: Option<Pattern>,
+  pub patterns: HashMap<PatternKey, Pattern>,
 }
 
 impl AppState {
   pub fn new() -> Self {
-    Self { pattern: None }
+    Self {
+      patterns: HashMap::new(),
+    }
   }
 }
 

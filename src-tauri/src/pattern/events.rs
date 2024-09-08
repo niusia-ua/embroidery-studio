@@ -1,13 +1,20 @@
+use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager, Window};
 
-use serde::{Deserialize, Serialize};
-
-use super::{FullStitch, FullStitchKind, Line, Node, PartStitch, PartStitchKind};
+use super::{FullStitch, FullStitchKind, Line, Node, PartStitch, PartStitchKind, PatternKey};
 use crate::state::AppStateType;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct EventStitchPayload {
+  pattern_key: PatternKey,
+  #[serde(flatten)]
+  stitch: CreatedStitchPayload,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
-enum EventStitchPayload {
+enum CreatedStitchPayload {
   FullStitch(FullStitch),
   PartStitch(PartStitch),
   Line(Line),
@@ -30,11 +37,13 @@ pub fn setup_pattern_event_handlers(window: Window, app_handle: AppHandle) {
   window.clone().listen(EVENT_STITCH_CREATE, move |e| {
     let state = app_handle.state::<AppStateType>();
     let mut state = state.write().unwrap();
-    let pattern = state.pattern.as_mut().unwrap();
 
     let payload = serde_json::from_str::<EventStitchPayload>(e.payload().unwrap()).unwrap();
-    match payload {
-      EventStitchPayload::FullStitch(fullstitch) => match fullstitch.kind {
+    // This is safe because the event is only emitted when the pattern exists.
+    let pattern = state.patterns.get_mut(&payload.pattern_key).unwrap();
+
+    match payload.stitch {
+      CreatedStitchPayload::FullStitch(fullstitch) => match fullstitch.kind {
         FullStitchKind::Full => {
           emit_remove_partstitches(
             &window,
@@ -74,7 +83,7 @@ pub fn setup_pattern_event_handlers(window: Window, app_handle: AppHandle) {
           emit_remove_fullstitches(&window, conflicting_fullstitches);
         }
       },
-      EventStitchPayload::PartStitch(partstitch) => match partstitch.kind {
+      CreatedStitchPayload::PartStitch(partstitch) => match partstitch.kind {
         PartStitchKind::Half => {
           emit_remove_fullstitches(
             &window,
@@ -112,8 +121,8 @@ pub fn setup_pattern_event_handlers(window: Window, app_handle: AppHandle) {
           emit_remove_partstitches(&window, conflicting_partstitches);
         }
       },
-      EventStitchPayload::Line(line) => emit_remove_line(&window, pattern.lines.insert(line)),
-      EventStitchPayload::Node(node) => emit_remove_node(&window, pattern.nodes.insert(node)),
+      CreatedStitchPayload::Line(line) => emit_remove_line(&window, pattern.lines.insert(line)),
+      CreatedStitchPayload::Node(node) => emit_remove_node(&window, pattern.nodes.insert(node)),
     };
   });
 }

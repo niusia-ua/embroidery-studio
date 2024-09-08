@@ -9,12 +9,20 @@ mod xsd;
 
 #[tauri::command]
 pub fn load_pattern(file_path: PathBuf, state: tauri::State<AppStateType>) -> Result<Pattern> {
-  let pattern_format = PatternFormat::try_from(file_path.extension())?;
-  let pattern = match pattern_format {
-    PatternFormat::XSD => xsd::parse_pattern(file_path)?,
-    PatternFormat::OXS => oxs::parse_pattern(file_path)?,
+  let mut state = state.write().unwrap();
+  let pattern_key = PatternKey(file_path.clone());
+  let pattern = match state.patterns.get(&pattern_key) {
+    Some(pattern) => pattern.to_owned(),
+    None => {
+      let pattern_format = PatternFormat::try_from(file_path.extension())?;
+      let pattern = match pattern_format {
+        PatternFormat::XSD => xsd::parse_pattern(file_path)?,
+        PatternFormat::OXS => oxs::parse_pattern(file_path)?,
+      };
+      state.patterns.insert(pattern_key, pattern.clone());
+      pattern
+    }
   };
-  state.write().unwrap().pattern.replace(pattern.clone());
   Ok(pattern)
 }
 
@@ -43,6 +51,10 @@ impl TryFrom<Option<&OsStr>> for PatternFormat {
     }
   }
 }
+
+#[derive(Debug, Hash, PartialEq, Eq, Clone, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct PatternKey(PathBuf);
 
 #[derive(Debug, Clone, Serialize)]
 pub struct Pattern {

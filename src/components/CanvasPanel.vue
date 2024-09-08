@@ -19,7 +19,7 @@
     type StitchKind,
   } from "#/types/pattern";
   import { appWindow } from "@tauri-apps/api/window";
-  import { onMounted, ref } from "vue";
+  import { onMounted, ref, watch } from "vue";
 
   interface CanvasPanelProps {
     pattern: Pattern;
@@ -44,6 +44,24 @@
     canvasService.drawPattern(props.pattern);
   });
 
+  watch(
+    () => props.pattern,
+    (pattern) => canvasService.drawPattern(pattern),
+  );
+
+  interface EventStitchCreatePayload {
+    fullstitch?: FullStitch;
+    partstitch?: PartStitch;
+    line?: Line;
+    node?: Node;
+  }
+
+  function emitStitchCreated(payload: EventStitchCreatePayload) {
+    // The current pattern is always available here.
+    const patternKey = appStateStore.state.currentPattern!.key;
+    return appWindow.emit("pattern:stitch:create", { patternKey, ...payload });
+  }
+
   // A start point is needed to draw the lines.
   // An end point is needed to draw all the other kinds of stitches (in addition to lines).
   canvasService.onDraw(async (start, end, ctrl) => {
@@ -67,7 +85,7 @@
           palindex,
           kind,
         };
-        await appWindow.emit("pattern:stitch:create", { fullstitch });
+        await emitStitchCreated({ fullstitch });
         canvasService.drawFullStitch(fullstitch, palitem.color);
         break;
       }
@@ -85,7 +103,7 @@
           kind,
           direction,
         };
-        await appWindow.emit("pattern:stitch:create", { partstitch });
+        await emitStitchCreated({ partstitch });
         canvasService.drawPartStitch(partstitch, palitem.color);
         break;
       }
@@ -107,7 +125,7 @@
           palindex,
           kind,
         };
-        await appWindow.emit("pattern:stitch:create", { line });
+        await emitStitchCreated({ line });
         canvasService.drawLine(line, palitem.color);
         break;
       }
@@ -121,7 +139,7 @@
           kind,
           rotated: ctrl,
         };
-        await appWindow.emit("pattern:stitch:create", { node });
+        await emitStitchCreated({ node });
         canvasService.drawNode(node, palitem.color);
         break;
       }
