@@ -28,12 +28,21 @@
 
       <SplitterPanel :min-size="85" :size="85">
         <CanvasPanel v-if="pattern" :pattern="pattern" />
-        <template v-else>
-          <ProgressSpinner v-if="loading" class="absolute top-50 left-50" />
-          <Panel v-else header="No pattern loaded" class="w-3 border-none absolute top-50 left-50">
-            <p class="m-0">Open a pattern or create a new one to get started.</p>
-          </Panel>
-        </template>
+        <div v-else class="w-full h-full flex justify-content-center align-items-center relative">
+          <ProgressSpinner v-if="loading" />
+          <template v-else>
+            <Panel header="No pattern loaded" class="w-3 border-none">
+              <p class="m-0">Open a pattern or create a new one to get started.</p>
+            </Panel>
+
+            <!-- Credits -->
+            <div class="w-full absolute bottom-0">
+              <p class="my-2 text-xs text-center">
+                Developed with love in Ukraine | GNU General Public License v3.0 or later
+              </p>
+            </div>
+          </template>
+        </div>
       </SplitterPanel>
     </Splitter>
   </div>
