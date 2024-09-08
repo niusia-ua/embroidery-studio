@@ -2,6 +2,7 @@ import { PrimeVue } from "@primevue/core";
 import Aura from "@primevue/themes/aura";
 import { createPinia } from "pinia";
 import { createPersistedState } from "pinia-plugin-persistedstate";
+import ConfirmationService from "primevue/confirmationservice";
 import { createApp } from "vue";
 
 import "primeflex/primeflex.css";
@@ -18,5 +19,6 @@ app.use(pinia);
 app.use(PrimeVue, {
   theme: { preset: Aura },
 });
+app.use(ConfirmationService);
 
 app.mount("#app");

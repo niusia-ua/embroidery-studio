@@ -1,4 +1,5 @@
 <template>
+  <ConfirmDialog />
   <BlockUI :blocked="loading" full-screen />
   <div class="h-full flex flex-column">
     <Toolbar
@@ -42,12 +43,14 @@
   import { open } from "@tauri-apps/api/dialog";
   import { appWindow } from "@tauri-apps/api/window";
   import BlockUI from "primevue/blockui";
+  import ConfirmDialog from "primevue/confirmdialog";
   import type { MenuItem } from "primevue/menuitem";
   import Panel from "primevue/panel";
   import ProgressSpinner from "primevue/progressspinner";
   import Splitter from "primevue/splitter";
   import SplitterPanel from "primevue/splitterpanel";
   import Toolbar from "primevue/toolbar";
+  import { useConfirm } from "primevue/useconfirm";
   import { ref } from "vue";
   import { loadPattern } from "./api/pattern";
   import CanvasPanel from "./components/CanvasPanel.vue";
@@ -57,6 +60,11 @@
   import WindowControls from "./components/toolbar/WindowControls.vue";
   import type { Pattern } from "./types/pattern";
   import { studioDocumentDir } from "./utils/path";
+
+  const loading = ref(false);
+  const pattern = ref<Pattern>();
+
+  const confirm = useConfirm();
 
   const fileOptions: MenuItem = {
     label: "File",
@@ -77,9 +85,22 @@
             ],
           });
           if (file === null || Array.isArray(file)) return;
-          loading.value = true;
-          pattern.value = await loadPattern(file);
-          loading.value = false;
+          try {
+            loading.value = true;
+            pattern.value = await loadPattern(file);
+          } catch (err) {
+            confirm.require({
+              header: "Error",
+              message: err as string,
+              icon: "pi pi-info-circle",
+              acceptLabel: "OK",
+              acceptProps: { outlined: true },
+              rejectLabel: "Cancel",
+              rejectProps: { severity: "secondary", outlined: true },
+            });
+          } finally {
+            loading.value = false;
+          }
         },
       },
       {
@@ -101,7 +122,4 @@
     ],
   };
   const menuOptions = ref<MenuItem[]>([fileOptions]);
-
-  const loading = ref(false);
-  const pattern = ref<Pattern>();
 </script>
