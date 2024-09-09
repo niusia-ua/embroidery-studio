@@ -1,6 +1,6 @@
 use std::{fs, path::Path};
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 use super::*;
 
@@ -137,7 +137,7 @@ pub fn parse_pattern(path: impl AsRef<Path>) -> Result<Pattern> {
   })
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 struct OxsPattern {
   properties: OxsPatternProperties,
   palette: OxsPalette,
@@ -148,7 +148,7 @@ struct OxsPattern {
   ornaments: OxsOrnaments,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 struct OxsPatternProperties {
   #[serde(rename = "@chartwidth")]
   width: u16,
@@ -170,7 +170,7 @@ struct OxsPatternProperties {
   stitches_per_inch_y: u16,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 struct OxsPalette {
   #[serde(rename = "palette_item")]
   items: Vec<OxsPaletteItem>,
@@ -182,7 +182,7 @@ impl AsRef<Vec<OxsPaletteItem>> for OxsPalette {
   }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 struct OxsPaletteItem {
   #[serde(rename = "@number")]
   number: String,
@@ -192,7 +192,7 @@ struct OxsPaletteItem {
   color: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 struct OxsFullStitches {
   #[serde(rename = "stitch")]
   items: Vec<OxsFullStitch>,
@@ -204,7 +204,7 @@ impl AsRef<Vec<OxsFullStitch>> for OxsFullStitches {
   }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 struct OxsFullStitch {
   #[serde(rename = "@x")]
   x: f64,
@@ -214,7 +214,7 @@ struct OxsFullStitch {
   palindex: u8,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 struct OxsPartStitches {
   #[serde(rename = "partstitch")]
   items: Vec<OxsPartStitch>,
@@ -226,7 +226,7 @@ impl AsRef<Vec<OxsPartStitch>> for OxsPartStitches {
   }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 struct OxsPartStitch {
   #[serde(rename = "@x")]
   x: f64,
@@ -240,7 +240,7 @@ struct OxsPartStitch {
   direction: u8,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 struct OxsBackStitches {
   #[serde(rename = "backstitch")]
   items: Vec<OxsBackStitch>,
@@ -252,7 +252,7 @@ impl AsRef<Vec<OxsBackStitch>> for OxsBackStitches {
   }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 struct OxsBackStitch {
   #[serde(rename = "@x1")]
   x1: f64,
@@ -264,11 +264,9 @@ struct OxsBackStitch {
   y2: f64,
   #[serde(rename = "@palindex")]
   palindex: u8,
-  #[serde(rename = "@objecttype")]
-  kind: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 struct OxsOrnaments {
   #[serde(rename = "object")]
   items: Vec<OxsOrnament>,
@@ -280,7 +278,7 @@ impl AsRef<Vec<OxsOrnament>> for OxsOrnaments {
   }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 struct OxsOrnament {
   #[serde(rename = "@x1")]
   x: f64,

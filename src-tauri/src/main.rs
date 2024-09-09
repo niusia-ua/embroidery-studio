@@ -40,7 +40,8 @@ fn main() {
     .manage(RwLock::new(state::AppState::new()))
     .invoke_handler(tauri::generate_handler![
       pattern::load_pattern,
-      pattern::create_pattern
+      pattern::create_pattern,
+      pattern::save_pattern,
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");

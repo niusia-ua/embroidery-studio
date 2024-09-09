@@ -59,7 +59,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { open } from "@tauri-apps/api/dialog";
+  import { open, save } from "@tauri-apps/api/dialog";
   import { appWindow } from "@tauri-apps/api/window";
   import BlockUI from "primevue/blockui";
   import ConfirmDialog from "primevue/confirmdialog";
@@ -103,7 +103,7 @@
             filters: [
               {
                 name: "Cross Stitch Pattern",
-                extensions: ["xsd", "oxs", "xml"],
+                extensions: ["xsd", "oxs", "xml", "json"],
               },
             ],
           });
@@ -117,12 +117,23 @@
         command: createPattern,
       },
       {
-        label: "Save",
-        icon: "pi pi-save",
-      },
-      {
         label: "Save As",
         icon: "pi pi-copy",
+        command: async () => {
+          const currentPattern = appStateStore.state.currentPattern;
+          if (!currentPattern) return;
+          const path = await save({
+            defaultPath: await studioDocumentDir(),
+            filters: [
+              {
+                name: "Cross Stitch Pattern",
+                extensions: ["json"],
+              },
+            ],
+          });
+          if (path === null) return;
+          await savePattern(currentPattern.key, path);
+        },
       },
       {
         label: "Close",
@@ -164,5 +175,24 @@
     pattern.value = pat;
     appStateStore.addOpenedPattern(pattern.value.info.title, key);
     loading.value = false;
+  }
+
+  async function savePattern(key: string, path: string) {
+    try {
+      loading.value = true;
+      await patternApi.savePattern(key, path);
+    } catch (err) {
+      confirm.require({
+        header: "Error",
+        message: err as string,
+        icon: "pi pi-info-circle",
+        acceptLabel: "OK",
+        acceptProps: { outlined: true },
+        rejectLabel: "Cancel",
+        rejectProps: { severity: "secondary", outlined: true },
+      });
+    } finally {
+      loading.value = false;
+    }
   }
 </script>

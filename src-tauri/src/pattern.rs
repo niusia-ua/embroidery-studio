@@ -1,5 +1,6 @@
-use serde::{Deserialize, Serialize, Serializer};
-use std::{collections::BTreeMap, ffi::OsStr, path::PathBuf, time::Instant};
+use std::{collections::BTreeMap, ffi::OsStr, fs, path::PathBuf, time::Instant};
+
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::{error::*, state::AppStateType};
 
@@ -18,6 +19,10 @@ pub fn load_pattern(file_path: PathBuf, state: tauri::State<AppStateType>) -> Re
       let pattern = match pattern_format {
         PatternFormat::XSD => xsd::parse_pattern(file_path)?,
         PatternFormat::OXS => oxs::parse_pattern(file_path)?,
+        PatternFormat::JSON => {
+          let content = std::fs::read_to_string(file_path)?;
+          serde_json::from_str(&content).unwrap()
+        }
       };
       state.patterns.insert(pattern_key, pattern.clone());
       pattern
@@ -29,16 +34,30 @@ pub fn load_pattern(file_path: PathBuf, state: tauri::State<AppStateType>) -> Re
 #[tauri::command]
 pub fn create_pattern(state: tauri::State<AppStateType>) -> (PatternKey, Pattern) {
   let mut state = state.write().unwrap();
-  let file_path = PathBuf::from(format!("Untitled-{:?}.oxs", Instant::now()));
+  let file_path = PathBuf::from(format!("Untitled-{:?}.json", Instant::now()));
   let pattern_key = PatternKey(file_path);
   let pattern = Pattern::default();
   state.patterns.insert(pattern_key.clone(), pattern.clone());
   (pattern_key, pattern)
 }
 
+// TODO: Use a custom or different pattern format, but not the JSON.
+#[tauri::command]
+pub fn save_pattern(
+  pattern_key: PatternKey,
+  file_path: PathBuf,
+  state: tauri::State<AppStateType>,
+) -> Result<()> {
+  let state = state.read().unwrap();
+  let pattern = state.patterns.get(&pattern_key).unwrap();
+  fs::write(file_path, serde_json::to_string(pattern).unwrap())?;
+  Ok(())
+}
+
 enum PatternFormat {
   XSD,
   OXS,
+  JSON,
 }
 
 impl TryFrom<Option<&OsStr>> for PatternFormat {
@@ -50,6 +69,7 @@ impl TryFrom<Option<&OsStr>> for PatternFormat {
       match extension.to_lowercase().as_str() {
         "xsd" => Ok(Self::XSD),
         "oxs" | "xml" => Ok(Self::OXS),
+        "json" => Ok(Self::JSON),
         _ => Err(Error::UnsupportedPatternType {
           extension: extension.to_uppercase(),
         }),
@@ -66,7 +86,7 @@ impl TryFrom<Option<&OsStr>> for PatternFormat {
 #[serde(transparent)]
 pub struct PatternKey(PathBuf);
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Pattern {
   properties: PatternProperties,
   info: PatternInfo,
@@ -122,13 +142,13 @@ impl Default for Pattern {
   }
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 struct PatternProperties {
   width: u16,
   height: u16,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 struct PatternInfo {
   title: String,
   author: String,
@@ -136,7 +156,7 @@ struct PatternInfo {
   description: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 struct PaletteItem {
   brand: String,
   number: String,
@@ -146,14 +166,14 @@ struct PaletteItem {
   blends: Option<Vec<Blend>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 struct Blend {
   brand: String,
   number: String,
   strands: u8,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 struct Fabric {
   #[serde(rename = "stitchesPerInch")]
   stitches_per_inch: (u16, u16),
@@ -181,6 +201,10 @@ impl<T> Stitches<T> {
   pub fn len(&self) -> usize {
     self.inner.len()
   }
+
+  pub fn iter(&self) -> impl Iterator<Item = &T> {
+    self.inner.values()
+  }
 }
 
 impl<T: Key> Stitches<T> {
@@ -202,6 +226,15 @@ impl<T: Clone + Serialize> Serialize for Stitches<T> {
   fn serialize<S: Serializer>(&self, ser: S) -> Result<S::Ok, S::Error> {
     let stitches: Vec<T> = self.inner.values().cloned().collect();
     serde::Serialize::serialize(&stitches, ser)
+  }
+}
+
+impl<'de, T: Key + Deserialize<'de>> Deserialize<'de> for Stitches<T> {
+  fn deserialize<D: Deserializer<'de>>(de: D) -> Result<Self, D::Error> {
+    let values: Vec<T> = Deserialize::deserialize(de)?;
+    Ok(Self {
+      inner: BTreeMap::from_iter(values.into_iter().map(|item| (item.key(), item))),
+    })
   }
 }
 
