@@ -114,6 +114,7 @@
       {
         label: "Create",
         icon: "pi pi-file-plus",
+        command: createPattern,
       },
       {
         label: "Save",
@@ -154,5 +155,14 @@
     } finally {
       loading.value = false;
     }
+  }
+
+  // TODO: Create a new pattern with a user defined data (properties, info, fabric, etc.).
+  async function createPattern() {
+    loading.value = true;
+    const [key, pat] = await patternApi.createPattern();
+    pattern.value = pat;
+    appStateStore.addOpenedPattern(pattern.value.info.title, key);
+    loading.value = false;
   }
 </script>

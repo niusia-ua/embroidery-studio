@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize, Serializer};
-use std::{collections::BTreeMap, ffi::OsStr, path::PathBuf};
+use std::{collections::BTreeMap, ffi::OsStr, path::PathBuf, time::Instant};
 
 use crate::{error::*, state::AppStateType};
 
@@ -24,6 +24,16 @@ pub fn load_pattern(file_path: PathBuf, state: tauri::State<AppStateType>) -> Re
     }
   };
   Ok(pattern)
+}
+
+#[tauri::command]
+pub fn create_pattern(state: tauri::State<AppStateType>) -> (PatternKey, Pattern) {
+  let mut state = state.write().unwrap();
+  let file_path = PathBuf::from(format!("Untitled-{:?}.oxs", Instant::now()));
+  let pattern_key = PatternKey(file_path);
+  let pattern = Pattern::default();
+  state.patterns.insert(pattern_key.clone(), pattern.clone());
+  (pattern_key, pattern)
 }
 
 enum PatternFormat {
@@ -66,6 +76,50 @@ pub struct Pattern {
   partstitches: Stitches<PartStitch>,
   nodes: Stitches<Node>,
   lines: Stitches<Line>,
+}
+
+// TODO: Load the default values from a bundlled pattern file.
+impl Default for Pattern {
+  fn default() -> Self {
+    Self {
+      properties: PatternProperties {
+        width: 100,
+        height: 100,
+      },
+      info: PatternInfo {
+        title: "Untitled".to_string(),
+        author: "".to_string(),
+        copyright: "".to_string(),
+        description: "".to_string(),
+      },
+      palette: Vec::from([
+        PaletteItem {
+          brand: "DMC".to_string(),
+          number: "310".to_string(),
+          name: "Black".to_string(),
+          color: "000000".to_string(),
+          blends: None,
+        },
+        PaletteItem {
+          brand: "DMC".to_string(),
+          number: "349".to_string(),
+          name: "Coral-DK".to_string(),
+          color: "C23131".to_string(),
+          blends: None,
+        },
+      ]),
+      fabric: Fabric {
+        stitches_per_inch: (14, 14),
+        kind: "Aida".to_string(),
+        name: "White".to_string(),
+        color: "FFFFFF".to_string(),
+      },
+      fullstitches: Stitches::new(),
+      partstitches: Stitches::new(),
+      nodes: Stitches::new(),
+      lines: Stitches::new(),
+    }
+  }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]

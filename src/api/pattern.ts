@@ -1,6 +1,5 @@
 import type { Pattern } from "#/types/pattern";
 import { invoke } from "@tauri-apps/api/tauri";
 
-export function loadPattern(filePath: string) {
-  return invoke<Pattern>("load_pattern", { filePath });
-}
+export const loadPattern = (filePath: string) => invoke<Pattern>("load_pattern", { filePath });
+export const createPattern = () => invoke<[string, Pattern]>("create_pattern");
