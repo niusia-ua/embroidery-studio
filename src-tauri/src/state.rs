@@ -7,6 +7,7 @@ pub struct AppState {
 }
 
 impl AppState {
+  #[allow(clippy::new_without_default)]
   pub fn new() -> Self {
     Self {
       patterns: HashMap::new(),

@@ -216,8 +216,7 @@ fn reads_stitches() {
     palette_size: 7,
   };
   let (loaded_fullstitches, loaded_partstitches) = read_stitches(&mut cursor, &pattern_properties).unwrap();
-  let expected_fullstitches = vec![
-    FullStitch {
+  let expected_fullstitches = [FullStitch {
       x: 0.0,
       y: 0.0,
       palindex: 1,
@@ -264,14 +263,12 @@ fn reads_stitches() {
       y: 9.0,
       palindex: 0,
       kind: FullStitchKind::Full,
-    },
-  ];
+    }];
   for (loaded, expected) in loaded_fullstitches.iter().zip(expected_fullstitches.iter()) {
     assert_eq!(loaded, expected);
   }
 
-  let expected_partstitches = vec![
-    PartStitch {
+  let expected_partstitches = [PartStitch {
       x: 1.5,
       y: 1.5,
       palindex: 4,
@@ -326,8 +323,7 @@ fn reads_stitches() {
       palindex: 5,
       direction: PartStitchDirection::Backward,
       kind: PartStitchKind::Half,
-    },
-  ];
+    }];
   for (loaded, expected) in loaded_partstitches.iter().zip(expected_partstitches.iter()) {
     assert_eq!(loaded, expected);
   }
@@ -338,8 +334,7 @@ fn reads_joints() {
   let joints_count = 8;
   let mut cursor = load_fixture("test_joints_data");
   let (loaded_nodes, loaded_lines) = read_joints(&mut cursor, joints_count).unwrap();
-  let expected_nodes = vec![
-    Node {
+  let expected_nodes = [Node {
       x: 3.0,
       y: 3.0,
       rotated: false,
@@ -359,14 +354,12 @@ fn reads_joints() {
       rotated: true,
       palindex: 3,
       kind: NodeKind::Bead,
-    },
-  ];
+    }];
   for (loaded, expected) in loaded_nodes.iter().zip(expected_nodes.iter()) {
     assert_eq!(loaded, expected);
   }
 
-  let expected_lines = vec![
-    Line {
+  let expected_lines = [Line {
       x: (1.0, 2.0),
       y: (1.0, 1.0),
       palindex: 1,
@@ -395,8 +388,7 @@ fn reads_joints() {
       y: (2.0, 2.0),
       palindex: 0,
       kind: LineKind::Straight,
-    },
-  ];
+    }];
   for (loaded, expected) in loaded_lines.iter().zip(expected_lines.iter()) {
     assert_eq!(loaded, expected);
   }

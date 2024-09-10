@@ -157,7 +157,7 @@ impl XsdRead for Cursor {
   fn read_hex_color(&mut self) -> Result<String> {
     let mut buf: [u8; 3] = [0; 3];
     self.read_exact(&mut buf)?;
-    Ok(hex::encode_upper(&buf))
+    Ok(hex::encode_upper(buf))
   }
 
   fn read_fractional_coors(&mut self) -> Result<(f64, f64)> {
@@ -316,7 +316,7 @@ fn read_blend_item(cursor: &mut Cursor) -> Result<Blend> {
 /// Reads the number of strands for each blend color.
 /// Used only in the `read_blends` function.
 /// The function modifies the `blends` vector in place.
-fn read_blend_strands(cursor: &mut Cursor, blends: &mut Vec<Blend>) -> Result<()> {
+fn read_blend_strands(cursor: &mut Cursor, blends: &mut [Blend]) -> Result<()> {
   for i in 0..XSD_BLEND_COLORS_NUMBER {
     let strands = cursor.read_u8()?;
     if let Some(blend_color) = blends.get_mut(i) {
@@ -436,8 +436,8 @@ fn read_stitches_data(cursor: &mut Cursor, total_stitches_count: usize) -> Resul
 /// Reads the random numbers that are necessarry for decoding the stitches data.
 fn read_xsd_random_numbers(cursor: &mut Cursor) -> Result<XsdRandomNumbers> {
   let mut xsd_random_numbers = [0; 4];
-  for i in 0..4 {
-    xsd_random_numbers[i] = cursor.read_i32::<LittleEndian>()?;
+  for number in &mut xsd_random_numbers {
+    *number = cursor.read_i32::<LittleEndian>()?;
   }
   Ok(xsd_random_numbers)
 }
@@ -494,8 +494,8 @@ fn map_stitches_data_into_stitches(
   let mut fullstitches = Vec::new();
   let mut partstitches = Vec::new();
 
-  for i in 0..stitches_data.len() {
-    let stitch_buffer = stitches_data[i].to_le_bytes();
+  for (i, stitch_data) in stitches_data.iter().enumerate() {
+    let stitch_buffer = stitch_data.to_le_bytes();
 
     // Empty cell.
     if stitch_buffer[3] == 15 {
@@ -637,7 +637,7 @@ fn read_joints(cursor: &mut Cursor, joints_count: u16) -> Result<(Vec<Node>, Vec
         cursor.seek(SeekFrom::Current(2))?;
         let (x1, y1) = cursor.read_fractional_coors()?;
         let (x2, y2) = cursor.read_fractional_coors()?;
-        let palindex = cursor.read_u8()?.into();
+        let palindex = cursor.read_u8()?;
         cursor.seek(SeekFrom::Current(1))?;
         let kind = if joint_kind == XsdJointKind::Back {
           LineKind::Back
@@ -667,10 +667,7 @@ fn read_joints(cursor: &mut Cursor, joints_count: u16) -> Result<(Vec<Node>, Vec
         let (x, y) = cursor.read_fractional_coors()?;
         let palindex = cursor.read_u8()?;
         cursor.seek(SeekFrom::Current(1))?;
-        let rotated = match cursor.read_u16::<LittleEndian>()? {
-          90 | 270 => true,
-          _ => false,
-        };
+        let rotated = matches!(cursor.read_u16::<LittleEndian>()?, 90 | 270);
         nodes.push(Node {
           x,
           y,

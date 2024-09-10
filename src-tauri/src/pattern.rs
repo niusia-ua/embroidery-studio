@@ -1,3 +1,5 @@
+#!(allow(clippy::len_without_is_empty))
+
 use std::{collections::BTreeMap, ffi::OsStr, fs, path::PathBuf, time::Instant};
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -17,9 +19,9 @@ pub fn load_pattern(file_path: PathBuf, state: tauri::State<AppStateType>) -> Re
     None => {
       let pattern_format = PatternFormat::try_from(file_path.extension())?;
       let pattern = match pattern_format {
-        PatternFormat::XSD => xsd::parse_pattern(file_path)?,
-        PatternFormat::OXS => oxs::parse_pattern(file_path)?,
-        PatternFormat::JSON => {
+        PatternFormat::Xsd => xsd::parse_pattern(file_path)?,
+        PatternFormat::Oxs => oxs::parse_pattern(file_path)?,
+        PatternFormat::Json => {
           let content = std::fs::read_to_string(file_path)?;
           serde_json::from_str(&content).unwrap()
         }
@@ -51,14 +53,14 @@ pub fn save_pattern(pattern_key: PatternKey, file_path: PathBuf, state: tauri::S
 }
 
 #[tauri::command]
-pub fn close_pattern(pattern_key: PatternKey, state: tauri::State<AppStateType>) -> () {
+pub fn close_pattern(pattern_key: PatternKey, state: tauri::State<AppStateType>) {
   state.write().unwrap().patterns.remove(&pattern_key);
 }
 
 enum PatternFormat {
-  XSD,
-  OXS,
-  JSON,
+  Xsd,
+  Oxs,
+  Json,
 }
 
 impl TryFrom<Option<&OsStr>> for PatternFormat {
@@ -68,9 +70,9 @@ impl TryFrom<Option<&OsStr>> for PatternFormat {
     if let Some(extension) = value {
       let extension = extension.to_str().unwrap();
       match extension.to_lowercase().as_str() {
-        "xsd" => Ok(Self::XSD),
-        "oxs" | "xml" => Ok(Self::OXS),
-        "json" => Ok(Self::JSON),
+        "xsd" => Ok(Self::Xsd),
+        "oxs" | "xml" => Ok(Self::Oxs),
+        "json" => Ok(Self::Json),
         _ => Err(Error::UnsupportedPatternType {
           extension: extension.to_uppercase(),
         }),
@@ -193,10 +195,12 @@ pub struct Stitches<T> {
 }
 
 impl<T> Stitches<T> {
+  #[allow(clippy::new_without_default)]
   pub fn new() -> Self {
     Self { inner: BTreeMap::new() }
   }
 
+  #[cfg(test)]
   pub fn len(&self) -> usize {
     self.inner.len()
   }
