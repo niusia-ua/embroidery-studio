@@ -16,7 +16,5 @@ export default defineConfig({
     strictPort: true,
     watch: { ignored: ["src-tauri/**"] },
   },
-  test: {
-    environment: "jsdom",
-  },
+  test: { environment: "jsdom" },
 });

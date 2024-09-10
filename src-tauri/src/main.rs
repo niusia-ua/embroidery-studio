@@ -19,16 +19,10 @@ fn main() {
         let studio_dir = document_dir.join("Embroidery Studio");
         if !studio_dir.exists() {
           fs::create_dir(&studio_dir)?;
-          let resource_path = app
-            .path_resolver()
-            .resolve_resource("resources/patterns")
-            .unwrap();
+          let resource_path = app.path_resolver().resolve_resource("resources/patterns").unwrap();
           for pattern in fs::read_dir(resource_path)? {
             let pattern = pattern?.path();
-            fs::copy(
-              pattern.clone(),
-              studio_dir.join(pattern.file_name().unwrap()),
-            )?;
+            fs::copy(pattern.clone(), studio_dir.join(pattern.file_name().unwrap()))?;
           }
         }
       }

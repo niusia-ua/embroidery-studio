@@ -13,9 +13,9 @@
 </template>
 
 <script setup lang="ts">
+  import { ref } from "vue";
   import Button, { type ButtonProps } from "primevue/button";
   import TieredMenu, { type TieredMenuProps } from "primevue/tieredmenu";
-  import { ref } from "vue";
 
   interface DropdownTieredMenuProps {
     id: string;

@@ -7,10 +7,7 @@ mod xsd_read_tests {
   #[test]
   fn reads_cstring() {
     let utf8_buf = vec![0x57, 0x68, 0x69, 0x74, 0x65, 0x00, 0x00, 0x00];
-    assert_eq!(
-      Cursor::new(utf8_buf).read_cstring(8).unwrap(),
-      String::from("White")
-    );
+    assert_eq!(Cursor::new(utf8_buf).read_cstring(8).unwrap(), String::from("White"));
 
     let cp1251_buf = vec![0xE3, 0xEE, 0xEB, 0xF3, 0xE1, 0xEE, 0xE9, 0x00];
     assert_eq!(
@@ -65,23 +62,17 @@ fn load_fixture(name: &str) -> Cursor {
 #[test]
 fn reads_signature() {
   let buf: Vec<u8> = vec![0x10, 0x05];
-  assert_eq!(
-    read_signature(&mut Cursor::new(buf)).unwrap(),
-    XSD_VALID_SIGNATURE
-  );
+  assert_eq!(read_signature(&mut Cursor::new(buf)).unwrap(), XSD_VALID_SIGNATURE);
 
   let buf = vec![0x00, 0x00];
-  assert_ne!(
-    read_signature(&mut Cursor::new(buf)).unwrap(),
-    XSD_VALID_SIGNATURE
-  );
+  assert_ne!(read_signature(&mut Cursor::new(buf)).unwrap(), XSD_VALID_SIGNATURE);
 }
 
 #[test]
 fn reads_pattern_properties() {
   let buf = vec![
-    0x64, 0x00, 0x64, 0x00, 0xA6, 0x01, 0x00, 0x00, 0x89, 0x03, 0x0E, 0x00, 0x0E, 0x00, 0xFF, 0xFF,
-    0xFF, 0xFF, 0x00, 0x16, 0x4B, 0x00,
+    0x64, 0x00, 0x64, 0x00, 0xA6, 0x01, 0x00, 0x00, 0x89, 0x03, 0x0E, 0x00, 0x0E, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00,
+    0x16, 0x4B, 0x00,
   ];
   let loaded = read_pattern_properties(&mut Cursor::new(buf)).unwrap();
   let expected = XsdPatternProperties {
@@ -147,9 +138,7 @@ fn reads_palette() {
 
 #[test]
 fn reads_blend() {
-  let buf = vec![
-    0x00, 0x33, 0x31, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  ];
+  let buf = vec![0x00, 0x33, 0x31, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
   let loaded = read_blend_item(&mut Cursor::new(buf)).unwrap();
   let expected = Blend {
     brand: String::from("DMC"),
@@ -226,8 +215,7 @@ fn reads_stitches() {
     stitches_per_inch: (14, 14),
     palette_size: 7,
   };
-  let (loaded_fullstitches, loaded_partstitches) =
-    read_stitches(&mut cursor, &pattern_properties).unwrap();
+  let (loaded_fullstitches, loaded_partstitches) = read_stitches(&mut cursor, &pattern_properties).unwrap();
   let expected_fullstitches = vec![
     FullStitch {
       x: 0.0,
@@ -422,13 +410,7 @@ fn parses_xsd_pattern() {
 
   let pattern = pattern.unwrap();
 
-  assert_eq!(
-    pattern.properties,
-    PatternProperties {
-      width: 69,
-      height: 73,
-    }
-  );
+  assert_eq!(pattern.properties, PatternProperties { width: 69, height: 73 });
 
   assert_eq!(
     pattern.info,

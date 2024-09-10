@@ -148,10 +148,7 @@ impl XsdRead for Cursor {
       Ok(str) => String::from(str),
 
       // The string is in CP1251 (Russian).
-      Err(_) => encoding_rs::WINDOWS_1251
-        .decode(cstr.to_bytes())
-        .0
-        .to_string(),
+      Err(_) => encoding_rs::WINDOWS_1251.decode(cstr.to_bytes()).0.to_string(),
     };
 
     Ok(string)
@@ -241,10 +238,7 @@ fn read_pattern_properties(cursor: &mut Cursor) -> Result<XsdPatternProperties> 
   let height = cursor.read_u16::<LittleEndian>()?;
   let small_stitches_count = cursor.read_u32::<LittleEndian>()?;
   let joints_count = cursor.read_u16::<LittleEndian>()?;
-  let stitches_per_inch = (
-    cursor.read_u16::<LittleEndian>()?,
-    cursor.read_u16::<LittleEndian>()?,
-  );
+  let stitches_per_inch = (cursor.read_u16::<LittleEndian>()?, cursor.read_u16::<LittleEndian>()?);
   cursor.seek(SeekFrom::Current(6))?;
   let palette_size: usize = cursor.read_u16::<LittleEndian>()?.into();
   Ok(XsdPatternProperties {
@@ -377,8 +371,7 @@ fn read_stitches(
   cursor: &mut Cursor,
   xsd_pattern_properties: &XsdPatternProperties,
 ) -> Result<(Vec<FullStitch>, Vec<PartStitch>)> {
-  let total_stitches_count =
-    ((xsd_pattern_properties.width as u64) * (xsd_pattern_properties.height as u64)) as usize;
+  let total_stitches_count = ((xsd_pattern_properties.width as u64) * (xsd_pattern_properties.height as u64)) as usize;
   let small_stitches_count = xsd_pattern_properties.small_stitches_count as usize;
   let stitches_data = read_stitches_data(cursor, total_stitches_count)?;
   let small_stitch_buffers = read_small_stitch_buffers(cursor, small_stitches_count)?;
@@ -450,9 +443,7 @@ fn read_xsd_random_numbers(cursor: &mut Cursor) -> Result<XsdRandomNumbers> {
 }
 
 /// Reproduces the decoding values that are used for decoding the stitches data.
-fn reproduce_decoding_values(
-  xsd_random_numbers: &XsdRandomNumbers,
-) -> Result<(i32, XsdDecodingNumbers)> {
+fn reproduce_decoding_values(xsd_random_numbers: &XsdRandomNumbers) -> Result<(i32, XsdDecodingNumbers)> {
   let val1 = xsd_random_numbers[1].to_le_bytes()[1] as i32;
   let val2 = xsd_random_numbers[0] << 8;
   let val3 = (val2 | val1) << 8;
@@ -484,10 +475,7 @@ fn reproduce_decoding_values(
 }
 
 /// Reads the small stitch buffers that are used containe the small stitches data.
-fn read_small_stitch_buffers(
-  cursor: &mut Cursor,
-  small_stitches_count: usize,
-) -> Result<Vec<SmallStitchBuffer>> {
+fn read_small_stitch_buffers(cursor: &mut Cursor, small_stitches_count: usize) -> Result<Vec<SmallStitchBuffer>> {
   let mut small_stitch_buffers = Vec::with_capacity(small_stitches_count);
   for _ in 0..small_stitches_count {
     let mut buf = [0; 10];
@@ -546,9 +534,9 @@ fn map_stitches_data_into_stitches(
       if small_stitch_buffer[significant_byte_index] & bitand_arg != 0 {
         let (x, y) = calc_small_stitch_coors(x, y, &kind);
         let direction = match kind {
-          XsdSmallStitchKind::HalfTop
-          | XsdSmallStitchKind::QuarterTopLeft
-          | XsdSmallStitchKind::QuarterBottomRight => PartStitchDirection::Backward,
+          XsdSmallStitchKind::HalfTop | XsdSmallStitchKind::QuarterTopLeft | XsdSmallStitchKind::QuarterBottomRight => {
+            PartStitchDirection::Backward
+          }
           _ => PartStitchDirection::Forward,
         };
         let kind = match kind {
@@ -577,9 +565,7 @@ fn calc_small_stitch_coors(x: f64, y: f64, kind: &XsdSmallStitchKind) -> (f64, f
     XsdSmallStitchKind::QuarterTopLeft | XsdSmallStitchKind::PetiteTopLeft => (x, y),
     XsdSmallStitchKind::QuarterTopRight | XsdSmallStitchKind::PetiteTopRight => (x + 0.5, y),
     XsdSmallStitchKind::QuarterBottomLeft | XsdSmallStitchKind::PetiteBottomLeft => (x, y + 0.5),
-    XsdSmallStitchKind::QuarterBottomRight | XsdSmallStitchKind::PetiteBottomRight => {
-      (x + 0.5, y + 0.5)
-    }
+    XsdSmallStitchKind::QuarterBottomRight | XsdSmallStitchKind::PetiteBottomRight => (x + 0.5, y + 0.5),
     _ => (x, y),
   }
 }
@@ -602,9 +588,7 @@ fn skip_special_stitch_models(cursor: &mut Cursor) -> Result<()> {
       continue;
     }
 
-    cursor.seek(SeekFrom::Current(
-      (XSD_SPECIAL_STITCH_NAME_LENGTH * 2 + 2) as i64,
-    ))?;
+    cursor.seek(SeekFrom::Current((XSD_SPECIAL_STITCH_NAME_LENGTH * 2 + 2) as i64))?;
 
     for _ in 0..3 {
       cursor.seek(SeekFrom::Current(10))?;

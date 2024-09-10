@@ -1,26 +1,9 @@
-import {
-  FullStitchKind,
-  PartStitchDirection,
-  PartStitchKind,
-  type FullStitch,
-  type Line,
-  type Node,
-  type PartStitch,
-  type Pattern,
-  type PatternProperties,
-} from "#/types/pattern";
-import type { GridSettings } from "#/types/view";
-import { Simple as SimpleCulling } from "pixi-cull";
+import { Application, Container, Graphics, LINE_CAP, Point, Polygon, type ColorSource } from "pixi.js";
 import { Viewport } from "pixi-viewport";
-import {
-  Application,
-  Container,
-  Graphics,
-  LINE_CAP,
-  Point,
-  Polygon,
-  type ColorSource,
-} from "pixi.js";
+import { Simple as SimpleCulling } from "pixi-cull";
+import { FullStitchKind, PartStitchDirection, PartStitchKind } from "#/types/pattern";
+import type { FullStitch, Line, Node, PartStitch, Pattern, PatternProperties } from "#/types/pattern";
+import type { GridSettings } from "#/types/view";
 
 const GRID_SETTINGS: GridSettings = {
   majorLinesEveryStitches: 10,

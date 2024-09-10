@@ -83,14 +83,14 @@
 </template>
 
 <script setup lang="ts">
-  import { useAppStateStore } from "#/stores/state";
-  import type { Blend, PaletteItem } from "#/types/pattern";
+  import { reactive, ref } from "vue";
   import Button from "primevue/button";
   import Checkbox from "primevue/checkbox";
   import Listbox from "primevue/listbox";
   import Popover from "primevue/popover";
   import ToggleSwitch from "primevue/toggleswitch";
-  import { reactive, ref } from "vue";
+  import { useAppStateStore } from "#/stores/state";
+  import type { Blend, PaletteItem } from "#/types/pattern";
 
   interface PalettePanelProps {
     palette?: PaletteItem[];

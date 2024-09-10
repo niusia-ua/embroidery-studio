@@ -1,6 +1,7 @@
-import { FullStitchKind, type PaletteItem, type StitchKind } from "#/types/pattern";
-import { defineStore } from "pinia";
 import { reactive } from "vue";
+import { defineStore } from "pinia";
+import { FullStitchKind } from "#/types/pattern";
+import type { PaletteItem, StitchKind } from "#/types/pattern";
 
 interface OpenedPattern {
   title: string;
@@ -29,9 +30,7 @@ export const useAppStateStore = defineStore("embroidery-studio-state", () => {
   function addOpenedPattern(title: string, key: string) {
     if (!state.openedPatterns) state.openedPatterns = [];
     const openedPattern: OpenedPattern = { title, key };
-    if (state.openedPatterns.findIndex((p) => p.key === key) < 0) {
-      state.openedPatterns.push(openedPattern);
-    }
+    if (state.openedPatterns.findIndex((p) => p.key === key) < 0) state.openedPatterns.push(openedPattern);
     state.currentPattern = openedPattern;
   }
 

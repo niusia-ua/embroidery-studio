@@ -9,10 +9,10 @@
 </template>
 
 <script setup lang="ts">
+  import { ref } from "vue";
+  import Select from "primevue/select";
   import { useAppStateStore } from "#/stores/state";
   import { FullStitchKind, LineKind, NodeKind, PartStitchKind } from "#/types/pattern";
-  import Select from "primevue/select";
-  import { ref } from "vue";
 
   const appState = useAppStateStore();
   const tools = ref([

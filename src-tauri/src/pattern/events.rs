@@ -47,14 +47,10 @@ pub fn setup_pattern_event_handlers(window: Window, app_handle: AppHandle) {
         FullStitchKind::Full => {
           emit_remove_partstitches(
             &window,
-            pattern
-              .partstitches
-              .find_conflicts_with_full_stitch(&fullstitch),
+            pattern.partstitches.find_conflicts_with_full_stitch(&fullstitch),
           );
 
-          let mut conflicting_fullstitches = pattern
-            .fullstitches
-            .find_conflicts_with_full_stitch(&fullstitch);
+          let mut conflicting_fullstitches = pattern.fullstitches.find_conflicts_with_full_stitch(&fullstitch);
           if let Some(fullstitch) = pattern.fullstitches.insert(fullstitch) {
             if fullstitch.kind == FullStitchKind::Full {
               conflicting_fullstitches.push(fullstitch);
@@ -65,16 +61,11 @@ pub fn setup_pattern_event_handlers(window: Window, app_handle: AppHandle) {
         FullStitchKind::Petite => {
           emit_remove_partstitches(
             &window,
-            pattern
-              .partstitches
-              .find_conflicts_with_petite_stitch(&fullstitch),
+            pattern.partstitches.find_conflicts_with_petite_stitch(&fullstitch),
           );
 
           let mut conflicting_fullstitches = Vec::new();
-          if let Some(fullstitch) = pattern
-            .fullstitches
-            .find_conflicts_with_petite_stitch(&fullstitch)
-          {
+          if let Some(fullstitch) = pattern.fullstitches.find_conflicts_with_petite_stitch(&fullstitch) {
             conflicting_fullstitches.push(fullstitch);
           }
           if let Some(fullstitch) = pattern.fullstitches.insert(fullstitch) {
@@ -87,14 +78,10 @@ pub fn setup_pattern_event_handlers(window: Window, app_handle: AppHandle) {
         PartStitchKind::Half => {
           emit_remove_fullstitches(
             &window,
-            pattern
-              .fullstitches
-              .find_conflicts_with_half_stitch(&partstitch),
+            pattern.fullstitches.find_conflicts_with_half_stitch(&partstitch),
           );
 
-          let mut conflicting_partstitches = pattern
-            .partstitches
-            .find_conflicts_with_half_stitch(&partstitch);
+          let mut conflicting_partstitches = pattern.partstitches.find_conflicts_with_half_stitch(&partstitch);
           if let Some(partstitch) = pattern.partstitches.insert(partstitch) {
             conflicting_partstitches.push(partstitch);
           }
@@ -103,16 +90,11 @@ pub fn setup_pattern_event_handlers(window: Window, app_handle: AppHandle) {
         PartStitchKind::Quarter => {
           emit_remove_fullstitches(
             &window,
-            pattern
-              .fullstitches
-              .find_conflicts_with_quarter_stitch(&partstitch),
+            pattern.fullstitches.find_conflicts_with_quarter_stitch(&partstitch),
           );
 
           let mut conflicting_partstitches = Vec::new();
-          if let Some(partstitch) = pattern
-            .partstitches
-            .find_conflicts_with_quarter_stitch(&partstitch)
-          {
+          if let Some(partstitch) = pattern.partstitches.find_conflicts_with_quarter_stitch(&partstitch) {
             conflicting_partstitches.push(partstitch);
           }
           if let Some(partstitch) = pattern.partstitches.insert(partstitch) {

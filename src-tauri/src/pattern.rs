@@ -43,11 +43,7 @@ pub fn create_pattern(state: tauri::State<AppStateType>) -> (PatternKey, Pattern
 
 // TODO: Use a custom or different pattern format, but not the JSON.
 #[tauri::command]
-pub fn save_pattern(
-  pattern_key: PatternKey,
-  file_path: PathBuf,
-  state: tauri::State<AppStateType>,
-) -> Result<()> {
+pub fn save_pattern(pattern_key: PatternKey, file_path: PathBuf, state: tauri::State<AppStateType>) -> Result<()> {
   let state = state.read().unwrap();
   let pattern = state.patterns.get(&pattern_key).unwrap();
   fs::write(file_path, serde_json::to_string(pattern).unwrap())?;
@@ -198,9 +194,7 @@ pub struct Stitches<T> {
 
 impl<T> Stitches<T> {
   pub fn new() -> Self {
-    Self {
-      inner: BTreeMap::new(),
-    }
+    Self { inner: BTreeMap::new() }
   }
 
   pub fn len(&self) -> usize {
@@ -262,12 +256,7 @@ impl Stitches<FullStitch> {
 
     let mut conflicts = Vec::new();
     for petite in [
-      FullStitch {
-        x,
-        y,
-        palindex,
-        kind,
-      },
+      FullStitch { x, y, palindex, kind },
       FullStitch {
         x: x + 0.5,
         y,
@@ -348,12 +337,7 @@ impl Stitches<FullStitch> {
       }
       PartStitchDirection::Backward => {
         for petite in [
-          FullStitch {
-            x,
-            y,
-            palindex,
-            kind,
-          },
+          FullStitch { x, y, palindex, kind },
           FullStitch {
             x: x + 0.5,
             y: y + 0.5,
@@ -611,10 +595,7 @@ pub struct PartStitch {
 
 impl Key for PartStitch {
   fn key(&self) -> String {
-    format!(
-      "{}:{}|{}|{}",
-      self.x, self.y, self.direction as u8, self.kind as u8
-    )
+    format!("{}:{}|{}|{}", self.x, self.y, self.direction as u8, self.kind as u8)
   }
 }
 

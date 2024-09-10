@@ -9,17 +9,10 @@
 </template>
 
 <script setup lang="ts">
-  import { useAppStateStore } from "#/stores/state";
   import Select from "primevue/select";
+  import { useAppStateStore } from "#/stores/state";
 
   const emit = defineEmits<{ (e: "switch", key: string): void }>();
 
   const appState = useAppStateStore();
-
-  // watch(
-  //   () => appState.state.currentPattern,
-  //   (newPattern) => {
-  //     if (newPattern) emit("switch", newPattern.key);
-  //   },
-  // );
 </script>

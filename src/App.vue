@@ -8,11 +8,7 @@
       @dragstart="() => appWindow.startDragging()"
     >
       <template #start>
-        <DropdownTieredMenu
-          id="general_menu"
-          :button="{ icon: 'pi pi-bars' }"
-          :tiered-menu="{ model: menuOptions }"
-        />
+        <DropdownTieredMenu id="general_menu" :button="{ icon: 'pi pi-bars' }" :tiered-menu="{ model: menuOptions }" />
         <StitchToolSelector />
       </template>
 
@@ -59,19 +55,18 @@
 </template>
 
 <script lang="ts" setup>
-  import { open, save } from "@tauri-apps/api/dialog";
-  import { appWindow } from "@tauri-apps/api/window";
+  import { onMounted, ref } from "vue";
   import BlockUI from "primevue/blockui";
-  import ConfirmDialog from "primevue/confirmdialog";
-  import type { MenuItem } from "primevue/menuitem";
   import Panel from "primevue/panel";
+  import ConfirmDialog from "primevue/confirmdialog";
   import ProgressSpinner from "primevue/progressspinner";
   import Splitter from "primevue/splitter";
   import SplitterPanel from "primevue/splitterpanel";
   import Toolbar from "primevue/toolbar";
   import { useConfirm } from "primevue/useconfirm";
-  import { onMounted, ref } from "vue";
-  import * as patternApi from "./api/pattern";
+  import type { MenuItem } from "primevue/menuitem";
+  import { open, save } from "@tauri-apps/api/dialog";
+  import { appWindow } from "@tauri-apps/api/window";
   import CanvasPanel from "./components/CanvasPanel.vue";
   import PalettePanel from "./components/PalettePanel.vue";
   import DropdownTieredMenu from "./components/toolbar/DropdownTieredMenu.vue";
@@ -79,8 +74,9 @@
   import StitchToolSelector from "./components/toolbar/StitchToolSelector.vue";
   import WindowControls from "./components/toolbar/WindowControls.vue";
   import { useAppStateStore } from "./stores/state";
-  import type { Pattern } from "./types/pattern";
   import { studioDocumentDir } from "./utils/path";
+  import * as patternApi from "./api/pattern";
+  import type { Pattern } from "./types/pattern";
 
   const appStateStore = useAppStateStore();
 

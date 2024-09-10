@@ -34,10 +34,7 @@ pub fn parse_pattern(path: impl AsRef<Path>) -> Result<Pattern> {
     },
 
     fabric: Fabric {
-      stitches_per_inch: (
-        properties.stitches_per_inch_x,
-        properties.stitches_per_inch_y,
-      ),
+      stitches_per_inch: (properties.stitches_per_inch_x, properties.stitches_per_inch_y),
       kind: String::new(),
       name: fabric.name.clone(),
       color: fabric.color.clone(),

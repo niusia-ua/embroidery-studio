@@ -3,23 +3,12 @@
 </template>
 
 <script lang="ts" setup>
+  import { onMounted, ref, watch } from "vue";
+  import { appWindow } from "@tauri-apps/api/window";
   import { CanvasService } from "#/services/canvas";
   import { useAppStateStore } from "#/stores/state";
-  import {
-    FullStitchKind,
-    LineKind,
-    NodeKind,
-    PartStitchDirection,
-    PartStitchKind,
-    type FullStitch,
-    type Line,
-    type Node,
-    type PartStitch,
-    type Pattern,
-    type StitchKind,
-  } from "#/types/pattern";
-  import { appWindow } from "@tauri-apps/api/window";
-  import { onMounted, ref, watch } from "vue";
+  import { FullStitchKind, LineKind, NodeKind, PartStitchDirection, PartStitchKind } from "#/types/pattern";
+  import type { FullStitch, Line, Node, PartStitch, Pattern, StitchKind } from "#/types/pattern";
 
   interface CanvasPanelProps {
     pattern: Pattern;
@@ -35,12 +24,8 @@
   onMounted(() => {
     // Resizing the canvas to set its initial size.
     canvasService.resize(canvasContainer.value!.getBoundingClientRect());
-    window.addEventListener("resize", () =>
-      canvasService.resize(canvasContainer.value!.getBoundingClientRect()),
-    );
-
+    window.addEventListener("resize", () => canvasService.resize(canvasContainer.value!.getBoundingClientRect()));
     canvasContainer.value!.appendChild(canvasService.view as HTMLCanvasElement);
-
     canvasService.drawPattern(props.pattern);
   });
 
@@ -114,14 +99,8 @@
         const startY = Math.trunc(start.y);
 
         const line: Line = {
-          x: [
-            adjustStitchCoordinate(startX, start.x - startX, kind),
-            adjustStitchCoordinate(x, xdp, kind),
-          ],
-          y: [
-            adjustStitchCoordinate(startY, start.y - startY, kind),
-            adjustStitchCoordinate(y, ydp, kind),
-          ],
+          x: [adjustStitchCoordinate(startX, start.x - startX, kind), adjustStitchCoordinate(x, xdp, kind)],
+          y: [adjustStitchCoordinate(startY, start.y - startY, kind), adjustStitchCoordinate(y, ydp, kind)],
           palindex,
           kind,
         };

@@ -16,9 +16,7 @@ pinia.use(createPersistedState({ storage: sessionStorage, auto: true }));
 
 const app = createApp(App);
 app.use(pinia);
-app.use(PrimeVue, {
-  theme: { preset: Aura },
-});
+app.use(PrimeVue, { theme: { preset: Aura } });
 app.use(ConfirmationService);
 
 app.mount("#app");

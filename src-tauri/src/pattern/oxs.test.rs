@@ -8,13 +8,7 @@ fn parses_oxs_pattern() {
 
   let pattern = pattern.unwrap();
 
-  assert_eq!(
-    pattern.properties,
-    PatternProperties {
-      width: 69,
-      height: 73,
-    }
-  );
+  assert_eq!(pattern.properties, PatternProperties { width: 69, height: 73 });
 
   assert_eq!(
     pattern.info,
