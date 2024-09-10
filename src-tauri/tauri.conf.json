@@ -1,7 +1,7 @@
 {
   "build": {
-    "beforeDevCommand": "npm run dev",
-    "beforeBuildCommand": "npm run build",
+    "beforeDevCommand": "vite",
+    "beforeBuildCommand": "vue-tsc --noEmit && vite build",
     "devPath": "http://localhost:1420",
     "distDir": "../dist"
   },
@@ -47,13 +47,7 @@
       "active": true,
       "targets": "msi",
       "identifier": "studio.embroidery",
-      "icon": [
-        "icons/32x32.png",
-        "icons/128x128.png",
-        "icons/128x128@2x.png",
-        "icons/icon.icns",
-        "icons/icon.ico"
-      ],
+      "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
       "resources": ["resources/*"]
     }
   }

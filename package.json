@@ -2,13 +2,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vue-tsc --noEmit && vite build",
-    "preview": "vite preview",
     "tauri": "tauri",
-    "test": "vitest",
-    "lint": "eslint --ext .vue,.ts src/",
-    "fmt": "prettier --check src/"
+    "fmt": "prettier --check ./vite.config.ts src/",
+    "lint": "eslint --ext .vue,.ts ./vite.config.ts src/",
+    "test": "vitest --passWithNoTests --run"
   },
   "dependencies": {
     "@primevue/themes": "^4.0.4",
