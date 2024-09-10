@@ -6,3 +6,6 @@ export const createPattern = () => invoke<[string, Pattern]>("create_pattern");
 export const savePattern = (patternKey: string, filePath: string) => {
   return invoke<Pattern>("save_pattern", { patternKey, filePath });
 };
+export const closePattern = (patternKey: string) => {
+  return invoke<Pattern>("close_pattern", { patternKey });
+};

@@ -42,6 +42,7 @@ fn main() {
       pattern::load_pattern,
       pattern::create_pattern,
       pattern::save_pattern,
+      pattern::close_pattern
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");

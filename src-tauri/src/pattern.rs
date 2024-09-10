@@ -54,6 +54,11 @@ pub fn save_pattern(
   Ok(())
 }
 
+#[tauri::command]
+pub fn close_pattern(pattern_key: PatternKey, state: tauri::State<AppStateType>) -> () {
+  state.write().unwrap().patterns.remove(&pattern_key);
+}
+
 enum PatternFormat {
   XSD,
   OXS,

@@ -15,4 +15,11 @@
   const emit = defineEmits<{ (e: "switch", key: string): void }>();
 
   const appState = useAppStateStore();
+
+  // watch(
+  //   () => appState.state.currentPattern,
+  //   (newPattern) => {
+  //     if (newPattern) emit("switch", newPattern.key);
+  //   },
+  // );
 </script>

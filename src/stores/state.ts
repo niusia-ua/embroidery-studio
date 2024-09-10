@@ -35,5 +35,13 @@ export const useAppStateStore = defineStore("embroidery-studio-state", () => {
     state.currentPattern = openedPattern;
   }
 
-  return { state, addOpenedPattern };
+  function removeCurrentPattern() {
+    if (!state.openedPatterns || !state.currentPattern) return;
+    const index = state.openedPatterns.findIndex((p) => p.key === state.currentPattern!.key);
+    if (index >= 0) state.openedPatterns.splice(index, 1);
+    if (state.openedPatterns.length) state.currentPattern = state.openedPatterns[0];
+    else state.currentPattern = undefined;
+  }
+
+  return { state, addOpenedPattern, removeCurrentPattern };
 });

@@ -16,7 +16,7 @@
         <StitchToolSelector />
       </template>
 
-      <template v-if="appStateStore.state.openedPatterns" #center>
+      <template v-if="appStateStore.state.openedPatterns?.length" #center>
         <PatternSelector
           @switch="
             (patternPath) => {
@@ -138,6 +138,14 @@
       {
         label: "Close",
         icon: "pi pi-times",
+        command: async () => {
+          // TODO: Implement a confirmation dialog.
+          if (!appStateStore.state.currentPattern) return;
+          await patternApi.closePattern(appStateStore.state.currentPattern.key);
+          appStateStore.removeCurrentPattern();
+          if (!appStateStore.state.currentPattern) pattern.value = undefined;
+          else await loadPattern(appStateStore.state.currentPattern.key);
+        },
       },
     ],
   };
