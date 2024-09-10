@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@primevue/themes": "^4.0.4",
-    "@tauri-apps/api": "^1",
+    "@tauri-apps/api": "^1.6.0",
     "pinia": "^2.2.2",
     "pinia-plugin-persistedstate": "^3.2.3",
     "pixi-cull": "^2.1.1",
@@ -21,7 +21,7 @@
     "vue": "^3.4.29"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^1",
+    "@tauri-apps/cli": "^1.6.1",
     "@tsconfig/node20": "^20.1.4",
     "@types/jsdom": "^21.1.7",
     "@types/node": "^22.1.0",
