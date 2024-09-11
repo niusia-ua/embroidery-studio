@@ -127,11 +127,11 @@ export class CanvasService {
     this.drawFabric(pattern.properties, pattern.fabric.color);
     this.drawGrid(pattern.properties, GRID_SETTINGS);
     // prettier-ignore
-    for (const fullstitch of pattern.fullstitches) this.drawFullStitch(fullstitch, pattern.palette[fullstitch.palindex].color);
+    for (const fullstitch of pattern.fullstitches) this.drawFullStitch(fullstitch, pattern.palette[fullstitch.palindex]!.color);
     // prettier-ignore
-    for (const partstitch of pattern.partstitches) this.drawPartStitch(partstitch, pattern.palette[partstitch.palindex].color);
-    for (const line of pattern.lines) this.drawLine(line, pattern.palette[line.palindex].color);
-    for (const node of pattern.nodes) this.drawNode(node, pattern.palette[node.palindex].color);
+    for (const partstitch of pattern.partstitches) this.drawPartStitch(partstitch, pattern.palette[partstitch.palindex]!.color);
+    for (const line of pattern.lines) this.drawLine(line, pattern.palette[line.palindex]!.color);
+    for (const node of pattern.nodes) this.drawNode(node, pattern.palette[node.palindex]!.color);
   }
 
   drawFabric({ width, height }: PatternProperties, color: ColorSource) {
@@ -288,7 +288,7 @@ export class CanvasService {
 
       // TODO: Improve the way to detect the control key.
       // Control key is used to change the rotation of the node.
-      callback(start, end, e.ctrlKey);
+      callback(start!, end!, e.ctrlKey);
       this.#startPoint = undefined;
     });
   }
