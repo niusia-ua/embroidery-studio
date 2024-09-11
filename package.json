@@ -5,7 +5,7 @@
     "tauri": "tauri",
     "fmt": "prettier --check ./vite.config.ts src/",
     "lint": "eslint --ext .vue,.ts ./vite.config.ts src/",
-    "test": "vitest --passWithNoTests --run"
+    "test": "vitest --run"
   },
   "dependencies": {
     "@primevue/themes": "^4.0.4",
@@ -21,6 +21,7 @@
     "vue": "^3.4.29"
   },
   "devDependencies": {
+    "@pinia/testing": "^0.1.5",
     "@tauri-apps/cli": "^1.6.1",
     "@tsconfig/node20": "^20.1.4",
     "@tsconfig/strictest": "^2.0.5",
