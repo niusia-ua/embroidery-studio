@@ -6,7 +6,7 @@ use super::*;
 
 #[cfg(test)]
 #[path = "oxs.test.rs"]
-mod oxs_tests;
+mod tests;
 
 pub fn parse_pattern(path: impl AsRef<Path>) -> Result<Pattern> {
   log::trace!("Parsing the OXS pattern");

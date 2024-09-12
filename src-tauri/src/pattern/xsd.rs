@@ -18,7 +18,7 @@ use super::*;
 
 #[cfg(test)]
 #[path = "xsd.test.rs"]
-mod xsd_tests;
+mod tests;
 
 static PM_FLOSS_BRANDS: LazyLock<std::collections::HashMap<u8, String>> = LazyLock::new(|| {
   let pm_floss_brands = include_str!("./pm_floss_brands.json");

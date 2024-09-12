@@ -52,8 +52,8 @@ fn parses_oxs_pattern() {
     }
   );
 
-  assert_eq!(pattern.fullstitches.len(), 1000);
-  assert_eq!(pattern.partstitches.len(), 55);
-  assert_eq!(pattern.nodes.len(), 18);
-  assert_eq!(pattern.lines.len(), 1105);
+  assert_eq!(pattern.fullstitches.inner.len(), 1000);
+  assert_eq!(pattern.partstitches.inner.len(), 55);
+  assert_eq!(pattern.nodes.inner.len(), 18);
+  assert_eq!(pattern.lines.inner.len(), 1105);
 }

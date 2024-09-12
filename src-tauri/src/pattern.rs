@@ -1,5 +1,3 @@
-#!(allow(clippy::len_without_is_empty))
-
 use std::{collections::BTreeMap, ffi::OsStr, fs, path::PathBuf, time::Instant};
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -10,11 +8,15 @@ pub mod events;
 mod oxs;
 mod xsd;
 
+#[cfg(test)]
+#[path = "pattern.test.rs"]
+mod tests;
+
 #[tauri::command]
 pub fn load_pattern(file_path: PathBuf, state: tauri::State<AppStateType>) -> Result<Pattern> {
   log::trace!("Loading pattern from {:?}", file_path);
   let mut state = state.write().unwrap();
-  let pattern_key = PatternKey(file_path.clone());
+  let pattern_key = PatternKey::from(file_path.clone());
   let pattern = match state.patterns.get(&pattern_key) {
     Some(pattern) => {
       log::trace!("Pattern already loaded");
@@ -43,7 +45,7 @@ pub fn create_pattern(state: tauri::State<AppStateType>) -> (PatternKey, Pattern
   log::trace!("Creating new pattern");
   let mut state = state.write().unwrap();
   let file_path = PathBuf::from(format!("Untitled-{:?}.json", Instant::now()));
-  let pattern_key = PatternKey(file_path);
+  let pattern_key = PatternKey::from(file_path);
   let pattern = Pattern::default();
   state.patterns.insert(pattern_key.clone(), pattern.clone());
   log::trace!("Pattern created");
@@ -99,6 +101,12 @@ impl TryFrom<Option<&OsStr>> for PatternFormat {
 #[derive(Debug, Hash, PartialEq, Eq, Clone, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct PatternKey(PathBuf);
+
+impl From<PathBuf> for PatternKey {
+  fn from(value: PathBuf) -> Self {
+    Self(value)
+  }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Pattern {
@@ -211,11 +219,6 @@ impl<T> Stitches<T> {
     Self { inner: BTreeMap::new() }
   }
 
-  #[cfg(test)]
-  pub fn len(&self) -> usize {
-    self.inner.len()
-  }
-
   pub fn iter(&self) -> impl Iterator<Item = &T> {
     self.inner.values()
   }
@@ -261,8 +264,10 @@ impl<T: Key> FromIterator<T> for Stitches<T> {
 }
 
 impl Stitches<FullStitch> {
+  /// Finds conflicts with a given full stitch.
+  /// It looks for any petite stitches that overlap with the full stitch.
   pub fn find_conflicts_with_full_stitch(&self, fullstitch: &FullStitch) -> Vec<FullStitch> {
-    assert_eq!(fullstitch.kind, FullStitchKind::Full);
+    debug_assert_eq!(fullstitch.kind, FullStitchKind::Full);
 
     let x = fullstitch.x;
     let y = fullstitch.y;
@@ -298,8 +303,10 @@ impl Stitches<FullStitch> {
     conflicts
   }
 
+  /// Finds conflicts with a given petite stitch.
+  /// It looks for the full stitch that overlaps with the petite stitch.
   pub fn find_conflicts_with_petite_stitch(&self, fullstitch: &FullStitch) -> Option<FullStitch> {
-    assert_eq!(fullstitch.kind, FullStitchKind::Petite);
+    debug_assert_eq!(fullstitch.kind, FullStitchKind::Petite);
     let fullstitch = FullStitch {
       x: fullstitch.x.trunc(),
       y: fullstitch.y.trunc(),
@@ -309,8 +316,10 @@ impl Stitches<FullStitch> {
     self.get(&fullstitch.key()).cloned()
   }
 
+  /// Finds conflicts with a given half stitch.
+  /// It looks for the full and any petite stitches that overlap with the half stitch.
   pub fn find_conflicts_with_half_stitch(&self, partstitch: &PartStitch) -> Vec<FullStitch> {
-    assert_eq!(partstitch.kind, PartStitchKind::Half);
+    debug_assert_eq!(partstitch.kind, PartStitchKind::Half);
 
     let x = partstitch.x;
     let y = partstitch.y;
@@ -370,8 +379,10 @@ impl Stitches<FullStitch> {
     conflicts
   }
 
+  /// Finds conflicts with a given quarter stitch.
+  /// It looks for the full and petite stitches that overlap with the quarter stitch.
   pub fn find_conflicts_with_quarter_stitch(&self, partstitch: &PartStitch) -> Vec<FullStitch> {
-    assert_eq!(partstitch.kind, PartStitchKind::Quarter);
+    debug_assert_eq!(partstitch.kind, PartStitchKind::Quarter);
     let mut conflicts = Vec::new();
     for fullstitch in [
       FullStitch {
@@ -396,8 +407,10 @@ impl Stitches<FullStitch> {
 }
 
 impl Stitches<PartStitch> {
+  /// Finds conflicts with a given full stitch.
+  /// It looks for any half and quarter stitches that overlap with the full stitch.
   pub fn find_conflicts_with_full_stitch(&self, fullstitch: &FullStitch) -> Vec<PartStitch> {
-    assert_eq!(fullstitch.kind, FullStitchKind::Full);
+    debug_assert_eq!(fullstitch.kind, FullStitchKind::Full);
 
     let x = fullstitch.x;
     let y = fullstitch.y;
@@ -455,8 +468,10 @@ impl Stitches<PartStitch> {
     conflicts
   }
 
+  /// Finds conflicts with a given petite stitch.
+  /// It looks for the half and quarter stitches that overlap with the petite stitch.
   pub fn find_conflicts_with_petite_stitch(&self, fullstitch: &FullStitch) -> Vec<PartStitch> {
-    assert_eq!(fullstitch.kind, FullStitchKind::Petite);
+    debug_assert_eq!(fullstitch.kind, FullStitchKind::Petite);
 
     let x = fullstitch.x;
     let x_fract = x.fract();
@@ -472,8 +487,8 @@ impl Stitches<PartStitch> {
     let mut conflicts = Vec::new();
 
     let half = PartStitch {
-      x,
-      y,
+      x: x.trunc(),
+      y: y.trunc(),
       palindex,
       direction,
       kind: PartStitchKind::Half,
@@ -496,8 +511,10 @@ impl Stitches<PartStitch> {
     conflicts
   }
 
+  /// Finds conflicts with a given half stitch.
+  /// It looks for any quarter stitches that overlap with the half stitch.
   pub fn find_conflicts_with_half_stitch(&self, partstitch: &PartStitch) -> Vec<PartStitch> {
-    assert_eq!(partstitch.kind, PartStitchKind::Half);
+    debug_assert_eq!(partstitch.kind, PartStitchKind::Half);
 
     let x = partstitch.x;
     let y = partstitch.y;
@@ -553,8 +570,10 @@ impl Stitches<PartStitch> {
     conflicts
   }
 
+  /// Finds conflicts with a given quarter stitch.
+  /// It looks for the half stitch that overlap with the quarter stitch.
   pub fn find_conflicts_with_quarter_stitch(&self, partstitch: &PartStitch) -> Option<PartStitch> {
-    assert_eq!(partstitch.kind, PartStitchKind::Quarter);
+    debug_assert_eq!(partstitch.kind, PartStitchKind::Quarter);
 
     let x = partstitch.x;
     let x_fract = x.fract();
@@ -588,8 +607,10 @@ pub struct FullStitch {
 }
 
 impl Key for FullStitch {
+  /// Returns the key for the full stitch.
+  /// It uses the x and y coordinates and the kind of stitch.
   fn key(&self) -> String {
-    format!("{}:{}|{}", self.x, self.y, self.kind as u8)
+    format!("{:?}:{:?}|{}", self.x, self.y, self.kind as u8)
   }
 }
 
@@ -609,8 +630,10 @@ pub struct PartStitch {
 }
 
 impl Key for PartStitch {
+  /// Returns the key for the part stitch.
+  /// It uses the x and y coordinates, the direction and the kind of stitch.
   fn key(&self) -> String {
-    format!("{}:{}|{}|{}", self.x, self.y, self.direction as u8, self.kind as u8)
+    format!("{:?}:{:?}|{}|{}", self.x, self.y, self.direction as u8, self.kind as u8)
   }
 }
 
@@ -636,8 +659,10 @@ pub struct Node {
 }
 
 impl Key for Node {
+  /// Returns the key for the node stitch.
+  /// It uses the x and y coordinates.
   fn key(&self) -> String {
-    format!("{}:{}", self.x, self.y)
+    format!("{:?}:{:?}", self.x, self.y)
   }
 }
 
@@ -656,8 +681,10 @@ pub struct Line {
 }
 
 impl Key for Line {
+  /// Returns the key for the line stitch.
+  /// It uses the x and y coordinates.
   fn key(&self) -> String {
-    format!("{}:{}:{}:{}", self.x.0, self.y.0, self.x.1, self.y.1)
+    format!("{:?}:{:?}:{:?}:{:?}", self.x.0, self.y.0, self.x.1, self.y.1)
   }
 }
 
