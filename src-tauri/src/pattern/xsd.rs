@@ -88,7 +88,10 @@ impl From<u16> for XsdJointKind {
       4 => XsdJointKind::Special,
       5 => XsdJointKind::Straight,
       6 => XsdJointKind::Bead,
-      _ => panic!("An unknown type of XsdJointKind was encountered."),
+      _ => {
+        log::warn!("Unknown joint kind {}", value);
+        panic!("An unknown type of XsdJointKind was encountered.")
+      }
     }
   }
 }
@@ -169,11 +172,13 @@ impl XsdRead for Cursor {
 }
 
 pub fn parse_pattern(path: impl AsRef<Path>) -> Result<Pattern> {
+  log::info!("Parsing the XSD pattern file");
   let buf = fs::read(path)?;
   let mut cursor = io::Cursor::new(buf);
 
   let signature = read_signature(&mut cursor)?;
   if signature != XSD_VALID_SIGNATURE {
+    log::error!("The file has an invalid signature {:?}", signature);
     return Err(Error::XsdInvalidSignature);
   }
 
@@ -234,6 +239,7 @@ fn read_signature(cursor: &mut Cursor) -> Result<u16> {
 
 /// Reads the pattern properties that are necessarry for further parsing.
 fn read_pattern_properties(cursor: &mut Cursor) -> Result<XsdPatternProperties> {
+  log::trace!("Reading the pattern properties");
   let width = cursor.read_u16::<LittleEndian>()?;
   let height = cursor.read_u16::<LittleEndian>()?;
   let small_stitches_count = cursor.read_u32::<LittleEndian>()?;
@@ -253,6 +259,7 @@ fn read_pattern_properties(cursor: &mut Cursor) -> Result<XsdPatternProperties> 
 
 /// Reads the color palette of the pattern.
 fn read_palette(cursor: &mut Cursor, palette_size: usize) -> Result<Vec<PaletteItem>> {
+  log::trace!("Reading the palette with {} items", palette_size);
   let mut palette = Vec::with_capacity(palette_size);
   for _ in 0..palette_size {
     palette.push(read_palette_item(cursor)?);
@@ -339,6 +346,7 @@ fn skip_palette_items_notes(cursor: &mut Cursor, palette_size: usize) -> Result<
 
 /// Reads a part of the fabric information.
 fn read_fabric_info(cursor: &mut Cursor) -> Result<XsdFabric> {
+  log::trace!("Reading the fabric info");
   let fabric_info = XsdFabric {
     name: cursor.read_cstring(XSD_FABRIC_COLOR_NAME_LENGTH)?,
     color: cursor.read_hex_color()?,
@@ -349,6 +357,7 @@ fn read_fabric_info(cursor: &mut Cursor) -> Result<XsdFabric> {
 
 /// Reads the necessarry pattern information.
 fn read_pattern_info(cursor: &mut Cursor) -> Result<(PatternInfo, String)> {
+  log::trace!("Reading the pattern info");
   let title = cursor.read_cstring(XSD_PATTERN_NAME_LENGTH)?;
   let author = cursor.read_cstring(XSD_AUTHOR_NAME_LENGTH)?;
   cursor.seek(SeekFrom::Current(41))?; // Skip company name.
@@ -371,6 +380,7 @@ fn read_stitches(
   cursor: &mut Cursor,
   xsd_pattern_properties: &XsdPatternProperties,
 ) -> Result<(Vec<FullStitch>, Vec<PartStitch>)> {
+  log::trace!("Reading the stitches");
   let total_stitches_count = ((xsd_pattern_properties.width as u64) * (xsd_pattern_properties.height as u64)) as usize;
   let small_stitches_count = xsd_pattern_properties.small_stitches_count as usize;
   let stitches_data = read_stitches_data(cursor, total_stitches_count)?;
@@ -385,6 +395,7 @@ fn read_stitches(
 
 /// Reads the bytes buffer that contains the decoded stitches data.
 fn read_stitches_data(cursor: &mut Cursor, total_stitches_count: usize) -> Result<Vec<i32>> {
+  log::trace!("Reading the stitches data");
   let mut stitches_data = Vec::with_capacity(total_stitches_count);
   let mut xsd_random_numbers = read_xsd_random_numbers(cursor)?;
   let (mut decoding_key, decoding_numbers) = reproduce_decoding_values(&xsd_random_numbers)?;
@@ -435,6 +446,7 @@ fn read_stitches_data(cursor: &mut Cursor, total_stitches_count: usize) -> Resul
 
 /// Reads the random numbers that are necessarry for decoding the stitches data.
 fn read_xsd_random_numbers(cursor: &mut Cursor) -> Result<XsdRandomNumbers> {
+  log::trace!("Reading the XSD random numbers");
   let mut xsd_random_numbers = [0; 4];
   for number in &mut xsd_random_numbers {
     *number = cursor.read_i32::<LittleEndian>()?;
@@ -444,6 +456,7 @@ fn read_xsd_random_numbers(cursor: &mut Cursor) -> Result<XsdRandomNumbers> {
 
 /// Reproduces the decoding values that are used for decoding the stitches data.
 fn reproduce_decoding_values(xsd_random_numbers: &XsdRandomNumbers) -> Result<(i32, XsdDecodingNumbers)> {
+  log::trace!("Reproducing the decoding values");
   let val1 = xsd_random_numbers[1].to_le_bytes()[1] as i32;
   let val2 = xsd_random_numbers[0] << 8;
   let val3 = (val2 | val1) << 8;
@@ -476,6 +489,7 @@ fn reproduce_decoding_values(xsd_random_numbers: &XsdRandomNumbers) -> Result<(i
 
 /// Reads the small stitch buffers that are used containe the small stitches data.
 fn read_small_stitch_buffers(cursor: &mut Cursor, small_stitches_count: usize) -> Result<Vec<SmallStitchBuffer>> {
+  log::trace!("Reading the small stitch buffers");
   let mut small_stitch_buffers = Vec::with_capacity(small_stitches_count);
   for _ in 0..small_stitches_count {
     let mut buf = [0; 10];
@@ -494,6 +508,7 @@ fn map_stitches_data_into_stitches(
   let mut fullstitches = Vec::new();
   let mut partstitches = Vec::new();
 
+  log::trace!("Mapping the stitches data into stitches");
   for (i, stitch_data) in stitches_data.iter().enumerate() {
     let stitch_buffer = stitch_data.to_le_bytes();
 
@@ -615,6 +630,7 @@ fn read_joints(cursor: &mut Cursor, joints_count: u16) -> Result<(Vec<Node>, Vec
   let mut nodes = Vec::new();
   let mut lines = Vec::new();
 
+  log::trace!("Reading the joints");
   for _ in 0..joints_count {
     let joint_kind = XsdJointKind::from(cursor.read_u16::<LittleEndian>()?);
     match joint_kind {

@@ -12,10 +12,14 @@ mod xsd;
 
 #[tauri::command]
 pub fn load_pattern(file_path: PathBuf, state: tauri::State<AppStateType>) -> Result<Pattern> {
+  log::trace!("Loading pattern from {:?}", file_path);
   let mut state = state.write().unwrap();
   let pattern_key = PatternKey(file_path.clone());
   let pattern = match state.patterns.get(&pattern_key) {
-    Some(pattern) => pattern.to_owned(),
+    Some(pattern) => {
+      log::trace!("Pattern already loaded");
+      pattern.to_owned()
+    }
     None => {
       let pattern_format = PatternFormat::try_from(file_path.extension())?;
       let pattern = match pattern_format {
@@ -30,31 +34,38 @@ pub fn load_pattern(file_path: PathBuf, state: tauri::State<AppStateType>) -> Re
       pattern
     }
   };
+  log::trace!("Pattern loaded");
   Ok(pattern)
 }
 
 #[tauri::command]
 pub fn create_pattern(state: tauri::State<AppStateType>) -> (PatternKey, Pattern) {
+  log::trace!("Creating new pattern");
   let mut state = state.write().unwrap();
   let file_path = PathBuf::from(format!("Untitled-{:?}.json", Instant::now()));
   let pattern_key = PatternKey(file_path);
   let pattern = Pattern::default();
   state.patterns.insert(pattern_key.clone(), pattern.clone());
+  log::trace!("Pattern created");
   (pattern_key, pattern)
 }
 
 // TODO: Use a custom or different pattern format, but not the JSON.
 #[tauri::command]
 pub fn save_pattern(pattern_key: PatternKey, file_path: PathBuf, state: tauri::State<AppStateType>) -> Result<()> {
+  log::trace!("Saving pattern to {:?}", file_path);
   let state = state.read().unwrap();
   let pattern = state.patterns.get(&pattern_key).unwrap();
   fs::write(file_path, serde_json::to_string(pattern).unwrap())?;
+  log::trace!("Pattern saved");
   Ok(())
 }
 
 #[tauri::command]
 pub fn close_pattern(pattern_key: PatternKey, state: tauri::State<AppStateType>) {
+  log::trace!("Closing pattern {:?}", pattern_key);
   state.write().unwrap().patterns.remove(&pattern_key);
+  log::trace!("Pattern closed");
 }
 
 enum PatternFormat {

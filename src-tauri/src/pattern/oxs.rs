@@ -9,6 +9,7 @@ use super::*;
 mod oxs_tests;
 
 pub fn parse_pattern(path: impl AsRef<Path>) -> Result<Pattern> {
+  log::trace!("Parsing the OXS pattern");
   let xml = fs::read_to_string(path)?;
   let pattern: OxsPattern = quick_xml::de::from_str(&xml).unwrap();
 

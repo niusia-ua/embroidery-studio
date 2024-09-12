@@ -34,7 +34,9 @@ static EVENT_STITCH_CREATE: &str = "pattern:stitch:create";
 static EVENT_STITCH_REMOVE: &str = "pattern:stitch:remove";
 
 pub fn setup_pattern_event_handlers(window: Window, app_handle: AppHandle) {
+  log::trace!("Setting up pattern event handlers");
   window.clone().listen(EVENT_STITCH_CREATE, move |e| {
+    log::trace!("Received stitch create event");
     let state = app_handle.state::<AppStateType>();
     let mut state = state.write().unwrap();
 
@@ -113,6 +115,7 @@ fn emit_remove_fullstitches(window: &Window, fullstitches: Vec<FullStitch>) {
   if fullstitches.is_empty() {
     return;
   }
+  log::trace!("Emitting remove fullstitches event");
   let payload = EventStitchRemovePayload::FullStitches(fullstitches);
   window.emit(EVENT_STITCH_REMOVE, payload).unwrap();
 }
@@ -121,12 +124,14 @@ fn emit_remove_partstitches(window: &Window, partstitches: Vec<PartStitch>) {
   if partstitches.is_empty() {
     return;
   }
+  log::trace!("Emitting remove partstitches event");
   let payload = EventStitchRemovePayload::PartStitches(partstitches);
   window.emit(EVENT_STITCH_REMOVE, payload).unwrap();
 }
 
 fn emit_remove_line(window: &Window, line: Option<Line>) {
   if let Some(line) = line {
+    log::trace!("Emitting remove line event");
     let payload = EventStitchRemovePayload::Line(line);
     window.emit(EVENT_STITCH_REMOVE, payload).unwrap();
   }
@@ -134,6 +139,7 @@ fn emit_remove_line(window: &Window, line: Option<Line>) {
 
 fn emit_remove_node(window: &Window, node: Option<Node>) {
   if let Some(node) = node {
+    log::trace!("Emitting remove node event");
     let payload = EventStitchRemovePayload::Node(node);
     window.emit(EVENT_STITCH_REMOVE, payload).unwrap();
   }
