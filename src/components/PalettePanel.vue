@@ -23,16 +23,16 @@
       </div>
     </template>
 
-    <template #option="{ option, selected }">
+    <template #option="{ option: pi, selected }">
       <div
         class="w-full h-2rem text-color px-2 py-1 white-space-nowrap overflow-hidden text-overflow-ellipsis select-none"
         :style="{
-          backgroundColor: `#${option.color}`,
-          color: `${contrastColor(option.color)} !important`,
-          boxShadow: selected ? `inset 0 0 0 2px #${option.color}, inset 0 0 0 4px ${contrastColor(option.color)}` : '',
+          backgroundColor: `#${pi.color}`,
+          color: `${contrastColor(pi.color)} !important`,
+          boxShadow: selected ? `inset 0 0 0 2px #${pi.color}, inset 0 0 0 4px ${contrastColor(pi.color)}` : '',
         }"
       >
-        {{ paletteItemTitle(option) }}
+        {{ paletteItemTitle(pi, paletteItemDisplayOptions) }}
       </div>
     </template>
   </Listbox>
@@ -40,38 +40,38 @@
   <Popover ref="paletteSettingsPopover">
     <div class="card">
       <div class="flex items-center pb-3">
-        <ToggleSwitch v-model="paletteSettings.colorOnly" input-id="color-only" />
+        <ToggleSwitch v-model="paletteItemDisplayOptions.colorOnly" input-id="color-only" />
         <label for="color-only" class="ml-2">Color only</label>
       </div>
 
       <div class="flex flex-column gap-2">
         <div class="flex items-center">
           <Checkbox
-            v-model="paletteSettings.showVendor"
+            v-model="paletteItemDisplayOptions.showVendor"
             input-id="show-vendor"
             name="show-vendor"
             binary
-            :disabled="paletteSettings.colorOnly"
+            :disabled="paletteItemDisplayOptions.colorOnly"
           />
           <label for="show-vendor" class="ml-2">Show floss vendor</label>
         </div>
 
         <div class="flex items-center">
           <Checkbox
-            v-model="paletteSettings.showNumber"
+            v-model="paletteItemDisplayOptions.showNumber"
             input-id="show-number"
             binary
-            :disabled="paletteSettings.colorOnly"
+            :disabled="paletteItemDisplayOptions.colorOnly"
           />
           <label for="show-number" class="ml-2">Show color number</label>
         </div>
 
         <div class="flex items-center">
           <Checkbox
-            v-model="paletteSettings.showName"
+            v-model="paletteItemDisplayOptions.showName"
             input-id="show-name"
             binary
-            :disabled="paletteSettings.colorOnly"
+            :disabled="paletteItemDisplayOptions.colorOnly"
           />
           <label for="show-name" class="ml-2">Show color name</label>
         </div>
@@ -88,8 +88,9 @@
   import Popover from "primevue/popover";
   import ToggleSwitch from "primevue/toggleswitch";
   import { contrastColor } from "#/utils/color";
+  import { paletteItemTitle, type PaletteItemDisplayOptions } from "#/utils/paletteItem";
   import { useAppStateStore } from "#/stores/state";
-  import type { Blend, PaletteItem } from "#/types/pattern";
+  import type { PaletteItem } from "#/types/pattern";
 
   interface PalettePanelProps {
     palette?: PaletteItem[];
@@ -99,38 +100,8 @@
 
   const appState = useAppStateStore();
 
-  function paletteItemTitle(pi: PaletteItem) {
-    if (paletteSettings.colorOnly) return "";
-    const components = [];
-    if (paletteSettings.showVendor) components.push(pi.brand);
-    if (pi.blends) {
-      components.push(
-        pi.blends
-          .map(blendTitle)
-          .filter((v) => v.length)
-          .join(", "),
-      );
-      return components.join(": ");
-    }
-    if (paletteSettings.showNumber) components.push(pi.number);
-    // The name can be an empty string. For example, if the palette item is blend.
-    if (paletteSettings.showName && pi.name.length) {
-      if (!components.length) return pi.name;
-      return [components.join(" "), pi.name].join(", ");
-    }
-    return components.join(" ");
-  }
-
-  function blendTitle({ brand, number }: Blend) {
-    if (paletteSettings.colorOnly) return "";
-    const components = [];
-    if (paletteSettings.showVendor) components.push(brand ?? "unknown");
-    if (paletteSettings.showNumber) components.push(number);
-    return components.join(" ");
-  }
-
   const paletteSettingsPopover = ref<typeof Popover>();
-  const paletteSettings = reactive({
+  const paletteItemDisplayOptions = reactive<PaletteItemDisplayOptions>({
     colorOnly: false,
     showVendor: true,
     showNumber: true,
