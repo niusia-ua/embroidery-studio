@@ -19,28 +19,31 @@ const GRID_SETTINGS: GridSettings = {
 
 const FULL_STITCH_GEOMETRIES = {
   Full: new Graphics().beginFill("FFFFFF").drawRect(0, 0, 1, 1).endFill().geometry,
-  Petite: new Graphics().beginFill("FFFFFF").drawRect(0, 0, 0.5, 0.5).endFill().geometry,
+  Petite: new Graphics().lineStyle({ width: 0.01, alignment: 0 }).beginFill("FFFFFF").drawRect(0, 0, 0.5, 0.5).endFill()
+    .geometry,
 };
 
 const PART_STITCH_GEOMETRIES = {
   Half: {
     Forward: new Graphics()
+      .lineStyle({ width: 0.01, alignment: 0 })
       .beginFill("FFFFFF")
       .drawPolygon(new Polygon([1, 0, 1, 0.25, 0.25, 1, 0, 1, 0, 0.75, 0.75, 0]))
       .endFill().geometry,
     Backward: new Graphics()
+      .lineStyle({ width: 0.01, alignment: 0 })
       .beginFill("FFFFFF")
       .drawPolygon(new Polygon([0, 0, 0.25, 0, 1, 0.75, 1, 1, 0.75, 1, 0, 0.25]))
       .endFill().geometry,
   },
   Quarter: {
     Forward: new Graphics()
-      .lineStyle({ width: 0.01, alignment: 1 })
+      .lineStyle({ width: 0.01, alignment: 0 })
       .beginFill("FFFFFF")
       .drawPolygon(new Polygon([0.5, 0, 0.5, 0.25, 0.25, 0.5, 0, 0.5, 0, 0.25, 0.25, 0]))
       .endFill().geometry,
     Backward: new Graphics()
-      .lineStyle({ width: 0.01, alignment: 1 })
+      .lineStyle({ width: 0.01, alignment: 0 })
       .beginFill("FFFFFF")
       .drawPolygon(new Polygon([0, 0, 0.25, 0, 0.5, 0.25, 0.5, 0.5, 0.25, 0.5, 0, 0.25]))
       .endFill().geometry,
@@ -50,12 +53,12 @@ const PART_STITCH_GEOMETRIES = {
 const NODE_GEOMETRIES = {
   FrenchKnot: new Graphics()
     .beginFill("FFFFFF")
-    .lineStyle({ width: 0.1, color: 0x000000, alignment: 1 })
+    .lineStyle({ width: 0.1, color: 0x000000, alignment: 0 })
     .drawCircle(0, 0, 5)
     .endFill().geometry,
   Bead: new Graphics()
     .beginFill("FFFFFF")
-    .lineStyle({ width: 0.1, color: 0x000000, alignment: 1 })
+    .lineStyle({ width: 0.1, color: 0x000000, alignment: 0 })
     // Set negative coordinates to rotate elements around their center.
     .drawRoundedRect(-3.75, -5, 7.5, 10, 10)
     .endFill().geometry,
