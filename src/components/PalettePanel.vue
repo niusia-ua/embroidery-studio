@@ -32,7 +32,9 @@
           boxShadow: selected ? `inset 0 0 0 2px #${pi.color}, inset 0 0 0 4px ${contrastColor(pi.color)}` : '',
         }"
       >
-        {{ paletteItemTitle(pi, paletteItemDisplayOptions) }}
+        <div v-show="!displayOnlyPaletteItemColor">
+          {{ paletteItemTitle(pi, paletteItemDisplayOptions) }}
+        </div>
       </div>
     </template>
   </Listbox>
@@ -40,7 +42,7 @@
   <Popover ref="paletteSettingsPopover">
     <div class="card">
       <div class="flex items-center pb-3">
-        <ToggleSwitch v-model="paletteItemDisplayOptions.colorOnly" input-id="color-only" />
+        <ToggleSwitch v-model="displayOnlyPaletteItemColor" input-id="color-only" />
         <label for="color-only" class="ml-2">Color only</label>
       </div>
 
@@ -51,7 +53,7 @@
             input-id="show-vendor"
             name="show-vendor"
             binary
-            :disabled="paletteItemDisplayOptions.colorOnly"
+            :disabled="displayOnlyPaletteItemColor"
           />
           <label for="show-vendor" class="ml-2">Show floss vendor</label>
         </div>
@@ -61,7 +63,7 @@
             v-model="paletteItemDisplayOptions.showNumber"
             input-id="show-number"
             binary
-            :disabled="paletteItemDisplayOptions.colorOnly"
+            :disabled="displayOnlyPaletteItemColor"
           />
           <label for="show-number" class="ml-2">Show color number</label>
         </div>
@@ -71,7 +73,7 @@
             v-model="paletteItemDisplayOptions.showName"
             input-id="show-name"
             binary
-            :disabled="paletteItemDisplayOptions.colorOnly"
+            :disabled="displayOnlyPaletteItemColor"
           />
           <label for="show-name" class="ml-2">Show color name</label>
         </div>
@@ -102,11 +104,11 @@
 
   const paletteSettingsPopover = ref<typeof Popover>();
   const paletteItemDisplayOptions = reactive<PaletteItemDisplayOptions>({
-    colorOnly: false,
     showVendor: true,
     showNumber: true,
     showName: true,
   });
+  const displayOnlyPaletteItemColor = ref(false);
 
   function togglePaletteSettingsPopover(event: Event) {
     paletteSettingsPopover.value!.toggle(event);

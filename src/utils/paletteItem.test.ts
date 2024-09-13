@@ -43,19 +43,17 @@ const PALETTE: PaletteItem[] = [
 ];
 
 describe("paletteItemTitle", () => {
-  test("color only", () => {
+  test("empty", () => {
     const options: PaletteItemDisplayOptions = {
-      colorOnly: true,
-      showVendor: true,
-      showNumber: true,
-      showName: true,
+      showVendor: false,
+      showNumber: false,
+      showName: false,
     };
     for (const pi of PALETTE) expect(paletteItemTitle(pi, options)).toBe("");
   });
 
   test("brand only", () => {
     const options: PaletteItemDisplayOptions = {
-      colorOnly: false,
       showVendor: true,
       showNumber: false,
       showName: false,
@@ -68,7 +66,6 @@ describe("paletteItemTitle", () => {
 
   test("number only", () => {
     const options: PaletteItemDisplayOptions = {
-      colorOnly: false,
       showVendor: false,
       showNumber: true,
       showName: false,
@@ -81,7 +78,6 @@ describe("paletteItemTitle", () => {
 
   test("name only", () => {
     const options: PaletteItemDisplayOptions = {
-      colorOnly: false,
       showVendor: false,
       showNumber: false,
       showName: true,
@@ -94,7 +90,6 @@ describe("paletteItemTitle", () => {
 
   test("brand and number", () => {
     const options: PaletteItemDisplayOptions = {
-      colorOnly: false,
       showVendor: true,
       showNumber: true,
       showName: false,
@@ -107,7 +102,6 @@ describe("paletteItemTitle", () => {
 
   test("brand and name", () => {
     const options: PaletteItemDisplayOptions = {
-      colorOnly: false,
       showVendor: true,
       showNumber: false,
       showName: true,
@@ -120,7 +114,6 @@ describe("paletteItemTitle", () => {
 
   test("number and name", () => {
     const options: PaletteItemDisplayOptions = {
-      colorOnly: false,
       showVendor: false,
       showNumber: true,
       showName: true,
@@ -133,19 +126,17 @@ describe("paletteItemTitle", () => {
 });
 
 describe("blendTitle", () => {
-  test("color only", () => {
+  test("empty", () => {
     const options: PaletteItemDisplayOptions = {
-      colorOnly: true,
-      showVendor: true,
-      showNumber: true,
-      showName: true,
+      showVendor: false,
+      showNumber: false,
+      showName: false,
     };
     for (const blend of BLENDS) expect(blendTitle(blend, options)).toBe("");
   });
 
   test("brand only", () => {
     const options: PaletteItemDisplayOptions = {
-      colorOnly: false,
       showVendor: true,
       showNumber: false,
       showName: false,
@@ -156,7 +147,6 @@ describe("blendTitle", () => {
 
   test("number only", () => {
     const options: PaletteItemDisplayOptions = {
-      colorOnly: false,
       showVendor: false,
       showNumber: true,
       showName: false,
@@ -167,7 +157,6 @@ describe("blendTitle", () => {
 
   test("brand and number", () => {
     const options: PaletteItemDisplayOptions = {
-      colorOnly: false,
       showVendor: true,
       showNumber: true,
       showName: false,

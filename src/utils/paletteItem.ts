@@ -2,8 +2,6 @@ import type { Blend, PaletteItem } from "#/types/pattern";
 
 /** Interface representing display options for a palette item's title. */
 export interface PaletteItemDisplayOptions {
-  /** If true, only the color will be displayed. Thus, the other properties will be ignored. */
-  colorOnly: boolean;
   /** If true, the vendor/brand will be displayed. */
   showVendor: boolean;
   /** If true, the item number will be displayed. */
@@ -20,7 +18,6 @@ export interface PaletteItemDisplayOptions {
  * @returns The composed title for the palette item.
  */
 export function paletteItemTitle(pi: PaletteItem, options: PaletteItemDisplayOptions): string {
-  if (options.colorOnly) return "";
   const components = [];
   if (options.showVendor) components.push(pi.brand);
   if (pi.blends?.length) {
@@ -50,7 +47,6 @@ export function paletteItemTitle(pi: PaletteItem, options: PaletteItemDisplayOpt
  * @returns The composed title for the blend.
  */
 export function blendTitle({ brand, number }: Blend, options: PaletteItemDisplayOptions): string {
-  if (options.colorOnly) return "";
   const components = [];
   if (options.showVendor) components.push(brand);
   if (options.showNumber) components.push(number);
