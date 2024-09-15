@@ -10,6 +10,7 @@
   "dependencies": {
     "@primevue/themes": "^4.0.4",
     "@tauri-apps/api": "^1.6.0",
+    "borsher": "^3.5.0",
     "pinia": "^2.2.2",
     "pinia-plugin-persistedstate": "^3.2.3",
     "pixi-cull": "^2.1.1",

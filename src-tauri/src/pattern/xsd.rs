@@ -132,7 +132,7 @@ trait XsdRead: Read + Seek {
   fn read_hex_color(&mut self) -> Result<String>;
 
   /// Reads node and line coordinates.
-  fn read_fractional_coors(&mut self) -> Result<(f64, f64)>;
+  fn read_fractional_coors(&mut self) -> Result<(Coord, Coord)>;
 }
 
 impl XsdRead for Cursor {
@@ -163,10 +163,10 @@ impl XsdRead for Cursor {
     Ok(hex::encode_upper(buf))
   }
 
-  fn read_fractional_coors(&mut self) -> Result<(f64, f64)> {
+  fn read_fractional_coors(&mut self) -> Result<(Coord, Coord)> {
     // The resolution of coordinates is 1/2 of a pattern cell.
-    let x = self.read_u16::<LittleEndian>()? as f64 / 2.0;
-    let y = self.read_u16::<LittleEndian>()? as f64 / 2.0;
+    let x = NotNan::new(self.read_u16::<LittleEndian>()? as f32).unwrap() / 2.0;
+    let y = NotNan::new(self.read_u16::<LittleEndian>()? as f32).unwrap() / 2.0;
     Ok((x, y))
   }
 }
@@ -517,8 +517,8 @@ fn map_stitches_data_into_stitches(
       continue;
     }
 
-    let x = (i % pattern_width) as f64;
-    let y = (i / pattern_width) as f64;
+    let x = NotNan::new((i % pattern_width) as f32).unwrap();
+    let y = NotNan::new((i / pattern_width) as f32).unwrap();
 
     if stitch_buffer[3] == 0 {
       fullstitches.push(FullStitch {
@@ -534,7 +534,7 @@ fn map_stitches_data_into_stitches(
     let small_stitch_buffer = small_stitch_buffers.get(position as usize).unwrap();
 
     for (significant_byte_index, bitand_arg, palindex_index, kind) in PETITE_STITCH_DATA {
-      let (x, y) = calc_small_stitch_coors(x, y, &kind);
+      let (x, y) = adjust_small_stitch_coors(x, y, &kind);
       if small_stitch_buffer[significant_byte_index] & bitand_arg != 0 {
         fullstitches.push(FullStitch {
           x,
@@ -547,7 +547,7 @@ fn map_stitches_data_into_stitches(
 
     for (significant_byte_index, bitand_arg, palindex_index, kind) in PART_STITCH_DATA {
       if small_stitch_buffer[significant_byte_index] & bitand_arg != 0 {
-        let (x, y) = calc_small_stitch_coors(x, y, &kind);
+        let (x, y) = adjust_small_stitch_coors(x, y, &kind);
         let direction = match kind {
           XsdSmallStitchKind::HalfTop | XsdSmallStitchKind::QuarterTopLeft | XsdSmallStitchKind::QuarterBottomRight => {
             PartStitchDirection::Backward
@@ -575,7 +575,7 @@ fn map_stitches_data_into_stitches(
 /// Calculates the coordinates of the small stitch.
 /// The XSD format contains coordinates without additional offsets relative to the cell.
 /// But this is important for us.
-fn calc_small_stitch_coors(x: f64, y: f64, kind: &XsdSmallStitchKind) -> (f64, f64) {
+fn adjust_small_stitch_coors(x: Coord, y: Coord, kind: &XsdSmallStitchKind) -> (Coord, Coord) {
   match kind {
     XsdSmallStitchKind::QuarterTopLeft | XsdSmallStitchKind::PetiteTopLeft => (x, y),
     XsdSmallStitchKind::QuarterTopRight | XsdSmallStitchKind::PetiteTopRight => (x + 0.5, y),

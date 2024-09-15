@@ -1,7 +1,6 @@
 import { reactive } from "vue";
 import { defineStore } from "pinia";
-import { FullStitchKind } from "#/types/pattern";
-import type { PaletteItem, StitchKind } from "#/types/pattern";
+import { StitchKind, type PaletteItem } from "#/schemas/pattern";
 
 interface OpenedPattern {
   title: string;
@@ -17,7 +16,7 @@ export interface AppState {
 
 export const useAppStateStore = defineStore("embroidery-studio-state", () => {
   const state = reactive<AppState>({
-    selectedStitchTool: FullStitchKind.Full,
+    selectedStitchTool: StitchKind.Full,
   });
 
   /**

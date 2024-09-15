@@ -1,6 +1,8 @@
-use std::{collections::BTreeMap, ffi::OsStr, fs, path::PathBuf, time::Instant};
+use std::{cmp::Ordering, collections::BTreeSet, ffi::OsStr, fs, path::PathBuf, time::Instant};
 
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use borsh::{BorshDeserialize, BorshSerialize};
+use ordered_float::NotNan;
+use serde::{Deserialize, Serialize};
 
 use crate::{error::*, state::AppStateType};
 
@@ -13,7 +15,7 @@ mod xsd;
 mod tests;
 
 #[tauri::command]
-pub fn load_pattern(file_path: PathBuf, state: tauri::State<AppStateType>) -> Result<Pattern> {
+pub fn load_pattern(file_path: PathBuf, state: tauri::State<AppStateType>) -> Result<Vec<u8>> {
   log::trace!("Loading pattern from {:?}", file_path);
   let mut state = state.write().unwrap();
   let pattern_key = PatternKey::from(file_path.clone());
@@ -37,11 +39,11 @@ pub fn load_pattern(file_path: PathBuf, state: tauri::State<AppStateType>) -> Re
     }
   };
   log::trace!("Pattern loaded");
-  Ok(pattern)
+  Ok(borsh::to_vec(&pattern).unwrap())
 }
 
 #[tauri::command]
-pub fn create_pattern(state: tauri::State<AppStateType>) -> (PatternKey, Pattern) {
+pub fn create_pattern(state: tauri::State<AppStateType>) -> (PatternKey, Vec<u8>) {
   log::trace!("Creating new pattern");
   let mut state = state.write().unwrap();
   let file_path = PathBuf::from(format!("Untitled-{:?}.json", Instant::now()));
@@ -49,7 +51,7 @@ pub fn create_pattern(state: tauri::State<AppStateType>) -> (PatternKey, Pattern
   let pattern = Pattern::default();
   state.patterns.insert(pattern_key.clone(), pattern.clone());
   log::trace!("Pattern created");
-  (pattern_key, pattern)
+  (pattern_key, borsh::to_vec(&pattern).unwrap())
 }
 
 // TODO: Use a custom or different pattern format, but not the JSON.
@@ -98,17 +100,19 @@ impl TryFrom<Option<&OsStr>> for PatternFormat {
   }
 }
 
-#[derive(Debug, Hash, PartialEq, Eq, Clone, Serialize, Deserialize)]
-#[serde(transparent)]
-pub struct PatternKey(PathBuf);
+#[derive(Debug, Hash, PartialEq, Eq, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+#[repr(transparent)]
+pub struct PatternKey(String);
 
 impl From<PathBuf> for PatternKey {
   fn from(value: PathBuf) -> Self {
-    Self(value)
+    Self(value.to_string_lossy().to_string())
   }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+pub type Coord = NotNan<f32>;
+
+#[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 pub struct Pattern {
   properties: PatternProperties,
   info: PatternInfo,
@@ -164,13 +168,13 @@ impl Default for Pattern {
   }
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 struct PatternProperties {
   width: u16,
   height: u16,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 struct PatternInfo {
   title: String,
   author: String,
@@ -178,7 +182,7 @@ struct PatternInfo {
   description: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 struct PaletteItem {
   brand: String,
   number: String,
@@ -188,14 +192,14 @@ struct PaletteItem {
   blends: Option<Vec<Blend>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 struct Blend {
   brand: String,
   number: String,
   strands: u8,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 struct Fabric {
   #[serde(rename = "stitchesPerInch")]
   stitches_per_inch: (u16, u16),
@@ -204,61 +208,39 @@ struct Fabric {
   color: String,
 }
 
-pub trait Key {
-  fn key(&self) -> String;
+#[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+#[serde(transparent)]
+pub struct Stitches<T: Ord> {
+  inner: BTreeSet<T>,
 }
 
-#[derive(Debug, Clone)]
-pub struct Stitches<T> {
-  inner: BTreeMap<String, T>,
-}
-
-impl<T> Stitches<T> {
+impl<T: Ord> Stitches<T> {
   #[allow(clippy::new_without_default)]
   pub fn new() -> Self {
-    Self { inner: BTreeMap::new() }
+    Self { inner: BTreeSet::new() }
   }
 
   pub fn iter(&self) -> impl Iterator<Item = &T> {
-    self.inner.values()
+    self.inner.iter()
   }
-}
 
-impl<T: Key> Stitches<T> {
   pub fn insert(&mut self, stitch: T) -> Option<T> {
-    self.inner.insert(stitch.key(), stitch)
+    self.inner.replace(stitch)
   }
 
-  pub fn remove(&mut self, stitch: T) -> Option<T> {
-    let key = stitch.key();
-    self.inner.remove(&key)
+  pub fn remove(&mut self, stitch: &T) -> bool {
+    self.inner.remove(stitch)
   }
 
-  pub fn get(&self, key: &str) -> Option<&T> {
-    self.inner.get(key)
-  }
-}
-
-impl<T: Clone + Serialize> Serialize for Stitches<T> {
-  fn serialize<S: Serializer>(&self, ser: S) -> Result<S::Ok, S::Error> {
-    let stitches: Vec<T> = self.inner.values().cloned().collect();
-    serde::Serialize::serialize(&stitches, ser)
+  pub fn get(&self, stitch: &T) -> Option<&T> {
+    self.inner.get(stitch)
   }
 }
 
-impl<'de, T: Key + Deserialize<'de>> Deserialize<'de> for Stitches<T> {
-  fn deserialize<D: Deserializer<'de>>(de: D) -> Result<Self, D::Error> {
-    let values: Vec<T> = Deserialize::deserialize(de)?;
-    Ok(Self {
-      inner: BTreeMap::from_iter(values.into_iter().map(|item| (item.key(), item))),
-    })
-  }
-}
-
-impl<T: Key> FromIterator<T> for Stitches<T> {
+impl<T: Ord> FromIterator<T> for Stitches<T> {
   fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
     Self {
-      inner: BTreeMap::from_iter(iter.into_iter().map(|item| (item.key(), item))),
+      inner: BTreeSet::from_iter(iter),
     }
   }
 }
@@ -296,7 +278,7 @@ impl Stitches<FullStitch> {
         kind,
       },
     ] {
-      if let Some(fullstitch) = self.get(&petite.key()) {
+      if let Some(fullstitch) = self.get(&petite) {
         conflicts.push(fullstitch.clone());
       }
     }
@@ -308,12 +290,12 @@ impl Stitches<FullStitch> {
   pub fn find_conflicts_with_petite_stitch(&self, fullstitch: &FullStitch) -> Option<FullStitch> {
     debug_assert_eq!(fullstitch.kind, FullStitchKind::Petite);
     let fullstitch = FullStitch {
-      x: fullstitch.x.trunc(),
-      y: fullstitch.y.trunc(),
+      x: NotNan::new(fullstitch.x.trunc()).unwrap(),
+      y: NotNan::new(fullstitch.y.trunc()).unwrap(),
       palindex: fullstitch.palindex,
       kind: FullStitchKind::Full,
     };
-    self.get(&fullstitch.key()).cloned()
+    self.get(&fullstitch).cloned()
   }
 
   /// Finds conflicts with a given half stitch.
@@ -333,7 +315,7 @@ impl Stitches<FullStitch> {
       palindex,
       kind: FullStitchKind::Full,
     };
-    if let Some(fullstitch) = self.get(&fullstitch.key()) {
+    if let Some(fullstitch) = self.get(&fullstitch) {
       conflicts.push(fullstitch.clone());
     }
 
@@ -354,7 +336,7 @@ impl Stitches<FullStitch> {
             kind,
           },
         ] {
-          if let Some(fullstitch) = self.get(&petite.key()) {
+          if let Some(fullstitch) = self.get(&petite) {
             conflicts.push(fullstitch.clone());
           }
         }
@@ -369,7 +351,7 @@ impl Stitches<FullStitch> {
             kind,
           },
         ] {
-          if let Some(fullstitch) = self.get(&petite.key()) {
+          if let Some(fullstitch) = self.get(&petite) {
             conflicts.push(fullstitch.clone());
           }
         }
@@ -386,8 +368,8 @@ impl Stitches<FullStitch> {
     let mut conflicts = Vec::new();
     for fullstitch in [
       FullStitch {
-        x: partstitch.x.trunc(),
-        y: partstitch.y.trunc(),
+        x: NotNan::new(partstitch.x.trunc()).unwrap(),
+        y: NotNan::new(partstitch.y.trunc()).unwrap(),
         palindex: partstitch.palindex,
         kind: FullStitchKind::Full,
       },
@@ -398,7 +380,7 @@ impl Stitches<FullStitch> {
         kind: FullStitchKind::Petite,
       },
     ] {
-      if let Some(fullstitch) = self.get(&fullstitch.key()) {
+      if let Some(fullstitch) = self.get(&fullstitch) {
         conflicts.push(fullstitch.clone());
       }
     }
@@ -461,7 +443,7 @@ impl Stitches<PartStitch> {
         direction: PartStitchDirection::Backward,
       },
     ] {
-      if let Some(partstitch) = self.get(&quarter.key()) {
+      if let Some(partstitch) = self.get(&quarter) {
         conflicts.push(partstitch.clone());
       }
     }
@@ -487,13 +469,13 @@ impl Stitches<PartStitch> {
     let mut conflicts = Vec::new();
 
     let half = PartStitch {
-      x: x.trunc(),
-      y: y.trunc(),
+      x: NotNan::new(x.trunc()).unwrap(),
+      y: NotNan::new(y.trunc()).unwrap(),
       palindex,
       direction,
       kind: PartStitchKind::Half,
     };
-    if let Some(half) = self.get(&half.key()) {
+    if let Some(half) = self.get(&half) {
       conflicts.push(half.clone());
     }
 
@@ -504,7 +486,7 @@ impl Stitches<PartStitch> {
       direction,
       kind: PartStitchKind::Quarter,
     };
-    if let Some(quarter) = self.get(&quarter.key()) {
+    if let Some(quarter) = self.get(&quarter) {
       conflicts.push(quarter.clone());
     }
 
@@ -539,7 +521,7 @@ impl Stitches<PartStitch> {
             direction: PartStitchDirection::Forward,
           },
         ] {
-          if let Some(partstitch) = self.get(&quarter.key()) {
+          if let Some(partstitch) = self.get(&quarter) {
             conflicts.push(partstitch.clone());
           }
         }
@@ -561,7 +543,7 @@ impl Stitches<PartStitch> {
             direction: PartStitchDirection::Backward,
           },
         ] {
-          if let Some(partstitch) = self.get(&quarter.key()) {
+          if let Some(partstitch) = self.get(&quarter) {
             conflicts.push(partstitch.clone());
           }
         }
@@ -587,109 +569,149 @@ impl Stitches<PartStitch> {
     };
 
     let half = PartStitch {
-      x: x.trunc(),
-      y: y.trunc(),
+      x: NotNan::new(x.trunc()).unwrap(),
+      y: NotNan::new(y.trunc()).unwrap(),
       palindex,
       direction,
       kind: PartStitchKind::Half,
     };
 
-    self.get(&half.key()).cloned()
+    self.get(&half).cloned()
   }
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(
+  Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, BorshSerialize, BorshDeserialize,
+)]
+#[borsh(use_discriminant = true)]
+pub enum FullStitchKind {
+  Full = 0,
+  Petite = 1,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 pub struct FullStitch {
-  pub x: f64,
-  pub y: f64,
+  pub x: Coord,
+  pub y: Coord,
   pub palindex: u8,
   pub kind: FullStitchKind,
 }
 
-impl Key for FullStitch {
-  /// Returns the key for the full stitch.
-  /// It uses the x and y coordinates and the kind of stitch.
-  fn key(&self) -> String {
-    format!("{:?}:{:?}|{}", self.x, self.y, self.kind as u8)
+impl PartialOrd for FullStitch {
+  fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+    Some(self.cmp(other))
   }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
-pub enum FullStitchKind {
-  Full,
-  Petite,
+impl Ord for FullStitch {
+  fn cmp(&self, other: &Self) -> Ordering {
+    self
+      .x
+      .cmp(&other.x)
+      .then(self.y.cmp(&other.y))
+      .then(self.kind.cmp(&other.kind))
+  }
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(
+  Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, BorshSerialize, BorshDeserialize,
+)]
+#[borsh(use_discriminant = true)]
+pub enum PartStitchDirection {
+  Forward = 1,
+  Backward = 2,
+}
+
+#[derive(
+  Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, BorshSerialize, BorshDeserialize,
+)]
+#[borsh(use_discriminant = true)]
+pub enum PartStitchKind {
+  Half = 0,
+  Quarter = 1,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 pub struct PartStitch {
-  pub x: f64,
-  pub y: f64,
+  pub x: Coord,
+  pub y: Coord,
   pub palindex: u8,
   pub direction: PartStitchDirection,
   pub kind: PartStitchKind,
 }
 
-impl Key for PartStitch {
-  /// Returns the key for the part stitch.
-  /// It uses the x and y coordinates, the direction and the kind of stitch.
-  fn key(&self) -> String {
-    format!("{:?}:{:?}|{}|{}", self.x, self.y, self.direction as u8, self.kind as u8)
+impl PartialOrd for PartStitch {
+  fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+    Some(self.cmp(other))
   }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
-pub enum PartStitchDirection {
-  Forward,
-  Backward,
+impl Ord for PartStitch {
+  fn cmp(&self, other: &Self) -> Ordering {
+    self
+      .x
+      .cmp(&other.x)
+      .then(self.y.cmp(&other.y))
+      .then(self.direction.cmp(&other.direction))
+      .then(self.kind.cmp(&other.kind))
+  }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
-pub enum PartStitchKind {
-  Half,
-  Quarter,
+#[derive(
+  Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, BorshSerialize, BorshDeserialize,
+)]
+#[borsh(use_discriminant = true)]
+enum NodeKind {
+  FrenchKnot = 0,
+  Bead = 1,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 pub struct Node {
-  x: f64,
-  y: f64,
+  x: Coord,
+  y: Coord,
   rotated: bool,
   palindex: u8,
   kind: NodeKind,
 }
 
-impl Key for Node {
-  /// Returns the key for the node stitch.
-  /// It uses the x and y coordinates.
-  fn key(&self) -> String {
-    format!("{:?}:{:?}", self.x, self.y)
+impl PartialOrd for Node {
+  fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+    Some(self.cmp(other))
   }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
-enum NodeKind {
-  FrenchKnot,
-  Bead,
+impl Ord for Node {
+  fn cmp(&self, other: &Self) -> Ordering {
+    self.x.cmp(&other.x).then(self.y.cmp(&other.y))
+  }
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(
+  Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, BorshSerialize, BorshDeserialize,
+)]
+#[borsh(use_discriminant = true)]
+enum LineKind {
+  Back = 0,
+  Straight = 1,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 pub struct Line {
-  x: (f64, f64),
-  y: (f64, f64),
+  x: (Coord, Coord),
+  y: (Coord, Coord),
   palindex: u8,
   kind: LineKind,
 }
 
-impl Key for Line {
-  /// Returns the key for the line stitch.
-  /// It uses the x and y coordinates.
-  fn key(&self) -> String {
-    format!("{:?}:{:?}:{:?}:{:?}", self.x.0, self.y.0, self.x.1, self.y.1)
+impl PartialOrd for Line {
+  fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+    Some(self.cmp(other))
   }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
-enum LineKind {
-  Back,
-  Straight,
+impl Ord for Line {
+  fn cmp(&self, other: &Self) -> Ordering {
+    self.x.cmp(&other.x).then(self.y.cmp(&other.y))
+  }
 }

@@ -205,9 +205,9 @@ impl AsRef<Vec<OxsFullStitch>> for OxsFullStitches {
 #[derive(Debug, Deserialize)]
 struct OxsFullStitch {
   #[serde(rename = "@x")]
-  x: f64,
+  x: Coord,
   #[serde(rename = "@y")]
-  y: f64,
+  y: Coord,
   #[serde(rename = "@palindex")]
   palindex: u8,
 }
@@ -227,9 +227,9 @@ impl AsRef<Vec<OxsPartStitch>> for OxsPartStitches {
 #[derive(Debug, Deserialize)]
 struct OxsPartStitch {
   #[serde(rename = "@x")]
-  x: f64,
+  x: Coord,
   #[serde(rename = "@y")]
-  y: f64,
+  y: Coord,
   #[serde(rename = "@palindex1")]
   palindex1: u8,
   #[serde(rename = "@palindex2")]
@@ -253,13 +253,13 @@ impl AsRef<Vec<OxsBackStitch>> for OxsBackStitches {
 #[derive(Debug, Deserialize)]
 struct OxsBackStitch {
   #[serde(rename = "@x1")]
-  x1: f64,
+  x1: Coord,
   #[serde(rename = "@y1")]
-  y1: f64,
+  y1: Coord,
   #[serde(rename = "@x2")]
-  x2: f64,
+  x2: Coord,
   #[serde(rename = "@y2")]
-  y2: f64,
+  y2: Coord,
   #[serde(rename = "@palindex")]
   palindex: u8,
 }
@@ -279,9 +279,9 @@ impl AsRef<Vec<OxsOrnament>> for OxsOrnaments {
 #[derive(Debug, Deserialize)]
 struct OxsOrnament {
   #[serde(rename = "@x1")]
-  x: f64,
+  x: Coord,
   #[serde(rename = "@y1")]
-  y: f64,
+  y: Coord,
   #[serde(rename = "@palindex")]
   palindex: u8,
   #[serde(rename = "@objecttype")]

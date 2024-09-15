@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { blendTitle, paletteItemTitle, type PaletteItemDisplayOptions } from "./paletteItem";
-import type { Blend, PaletteItem } from "#/types/pattern";
+import type { Blend, PaletteItem } from "#/schemas/pattern";
 
 const BLENDS: Blend[] = [
   {

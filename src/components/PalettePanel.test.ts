@@ -4,7 +4,7 @@ import { createTestingPinia } from "@pinia/testing";
 import { PrimeVue } from "@primevue/core";
 import Popover from "primevue/popover";
 import PalettePanel from "./PalettePanel.vue";
-import type { Blend, PaletteItem } from "#/types/pattern";
+import type { Blend, PaletteItem } from "#/schemas/pattern";
 import ToggleSwitch from "primevue/toggleswitch";
 import Checkbox from "primevue/checkbox";
 

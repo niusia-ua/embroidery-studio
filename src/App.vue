@@ -76,7 +76,7 @@
   import { useAppStateStore } from "./stores/state";
   import { studioDocumentDir } from "./utils/path";
   import * as patternApi from "./api/pattern";
-  import type { Pattern } from "./types/pattern";
+  import type { Pattern } from "./schemas/pattern";
 
   const appStateStore = useAppStateStore();
 
@@ -175,7 +175,7 @@
   // TODO: Create a new pattern with a user defined data (properties, info, fabric, etc.).
   async function createPattern() {
     loading.value = true;
-    const [key, pat] = await patternApi.createPattern();
+    const { key, pattern: pat } = await patternApi.createPattern();
     pattern.value = pat;
     appStateStore.addOpenedPattern(pattern.value.info.title, key);
     loading.value = false;

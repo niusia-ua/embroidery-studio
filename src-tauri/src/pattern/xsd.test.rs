@@ -46,7 +46,7 @@ mod xsd_read_tests {
       Cursor::new(vec![0x08, 0x00, 0x09, 0x00])
         .read_fractional_coors()
         .unwrap(),
-      (4.0, 4.5)
+      (NotNan::new(4.0).unwrap(), NotNan::new(4.5).unwrap())
     );
   }
 }
@@ -218,50 +218,50 @@ fn reads_stitches() {
   let (loaded_fullstitches, loaded_partstitches) = read_stitches(&mut cursor, &pattern_properties).unwrap();
   let expected_fullstitches = [
     FullStitch {
-      x: 0.0,
-      y: 0.0,
+      x: NotNan::new(0.0).unwrap(),
+      y: NotNan::new(0.0).unwrap(),
       palindex: 1,
       kind: FullStitchKind::Full,
     },
     FullStitch {
-      x: 9.0,
-      y: 0.0,
+      x: NotNan::new(9.0).unwrap(),
+      y: NotNan::new(0.0).unwrap(),
       palindex: 2,
       kind: FullStitchKind::Full,
     },
     FullStitch {
-      x: 1.0,
-      y: 1.0,
+      x: NotNan::new(1.0).unwrap(),
+      y: NotNan::new(1.0).unwrap(),
       palindex: 3,
       kind: FullStitchKind::Petite,
     },
     FullStitch {
-      x: 2.5,
-      y: 1.0,
+      x: NotNan::new(2.5).unwrap(),
+      y: NotNan::new(1.0).unwrap(),
       palindex: 3,
       kind: FullStitchKind::Petite,
     },
     FullStitch {
-      x: 1.0,
-      y: 2.5,
+      x: NotNan::new(1.0).unwrap(),
+      y: NotNan::new(2.5).unwrap(),
       palindex: 3,
       kind: FullStitchKind::Petite,
     },
     FullStitch {
-      x: 2.5,
-      y: 2.5,
+      x: NotNan::new(2.5).unwrap(),
+      y: NotNan::new(2.5).unwrap(),
       palindex: 3,
       kind: FullStitchKind::Petite,
     },
     FullStitch {
-      x: 0.0,
-      y: 9.0,
+      x: NotNan::new(0.0).unwrap(),
+      y: NotNan::new(9.0).unwrap(),
       palindex: 6,
       kind: FullStitchKind::Full,
     },
     FullStitch {
-      x: 9.0,
-      y: 9.0,
+      x: NotNan::new(9.0).unwrap(),
+      y: NotNan::new(9.0).unwrap(),
       palindex: 0,
       kind: FullStitchKind::Full,
     },
@@ -272,57 +272,57 @@ fn reads_stitches() {
 
   let expected_partstitches = [
     PartStitch {
-      x: 1.5,
-      y: 1.5,
+      x: NotNan::new(1.5).unwrap(),
+      y: NotNan::new(1.5).unwrap(),
       palindex: 4,
       direction: PartStitchDirection::Backward,
       kind: PartStitchKind::Quarter,
     },
     PartStitch {
-      x: 2.0,
-      y: 1.5,
+      x: NotNan::new(2.0).unwrap(),
+      y: NotNan::new(1.5).unwrap(),
       palindex: 4,
       direction: PartStitchDirection::Forward,
       kind: PartStitchKind::Quarter,
     },
     PartStitch {
-      x: 1.5,
-      y: 2.0,
+      x: NotNan::new(1.5).unwrap(),
+      y: NotNan::new(2.0).unwrap(),
       palindex: 4,
       direction: PartStitchDirection::Forward,
       kind: PartStitchKind::Quarter,
     },
     PartStitch {
-      x: 2.0,
-      y: 2.0,
+      x: NotNan::new(2.0).unwrap(),
+      y: NotNan::new(2.0).unwrap(),
       palindex: 4,
       direction: PartStitchDirection::Backward,
       kind: PartStitchKind::Quarter,
     },
     PartStitch {
-      x: 3.0,
-      y: 3.0,
+      x: NotNan::new(3.0).unwrap(),
+      y: NotNan::new(3.0).unwrap(),
       palindex: 5,
       direction: PartStitchDirection::Backward,
       kind: PartStitchKind::Half,
     },
     PartStitch {
-      x: 4.0,
-      y: 3.0,
+      x: NotNan::new(4.0).unwrap(),
+      y: NotNan::new(3.0).unwrap(),
       palindex: 5,
       direction: PartStitchDirection::Forward,
       kind: PartStitchKind::Half,
     },
     PartStitch {
-      x: 3.0,
-      y: 4.0,
+      x: NotNan::new(3.0).unwrap(),
+      y: NotNan::new(4.0).unwrap(),
       palindex: 5,
       direction: PartStitchDirection::Forward,
       kind: PartStitchKind::Half,
     },
     PartStitch {
-      x: 4.0,
-      y: 4.0,
+      x: NotNan::new(4.0).unwrap(),
+      y: NotNan::new(4.0).unwrap(),
       palindex: 5,
       direction: PartStitchDirection::Backward,
       kind: PartStitchKind::Half,
@@ -340,22 +340,22 @@ fn reads_joints() {
   let (loaded_nodes, loaded_lines) = read_joints(&mut cursor, joints_count).unwrap();
   let expected_nodes = [
     Node {
-      x: 3.0,
-      y: 3.0,
+      x: NotNan::new(3.0).unwrap(),
+      y: NotNan::new(3.0).unwrap(),
       rotated: false,
       palindex: 2,
       kind: NodeKind::FrenchKnot,
     },
     Node {
-      x: 3.0,
-      y: 4.5,
+      x: NotNan::new(3.0).unwrap(),
+      y: NotNan::new(4.5).unwrap(),
       rotated: false,
       palindex: 3,
       kind: NodeKind::Bead,
     },
     Node {
-      x: 3.0,
-      y: 5.5,
+      x: NotNan::new(3.0).unwrap(),
+      y: NotNan::new(5.5).unwrap(),
       rotated: true,
       palindex: 3,
       kind: NodeKind::Bead,
@@ -367,32 +367,32 @@ fn reads_joints() {
 
   let expected_lines = [
     Line {
-      x: (1.0, 2.0),
-      y: (1.0, 1.0),
+      x: (NotNan::new(1.0).unwrap(), NotNan::new(2.0).unwrap()),
+      y: (NotNan::new(1.0).unwrap(), NotNan::new(1.0).unwrap()),
       palindex: 1,
       kind: LineKind::Back,
     },
     Line {
-      x: (2.0, 3.0),
-      y: (1.0, 2.0),
+      x: (NotNan::new(2.0).unwrap(), NotNan::new(3.0).unwrap()),
+      y: (NotNan::new(1.0).unwrap(), NotNan::new(2.0).unwrap()),
       palindex: 1,
       kind: LineKind::Back,
     },
     Line {
-      x: (3.0, 4.0),
-      y: (2.0, 1.0),
+      x: (NotNan::new(3.0).unwrap(), NotNan::new(4.0).unwrap()),
+      y: (NotNan::new(2.0).unwrap(), NotNan::new(1.0).unwrap()),
       palindex: 1,
       kind: LineKind::Back,
     },
     Line {
-      x: (4.0, 5.0),
-      y: (1.0, 1.0),
+      x: (NotNan::new(4.0).unwrap(), NotNan::new(5.0).unwrap()),
+      y: (NotNan::new(1.0).unwrap(), NotNan::new(1.0).unwrap()),
       palindex: 1,
       kind: LineKind::Back,
     },
     Line {
-      x: (1.0, 5.0),
-      y: (2.0, 2.0),
+      x: (NotNan::new(1.0).unwrap(), NotNan::new(5.0).unwrap()),
+      y: (NotNan::new(2.0).unwrap(), NotNan::new(2.0).unwrap()),
       palindex: 0,
       kind: LineKind::Straight,
     },

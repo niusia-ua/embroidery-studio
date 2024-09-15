@@ -5,10 +5,17 @@
 <script lang="ts" setup>
   import { onMounted, ref, watch } from "vue";
   import { appWindow } from "@tauri-apps/api/window";
+  import { borshDeserialize } from "borsher";
   import { CanvasService } from "#/services/canvas";
   import { useAppStateStore } from "#/stores/state";
-  import { FullStitchKind, LineKind, NodeKind, PartStitchDirection, PartStitchKind } from "#/types/pattern";
-  import type { FullStitch, Line, Node, PartStitch, Pattern, StitchKind } from "#/types/pattern";
+  import { PartStitchDirection, StitchKind } from "#/schemas/pattern";
+  import { emitStitchCreated } from "#/services/events/pattern";
+  import {
+    RemovedStitchEventPayloadSchema,
+    type RemovedStitchPayload,
+    type StitchEventPayload,
+  } from "#/schemas/events/pattern";
+  import type { FullStitch, Line, Node, PartStitch, Pattern } from "#/schemas/pattern";
 
   interface CanvasPanelProps {
     pattern: Pattern;
@@ -34,19 +41,6 @@
     (pattern) => canvasService.drawPattern(pattern),
   );
 
-  interface EventStitchCreatePayload {
-    fullstitch?: FullStitch;
-    partstitch?: PartStitch;
-    line?: Line;
-    node?: Node;
-  }
-
-  function emitStitchCreated(payload: EventStitchCreatePayload) {
-    // The current pattern is always available here.
-    const patternKey = appStateStore.state.currentPattern!.key;
-    return appWindow.emit("pattern:stitch:create", { patternKey, ...payload });
-  }
-
   // A start point is needed to draw the lines.
   // An end point is needed to draw all the other kinds of stitches (in addition to lines).
   canvasService.onDraw(async (start, end, ctrl) => {
@@ -54,29 +48,34 @@
 
     const x = Math.trunc(end.x);
     const y = Math.trunc(end.y);
+
     // Decimal portion of the end coordinates.
     const xdp = end.x - x;
     const ydp = end.y - y;
 
+    // The current pattern is always available here.
+    const patternKey = appStateStore.state.currentPattern!.key;
     const palitem = appStateStore.state.selectedPaletteItem;
     const palindex = props.pattern.palette.indexOf(palitem);
-    const kind = appStateStore.state.selectedStitchTool;
-    switch (kind) {
-      case FullStitchKind.Full:
-      case FullStitchKind.Petite: {
+
+    const tool = appStateStore.state.selectedStitchTool;
+    const kind = tool % 2; // Get 0 or 1.
+    switch (tool) {
+      case StitchKind.Full:
+      case StitchKind.Petite: {
         const fullstitch: FullStitch = {
           x: adjustStitchCoordinate(x, xdp, kind),
           y: adjustStitchCoordinate(y, ydp, kind),
           palindex,
           kind,
         };
-        await emitStitchCreated({ fullstitch });
+        await emitStitchCreated(patternKey, { fullstitch });
         canvasService.drawFullStitch(fullstitch, palitem.color);
         break;
       }
 
-      case PartStitchKind.Half:
-      case PartStitchKind.Quarter: {
+      case StitchKind.Half:
+      case StitchKind.Quarter: {
         const direction =
           (xdp < 0.5 && ydp > 0.5) || (xdp > 0.5 && ydp < 0.5)
             ? PartStitchDirection.Forward
@@ -88,13 +87,13 @@
           kind,
           direction,
         };
-        await emitStitchCreated({ partstitch });
+        await emitStitchCreated(patternKey, { partstitch });
         canvasService.drawPartStitch(partstitch, palitem.color);
         break;
       }
 
-      case LineKind.Back:
-      case LineKind.Straight: {
+      case StitchKind.Back:
+      case StitchKind.Straight: {
         const startX = Math.trunc(start.x);
         const startY = Math.trunc(start.y);
 
@@ -104,13 +103,13 @@
           palindex,
           kind,
         };
-        await emitStitchCreated({ line });
+        await emitStitchCreated(patternKey, { line });
         canvasService.drawLine(line, palitem.color);
         break;
       }
 
-      case NodeKind.FrenchKnot:
-      case NodeKind.Bead: {
+      case StitchKind.FrenchKnot:
+      case StitchKind.Bead: {
         const node: Node = {
           x: adjustStitchCoordinate(x, xdp, kind),
           y: adjustStitchCoordinate(y, ydp, kind),
@@ -118,29 +117,37 @@
           kind,
           rotated: ctrl,
         };
-        await emitStitchCreated({ node });
+        await emitStitchCreated(patternKey, { node });
         canvasService.drawNode(node, palitem.color);
         break;
       }
     }
   });
 
-  function adjustStitchCoordinate(value: number, decimalPortion: number, kind: StitchKind): number {
-    if (kind === FullStitchKind.Full || kind === PartStitchKind.Half) return value;
-    if (kind === FullStitchKind.Petite || kind === PartStitchKind.Quarter) {
-      return decimalPortion > 0.5 ? value + 0.5 : value;
+  function adjustStitchCoordinate(value: number, decimalPortion: number, tool: StitchKind): number {
+    switch (tool) {
+      case StitchKind.Full:
+      case StitchKind.Half: {
+        return value;
+      }
+      case StitchKind.Petite:
+      case StitchKind.Quarter: {
+        return decimalPortion > 0.5 ? value + 0.5 : value;
+      }
+      case StitchKind.Back:
+      case StitchKind.Straight:
+      case StitchKind.FrenchKnot:
+      case StitchKind.Bead: {
+        return decimalPortion > 0.5 ? value + 1 : decimalPortion > 0.25 ? value + 0.5 : value;
+      }
     }
-    return decimalPortion > 0.5 ? value + 1 : decimalPortion > 0.25 ? value + 0.5 : value;
   }
 
-  interface EventStitchRemovePayload {
-    fullstitches?: FullStitch[];
-    partstitches?: PartStitch[];
-    line?: Line;
-    node?: Node;
-  }
-
-  appWindow.listen<EventStitchRemovePayload>("pattern:stitch:remove", ({ payload }) => {
+  appWindow.listen<Uint8Array>("pattern:stitch:remove", (e) => {
+    const { payload } = borshDeserialize<StitchEventPayload<RemovedStitchPayload>>(
+      RemovedStitchEventPayloadSchema,
+      e.payload,
+    );
     if (payload.fullstitches) canvasService.removeFullStitches(payload.fullstitches);
     if (payload.partstitches) canvasService.removePartStitches(payload.partstitches);
     if (payload.line) canvasService.removeLine(payload.line);
