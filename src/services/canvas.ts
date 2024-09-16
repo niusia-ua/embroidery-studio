@@ -1,6 +1,6 @@
 import { Application, Container, Graphics, LINE_CAP, Point, Polygon, type ColorSource } from "pixi.js";
 import { Viewport } from "pixi-viewport";
-import { Simple as SimpleCulling } from "pixi-cull";
+import { SpatialHash as SpatialHashCuller } from "pixi-cull";
 import { FullStitchKind, NodeKind, PartStitchDirection, PartStitchKind } from "#/schemas/pattern";
 import type { FullStitch, Line, Node, PartStitch, Pattern, PatternProperties } from "#/schemas/pattern";
 import type { GridSettings } from "#/types/view";
@@ -68,9 +68,9 @@ const NODE_GEOMETRIES = {
 };
 
 export class CanvasService {
-  #pixi = new Application({ backgroundAlpha: 0 });
+  #pixi = new Application({ antialias: true, backgroundAlpha: 0 });
   #viewport = new Viewport({ events: this.#pixi.renderer.events });
-  #culler = new SimpleCulling();
+  #culler = new SpatialHashCuller();
   #stages = {
     fabric: new Graphics(),
     fullstitches: new Container(),
@@ -94,15 +94,15 @@ export class CanvasService {
       });
 
     // Add stages to the viewport.
-    for (const elem of Object.values(this.#stages)) {
-      this.#viewport.addChild(elem);
-      if (elem instanceof Graphics) this.#culler.add(elem);
-      else this.#culler.addList(elem.children);
+    for (const stage of Object.values(this.#stages)) {
+      stage.interactiveChildren = false;
+      stage.eventMode = "none";
+      this.#viewport.addChild(stage);
+      if (stage instanceof Container) this.#culler.addContainer(stage, true);
     }
     this.#pixi.stage.addChild(this.#viewport);
 
     // Initialize the culler.
-    this.#culler.cull(this.#viewport.getVisibleBounds());
     this.#pixi.ticker.add(() => {
       if (this.#viewport.dirty) {
         this.#culler.cull(this.#viewport.getVisibleBounds());
