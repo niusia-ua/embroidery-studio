@@ -235,25 +235,67 @@ mod stitches {
   fn new_stitches_should_not_conflict() {
     let fullstitch = full(NotNan::new(10.0).unwrap());
     assert!(TEST_FULLSTITCHES.get(&fullstitch).is_none());
-    assert_eq!(TEST_FULLSTITCHES.find_conflicts_with_full_stitch(&fullstitch).len(), 0);
-    assert_eq!(TEST_PARTSTITCHES.find_conflicts_with_full_stitch(&fullstitch).len(), 0);
+    assert_eq!(
+      TEST_FULLSTITCHES
+        .clone()
+        .remove_conflicts_with_full_stitch(&fullstitch)
+        .len(),
+      0
+    );
+    assert_eq!(
+      TEST_PARTSTITCHES
+        .clone()
+        .remove_conflicts_with_full_stitch(&fullstitch)
+        .len(),
+      0
+    );
 
     for petite in petites(NotNan::new(10.0).unwrap()) {
-      assert!(TEST_FULLSTITCHES.get(&petite).is_none());
-      assert!(TEST_FULLSTITCHES.find_conflicts_with_petite_stitch(&petite).is_none());
-      assert_eq!(TEST_PARTSTITCHES.find_conflicts_with_petite_stitch(&petite).len(), 0);
+      assert!(TEST_FULLSTITCHES.clone().get(&petite).is_none());
+      assert_eq!(
+        TEST_FULLSTITCHES
+          .clone()
+          .remove_conflicts_with_petite_stitch(&petite)
+          .len(),
+        0
+      );
+      assert_eq!(
+        TEST_PARTSTITCHES
+          .clone()
+          .remove_conflicts_with_petite_stitch(&petite)
+          .len(),
+        0
+      );
     }
 
     for half in halves(NotNan::new(10.0).unwrap()) {
-      assert!(TEST_PARTSTITCHES.get(&half).is_none());
-      assert_eq!(TEST_FULLSTITCHES.find_conflicts_with_half_stitch(&half).len(), 0);
-      assert_eq!(TEST_PARTSTITCHES.find_conflicts_with_half_stitch(&half).len(), 0);
+      assert!(TEST_PARTSTITCHES.clone().get(&half).is_none());
+      assert_eq!(
+        TEST_FULLSTITCHES.clone().remove_conflicts_with_half_stitch(&half).len(),
+        0
+      );
+      assert_eq!(
+        TEST_PARTSTITCHES.clone().remove_conflicts_with_half_stitch(&half).len(),
+        0
+      );
     }
 
     for quarter in quarters(NotNan::new(10.0).unwrap()) {
-      assert!(TEST_PARTSTITCHES.get(&quarter).is_none());
-      assert_eq!(TEST_FULLSTITCHES.find_conflicts_with_quarter_stitch(&quarter).len(), 0);
-      assert!(TEST_PARTSTITCHES.find_conflicts_with_quarter_stitch(&quarter).is_none());
+      assert!(TEST_PARTSTITCHES.clone().get(&quarter).is_none());
+      assert_eq!(
+        TEST_FULLSTITCHES
+          .clone()
+          .remove_conflicts_with_quarter_stitch(&quarter)
+          .len(),
+        0
+      );
+      assert_eq!(
+        TEST_PARTSTITCHES
+          .clone()
+          .remove_conflicts_with_quarter_stitch(&quarter)
+          .len(),
+        0
+      );
     }
 
     let back = line(NotNan::new(10.0).unwrap(), LineKind::Back);
@@ -272,111 +314,186 @@ mod stitches {
   #[test]
   fn full_stitch_conflicts_with_full_stitch() {
     let fullstitch = full(NotNan::new(0.0).unwrap());
-    assert!(TEST_FULLSTITCHES.get(&fullstitch).is_some());
-    assert_eq!(TEST_FULLSTITCHES.find_conflicts_with_full_stitch(&fullstitch).len(), 0);
+    assert!(TEST_FULLSTITCHES.clone().get(&fullstitch).is_some());
+    assert_eq!(
+      TEST_FULLSTITCHES
+        .clone()
+        .remove_conflicts_with_full_stitch(&fullstitch)
+        .len(),
+      0
+    );
   }
 
   #[test]
   fn full_stitch_conflicts_with_petite_stitches() {
     let fullstitch = full(NotNan::new(1.0).unwrap());
-    assert!(TEST_FULLSTITCHES.get(&fullstitch).is_none());
-    assert_eq!(TEST_FULLSTITCHES.find_conflicts_with_full_stitch(&fullstitch).len(), 4);
+    assert!(TEST_FULLSTITCHES.clone().get(&fullstitch).is_none());
+    assert_eq!(
+      TEST_FULLSTITCHES
+        .clone()
+        .remove_conflicts_with_full_stitch(&fullstitch)
+        .len(),
+      4
+    );
   }
 
   #[test]
   fn full_stitch_conflicts_with_half_stitches() {
     let fullstitch = full(NotNan::new(0.0).unwrap());
-    assert_eq!(TEST_PARTSTITCHES.find_conflicts_with_full_stitch(&fullstitch).len(), 2);
+    assert_eq!(
+      TEST_PARTSTITCHES
+        .clone()
+        .remove_conflicts_with_full_stitch(&fullstitch)
+        .len(),
+      2
+    );
   }
 
   #[test]
   fn full_stitch_conflicts_with_quarter_stitches() {
     let fullstitch = full(NotNan::new(1.0).unwrap());
-    assert_eq!(TEST_PARTSTITCHES.find_conflicts_with_full_stitch(&fullstitch).len(), 4);
+    assert_eq!(
+      TEST_PARTSTITCHES
+        .clone()
+        .remove_conflicts_with_full_stitch(&fullstitch)
+        .len(),
+      4
+    );
   }
 
   #[test]
   fn petite_stitches_conflict_with_full_stitches() {
     for petite in petites(NotNan::new(0.0).unwrap()) {
-      assert!(TEST_FULLSTITCHES.find_conflicts_with_petite_stitch(&petite).is_some());
+      assert_eq!(
+        TEST_FULLSTITCHES
+          .clone()
+          .remove_conflicts_with_petite_stitch(&petite)
+          .len(),
+        1
+      );
     }
   }
 
   #[test]
   fn petite_stitches_conflict_with_petite_stitches() {
     for petite in petites(NotNan::new(1.0).unwrap()) {
-      assert!(TEST_FULLSTITCHES.get(&petite).is_some());
-      assert!(TEST_FULLSTITCHES.find_conflicts_with_petite_stitch(&petite).is_none());
+      assert!(TEST_FULLSTITCHES.clone().get(&petite).is_some());
+      assert_eq!(
+        TEST_FULLSTITCHES
+          .clone()
+          .remove_conflicts_with_petite_stitch(&petite)
+          .len(),
+        0
+      );
     }
   }
 
   #[test]
   fn petite_stitches_conflict_with_half_stitches() {
     for petite in petites(NotNan::new(0.0).unwrap()) {
-      assert_eq!(TEST_PARTSTITCHES.find_conflicts_with_petite_stitch(&petite).len(), 1);
+      assert_eq!(
+        TEST_PARTSTITCHES
+          .clone()
+          .remove_conflicts_with_petite_stitch(&petite)
+          .len(),
+        1
+      );
     }
   }
 
   #[test]
   fn petite_stitches_conflict_with_quarter_stitches() {
     for petite in petites(NotNan::new(1.0).unwrap()) {
-      assert_eq!(TEST_PARTSTITCHES.find_conflicts_with_petite_stitch(&petite).len(), 1);
+      assert_eq!(
+        TEST_PARTSTITCHES
+          .clone()
+          .remove_conflicts_with_petite_stitch(&petite)
+          .len(),
+        1
+      );
     }
   }
 
   #[test]
   fn half_stitches_conflict_with_full_stitches() {
     for half in halves(NotNan::new(0.0).unwrap()) {
-      assert_eq!(TEST_FULLSTITCHES.find_conflicts_with_half_stitch(&half).len(), 1);
+      assert_eq!(
+        TEST_FULLSTITCHES.clone().remove_conflicts_with_half_stitch(&half).len(),
+        1
+      );
     }
   }
 
   #[test]
   fn half_stitches_conflict_with_petite_stitches() {
     for half in halves(NotNan::new(1.0).unwrap()) {
-      assert_eq!(TEST_FULLSTITCHES.find_conflicts_with_half_stitch(&half).len(), 2);
+      assert_eq!(
+        TEST_FULLSTITCHES.clone().remove_conflicts_with_half_stitch(&half).len(),
+        2
+      );
     }
   }
 
   #[test]
   fn half_stitches_conflict_with_half_stitches() {
     for half in halves(NotNan::new(0.0).unwrap()) {
-      assert!(TEST_PARTSTITCHES.get(&half).is_some());
+      assert!(TEST_PARTSTITCHES.clone().get(&half).is_some());
     }
   }
 
   #[test]
   fn half_stitches_conflict_with_quarter_stitches() {
     for half in halves(NotNan::new(1.0).unwrap()) {
-      assert_eq!(TEST_PARTSTITCHES.find_conflicts_with_half_stitch(&half).len(), 2);
+      assert_eq!(
+        TEST_PARTSTITCHES.clone().remove_conflicts_with_half_stitch(&half).len(),
+        2
+      );
     }
   }
 
   #[test]
   fn quarter_stitches_conflict_with_full_stitches() {
     for quarter in quarters(NotNan::new(0.0).unwrap()) {
-      assert_eq!(TEST_FULLSTITCHES.find_conflicts_with_quarter_stitch(&quarter).len(), 1);
+      assert_eq!(
+        TEST_FULLSTITCHES
+          .clone()
+          .remove_conflicts_with_quarter_stitch(&quarter)
+          .len(),
+        1
+      );
     }
   }
 
   #[test]
   fn quarter_stitches_conflict_with_petite_stitches() {
     for quarter in quarters(NotNan::new(1.0).unwrap()) {
-      assert_eq!(TEST_FULLSTITCHES.find_conflicts_with_quarter_stitch(&quarter).len(), 1);
+      assert_eq!(
+        TEST_FULLSTITCHES
+          .clone()
+          .remove_conflicts_with_quarter_stitch(&quarter)
+          .len(),
+        1
+      );
     }
   }
 
   #[test]
   fn quarter_stitches_conflict_with_half_stitches() {
     for quarter in quarters(NotNan::new(0.0).unwrap()) {
-      assert!(TEST_PARTSTITCHES.find_conflicts_with_quarter_stitch(&quarter).is_some());
+      assert_eq!(
+        TEST_PARTSTITCHES
+          .clone()
+          .remove_conflicts_with_quarter_stitch(&quarter)
+          .len(),
+        1
+      );
     }
   }
 
   #[test]
   fn quarter_stitches_conflict_with_quarter_stitches() {
     for quarter in quarters(NotNan::new(1.0).unwrap()) {
-      assert!(TEST_PARTSTITCHES.get(&quarter).is_some());
+      assert!(TEST_PARTSTITCHES.clone().get(&quarter).is_some());
     }
   }
 

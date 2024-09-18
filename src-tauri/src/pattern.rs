@@ -124,14 +124,43 @@ pub struct Pattern {
   lines: Stitches<Line>,
 }
 
+impl Pattern {
+  pub fn add_stitch(&mut self, stitch: Stitch) -> StitchConflicts {
+    log::trace!("Adding stitch");
+    match stitch {
+      Stitch::Full(fullstitch) => {
+        let conflicts = match fullstitch.kind {
+          FullStitchKind::Full => StitchConflicts::default()
+            .with_fullstitches(self.fullstitches.remove_conflicts_with_full_stitch(&fullstitch))
+            .with_partstitches(self.partstitches.remove_conflicts_with_full_stitch(&fullstitch)),
+          FullStitchKind::Petite => StitchConflicts::default()
+            .with_fullstitches(self.fullstitches.remove_conflicts_with_petite_stitch(&fullstitch))
+            .with_partstitches(self.partstitches.remove_conflicts_with_petite_stitch(&fullstitch)),
+        };
+        conflicts.with_fullstitch(self.fullstitches.insert(fullstitch))
+      }
+      Stitch::Part(partstitch) => {
+        let conflicts = match partstitch.kind {
+          PartStitchKind::Half => StitchConflicts::default()
+            .with_fullstitches(self.fullstitches.remove_conflicts_with_half_stitch(&partstitch))
+            .with_partstitches(self.partstitches.remove_conflicts_with_half_stitch(&partstitch)),
+          PartStitchKind::Quarter => StitchConflicts::default()
+            .with_fullstitches(self.fullstitches.remove_conflicts_with_quarter_stitch(&partstitch))
+            .with_partstitches(self.partstitches.remove_conflicts_with_quarter_stitch(&partstitch)),
+        };
+        conflicts.with_partstitch(self.partstitches.insert(partstitch))
+      }
+      Stitch::Node(node) => StitchConflicts::default().with_node(self.nodes.insert(node)),
+      Stitch::Line(line) => StitchConflicts::default().with_line(self.lines.insert(line)),
+    }
+  }
+}
+
 // TODO: Load the default values from a bundlled pattern file.
 impl Default for Pattern {
   fn default() -> Self {
     Self {
-      properties: PatternProperties {
-        width: 100,
-        height: 100,
-      },
+      properties: PatternProperties { width: 100, height: 100 },
       info: PatternInfo {
         title: "Untitled".to_string(),
         author: "".to_string(),
@@ -239,133 +268,91 @@ impl<T: Ord> Stitches<T> {
 
 impl<T: Ord> FromIterator<T> for Stitches<T> {
   fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
-    Self {
-      inner: BTreeSet::from_iter(iter),
-    }
+    Self { inner: BTreeSet::from_iter(iter) }
   }
 }
 
 impl Stitches<FullStitch> {
-  /// Finds conflicts with a given full stitch.
+  /// Removes and returns all the conflicts with a given full stitch.
   /// It looks for any petite stitches that overlap with the full stitch.
-  pub fn find_conflicts_with_full_stitch(&self, fullstitch: &FullStitch) -> Vec<FullStitch> {
+  pub fn remove_conflicts_with_full_stitch(&mut self, fullstitch: &FullStitch) -> Vec<FullStitch> {
     debug_assert_eq!(fullstitch.kind, FullStitchKind::Full);
+    let mut conflicts = Vec::new();
 
-    let x = fullstitch.x;
-    let y = fullstitch.y;
-    let palindex = fullstitch.palindex;
+    let x = fullstitch.x + 0.5;
+    let y = fullstitch.y + 0.5;
     let kind = FullStitchKind::Petite;
 
-    let mut conflicts = Vec::new();
     for petite in [
-      FullStitch { x, y, palindex, kind },
-      FullStitch {
-        x: x + 0.5,
-        y,
-        palindex,
-        kind,
-      },
-      FullStitch {
-        x,
-        y: y + 0.5,
-        palindex,
-        kind,
-      },
-      FullStitch {
-        x: x + 0.5,
-        y: y + 0.5,
-        palindex,
-        kind,
-      },
+      FullStitch { kind, ..*fullstitch },
+      FullStitch { x, kind, ..*fullstitch },
+      FullStitch { y, kind, ..*fullstitch },
+      FullStitch { x, y, kind, ..*fullstitch },
     ] {
-      if let Some(fullstitch) = self.get(&petite) {
-        conflicts.push(fullstitch.clone());
-      }
+      self.remove(&petite).then(|| conflicts.push(petite));
     }
+
     conflicts
   }
 
-  /// Finds conflicts with a given petite stitch.
+  /// Removes and returns all the conflicts with a given petite stitch.
   /// It looks for the full stitch that overlaps with the petite stitch.
-  pub fn find_conflicts_with_petite_stitch(&self, fullstitch: &FullStitch) -> Option<FullStitch> {
+  pub fn remove_conflicts_with_petite_stitch(&mut self, fullstitch: &FullStitch) -> Vec<FullStitch> {
     debug_assert_eq!(fullstitch.kind, FullStitchKind::Petite);
+    let mut conflicts = Vec::new();
+
     let fullstitch = FullStitch {
       x: NotNan::new(fullstitch.x.trunc()).unwrap(),
       y: NotNan::new(fullstitch.y.trunc()).unwrap(),
       palindex: fullstitch.palindex,
       kind: FullStitchKind::Full,
     };
-    self.get(&fullstitch).cloned()
-  }
 
-  /// Finds conflicts with a given half stitch.
-  /// It looks for the full and any petite stitches that overlap with the half stitch.
-  pub fn find_conflicts_with_half_stitch(&self, partstitch: &PartStitch) -> Vec<FullStitch> {
-    debug_assert_eq!(partstitch.kind, PartStitchKind::Half);
-
-    let x = partstitch.x;
-    let y = partstitch.y;
-    let palindex = partstitch.palindex;
-
-    let mut conflicts = Vec::new();
-
-    let fullstitch = FullStitch {
-      x,
-      y,
-      palindex,
-      kind: FullStitchKind::Full,
-    };
-    if let Some(fullstitch) = self.get(&fullstitch) {
-      conflicts.push(fullstitch.clone());
-    }
-
-    let kind = FullStitchKind::Petite;
-    match partstitch.direction {
-      PartStitchDirection::Forward => {
-        for petite in [
-          FullStitch {
-            x: x + 0.5,
-            y,
-            palindex,
-            kind,
-          },
-          FullStitch {
-            x,
-            y: y + 0.5,
-            palindex,
-            kind,
-          },
-        ] {
-          if let Some(fullstitch) = self.get(&petite) {
-            conflicts.push(fullstitch.clone());
-          }
-        }
-      }
-      PartStitchDirection::Backward => {
-        for petite in [
-          FullStitch { x, y, palindex, kind },
-          FullStitch {
-            x: x + 0.5,
-            y: y + 0.5,
-            palindex,
-            kind,
-          },
-        ] {
-          if let Some(fullstitch) = self.get(&petite) {
-            conflicts.push(fullstitch.clone());
-          }
-        }
-      }
-    };
+    self.remove(&fullstitch).then(|| conflicts.push(fullstitch));
 
     conflicts
   }
 
-  /// Finds conflicts with a given quarter stitch.
+  /// Removes and returns all the conflicts with a given half stitch.
+  /// It looks for the full and any petite stitches that overlap with the half stitch.
+  pub fn remove_conflicts_with_half_stitch(&mut self, partstitch: &PartStitch) -> Vec<FullStitch> {
+    debug_assert_eq!(partstitch.kind, PartStitchKind::Half);
+    let mut conflicts = Vec::new();
+    let fullstitch: FullStitch = partstitch.to_owned().into();
+
+    let x = partstitch.x + 0.5;
+    let y = partstitch.y + 0.5;
+    let kind = FullStitchKind::Petite;
+    match partstitch.direction {
+      PartStitchDirection::Forward => {
+        for petite in [
+          FullStitch { x, kind, ..fullstitch },
+          FullStitch { y, kind, ..fullstitch },
+        ] {
+          self.remove(&petite).then(|| conflicts.push(petite));
+        }
+      }
+      PartStitchDirection::Backward => {
+        for petite in [
+          FullStitch { kind, ..fullstitch },
+          FullStitch { x, y, kind, ..fullstitch },
+        ] {
+          self.remove(&petite).then(|| conflicts.push(petite));
+        }
+      }
+    };
+
+    self.remove(&fullstitch).then(|| conflicts.push(fullstitch));
+
+    conflicts
+  }
+
+  /// Removes and returns all the conflicts with a given quarter stitch.
   /// It looks for the full and petite stitches that overlap with the quarter stitch.
-  pub fn find_conflicts_with_quarter_stitch(&self, partstitch: &PartStitch) -> Vec<FullStitch> {
+  pub fn remove_conflicts_with_quarter_stitch(&mut self, partstitch: &PartStitch) -> Vec<FullStitch> {
     debug_assert_eq!(partstitch.kind, PartStitchKind::Quarter);
     let mut conflicts = Vec::new();
+
     for fullstitch in [
       FullStitch {
         x: NotNan::new(partstitch.x.trunc()).unwrap(),
@@ -373,100 +360,76 @@ impl Stitches<FullStitch> {
         palindex: partstitch.palindex,
         kind: FullStitchKind::Full,
       },
-      FullStitch {
-        x: partstitch.x,
-        y: partstitch.y,
-        palindex: partstitch.palindex,
-        kind: FullStitchKind::Petite,
-      },
+      partstitch.to_owned().into(), // Petite
     ] {
-      if let Some(fullstitch) = self.get(&fullstitch) {
-        conflicts.push(fullstitch.clone());
-      }
+      self.remove(&fullstitch).then(|| conflicts.push(fullstitch));
     }
+
     conflicts
   }
 }
 
 impl Stitches<PartStitch> {
-  /// Finds conflicts with a given full stitch.
+  /// Removes and returns all the conflicts with a given full stitch.
   /// It looks for any half and quarter stitches that overlap with the full stitch.
-  pub fn find_conflicts_with_full_stitch(&self, fullstitch: &FullStitch) -> Vec<PartStitch> {
+  pub fn remove_conflicts_with_full_stitch(&mut self, fullstitch: &FullStitch) -> Vec<PartStitch> {
     debug_assert_eq!(fullstitch.kind, FullStitchKind::Full);
-
-    let x = fullstitch.x;
-    let y = fullstitch.y;
-    let palindex = fullstitch.palindex;
-
     let mut conflicts = Vec::new();
-    for quarter in [
+
+    let partstitch: PartStitch = fullstitch.to_owned().into();
+    let x = fullstitch.x + 0.5;
+    let y = fullstitch.y + 0.5;
+
+    for partstitch in [
       PartStitch {
-        x,
-        y,
-        palindex,
-        kind: PartStitchKind::Half,
         direction: PartStitchDirection::Forward,
+        ..partstitch
       },
       PartStitch {
-        x,
-        y,
-        palindex,
-        kind: PartStitchKind::Half,
         direction: PartStitchDirection::Backward,
+        ..partstitch
       },
       PartStitch {
-        x,
-        y,
-        palindex,
         kind: PartStitchKind::Quarter,
         direction: PartStitchDirection::Backward,
-      },
-      PartStitch {
-        x: x + 0.5,
-        y,
-        palindex,
-        kind: PartStitchKind::Quarter,
-        direction: PartStitchDirection::Forward,
+        ..partstitch
       },
       PartStitch {
         x,
-        y: y + 0.5,
-        palindex,
         kind: PartStitchKind::Quarter,
         direction: PartStitchDirection::Forward,
+        ..partstitch
       },
       PartStitch {
-        x: x + 0.5,
-        y: y + 0.5,
-        palindex,
+        y,
+        kind: PartStitchKind::Quarter,
+        direction: PartStitchDirection::Forward,
+        ..partstitch
+      },
+      PartStitch {
+        x,
+        y,
         kind: PartStitchKind::Quarter,
         direction: PartStitchDirection::Backward,
+        ..partstitch
       },
     ] {
-      if let Some(partstitch) = self.get(&quarter) {
-        conflicts.push(partstitch.clone());
-      }
+      self.remove(&partstitch).then(|| conflicts.push(partstitch));
     }
+
     conflicts
   }
 
-  /// Finds conflicts with a given petite stitch.
+  /// Removes and returns all the conflicts with a given petite stitch.
   /// It looks for the half and quarter stitches that overlap with the petite stitch.
-  pub fn find_conflicts_with_petite_stitch(&self, fullstitch: &FullStitch) -> Vec<PartStitch> {
+  pub fn remove_conflicts_with_petite_stitch(&mut self, fullstitch: &FullStitch) -> Vec<PartStitch> {
     debug_assert_eq!(fullstitch.kind, FullStitchKind::Petite);
+    let mut conflicts = Vec::new();
 
     let x = fullstitch.x;
-    let x_fract = x.fract();
     let y = fullstitch.y;
-    let y_fract = y.fract();
     let palindex = fullstitch.palindex;
-    let direction = if (x_fract < 0.5 && y_fract < 0.5) || (x_fract >= 0.5 && y_fract >= 0.5) {
-      PartStitchDirection::Backward
-    } else {
-      PartStitchDirection::Forward
-    };
-
-    let mut conflicts = Vec::new();
+    let direction = PartStitchDirection::from((x, y));
 
     let half = PartStitch {
       x: NotNan::new(x.trunc()).unwrap(),
@@ -475,9 +438,7 @@ impl Stitches<PartStitch> {
       direction,
       kind: PartStitchKind::Half,
     };
-    if let Some(half) = self.get(&half) {
-      conflicts.push(half.clone());
-    }
+    self.remove(&half).then(|| conflicts.push(half));
 
     let quarter = PartStitch {
       x,
@@ -486,97 +447,131 @@ impl Stitches<PartStitch> {
       direction,
       kind: PartStitchKind::Quarter,
     };
-    if let Some(quarter) = self.get(&quarter) {
-      conflicts.push(quarter.clone());
-    }
+    self.remove(&quarter).then(|| conflicts.push(quarter));
 
     conflicts
   }
 
-  /// Finds conflicts with a given half stitch.
+  /// Removes and returns all the conflicts with a given half stitch.
   /// It looks for any quarter stitches that overlap with the half stitch.
-  pub fn find_conflicts_with_half_stitch(&self, partstitch: &PartStitch) -> Vec<PartStitch> {
+  pub fn remove_conflicts_with_half_stitch(&mut self, partstitch: &PartStitch) -> Vec<PartStitch> {
     debug_assert_eq!(partstitch.kind, PartStitchKind::Half);
-
-    let x = partstitch.x;
-    let y = partstitch.y;
-    let palindex = partstitch.palindex;
-
     let mut conflicts = Vec::new();
+
+    let x = partstitch.x + 0.5;
+    let y = partstitch.y + 0.5;
+    let kind = PartStitchKind::Quarter;
+
     match partstitch.direction {
       PartStitchDirection::Forward => {
         for quarter in [
           PartStitch {
-            x: x + 0.5,
-            y,
-            palindex,
-            kind: PartStitchKind::Quarter,
+            x,
+            kind,
             direction: PartStitchDirection::Forward,
+            ..*partstitch
           },
           PartStitch {
-            x,
-            y: y + 0.5,
-            palindex,
-            kind: PartStitchKind::Quarter,
+            y,
+            kind,
             direction: PartStitchDirection::Forward,
+            ..*partstitch
           },
         ] {
-          if let Some(partstitch) = self.get(&quarter) {
-            conflicts.push(partstitch.clone());
-          }
+          self.remove(&quarter).then(|| conflicts.push(quarter));
         }
       }
       PartStitchDirection::Backward => {
         for quarter in [
           PartStitch {
-            x,
-            y,
-            palindex,
-            kind: PartStitchKind::Quarter,
+            kind,
             direction: PartStitchDirection::Backward,
+            ..*partstitch
           },
           PartStitch {
-            x: x + 0.5,
-            y: y + 0.5,
-            palindex,
-            kind: PartStitchKind::Quarter,
+            x,
+            y,
+            kind,
             direction: PartStitchDirection::Backward,
+            ..*partstitch
           },
         ] {
-          if let Some(partstitch) = self.get(&quarter) {
-            conflicts.push(partstitch.clone());
-          }
+          self.remove(&quarter).then(|| conflicts.push(quarter));
         }
       }
     }
+
     conflicts
   }
 
-  /// Finds conflicts with a given quarter stitch.
+  /// Removes and returns all the conflicts with a given quarter stitch.
   /// It looks for the half stitch that overlap with the quarter stitch.
-  pub fn find_conflicts_with_quarter_stitch(&self, partstitch: &PartStitch) -> Option<PartStitch> {
+  pub fn remove_conflicts_with_quarter_stitch(&mut self, partstitch: &PartStitch) -> Vec<PartStitch> {
     debug_assert_eq!(partstitch.kind, PartStitchKind::Quarter);
-
-    let x = partstitch.x;
-    let x_fract = x.fract();
-    let y = partstitch.y;
-    let y_fract = y.fract();
-    let palindex = partstitch.palindex;
-    let direction = if (x_fract < 0.5 && y_fract < 0.5) || (x_fract >= 0.5 && y_fract >= 0.5) {
-      PartStitchDirection::Backward
-    } else {
-      PartStitchDirection::Forward
-    };
+    let mut conflicts = Vec::new();
 
     let half = PartStitch {
-      x: NotNan::new(x.trunc()).unwrap(),
-      y: NotNan::new(y.trunc()).unwrap(),
-      palindex,
-      direction,
+      x: NotNan::new(partstitch.x.trunc()).unwrap(),
+      y: NotNan::new(partstitch.y.trunc()).unwrap(),
+      palindex: partstitch.palindex,
+      direction: PartStitchDirection::from((partstitch.x, partstitch.y)),
       kind: PartStitchKind::Half,
     };
+    self.remove(&half).then(|| conflicts.push(half));
 
-    self.get(&half).cloned()
+    conflicts
+  }
+}
+
+#[derive(Debug, Clone, BorshSerialize, BorshDeserialize)]
+pub enum Stitch {
+  Full(FullStitch),
+  Part(PartStitch),
+  Node(Node),
+  Line(Line),
+}
+
+#[derive(Debug, Default, Clone, BorshSerialize, BorshDeserialize)]
+pub struct StitchConflicts {
+  fullstitches: Vec<FullStitch>,
+  partstitches: Vec<PartStitch>,
+  node: Option<Node>,
+  line: Option<Line>,
+}
+
+impl StitchConflicts {
+  fn with_fullstitches(mut self, fullstitches: Vec<FullStitch>) -> Self {
+    self.fullstitches = fullstitches;
+    self
+  }
+
+  fn with_fullstitch(mut self, fullstitch: Option<FullStitch>) -> Self {
+    if let Some(fullstitch) = fullstitch {
+      self.fullstitches.push(fullstitch);
+    }
+    self
+  }
+
+  fn with_partstitches(mut self, partstitches: Vec<PartStitch>) -> Self {
+    self.partstitches = partstitches;
+    self
+  }
+
+  fn with_partstitch(mut self, partstitch: Option<PartStitch>) -> Self {
+    if let Some(partstitch) = partstitch {
+      self.partstitches.push(partstitch);
+    }
+    self
+  }
+
+  fn with_node(mut self, node: Option<Node>) -> Self {
+    self.node = node;
+    self
+  }
+
+  fn with_line(mut self, line: Option<Line>) -> Self {
+    self.line = line;
+    self
   }
 }
 
@@ -587,6 +582,15 @@ impl Stitches<PartStitch> {
 pub enum FullStitchKind {
   Full = 0,
   Petite = 1,
+}
+
+impl From<PartStitchKind> for FullStitchKind {
+  fn from(kind: PartStitchKind) -> Self {
+    match kind {
+      PartStitchKind::Half => FullStitchKind::Full,
+      PartStitchKind::Quarter => FullStitchKind::Petite,
+    }
+  }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
@@ -613,6 +617,17 @@ impl Ord for FullStitch {
   }
 }
 
+impl From<PartStitch> for FullStitch {
+  fn from(partstitch: PartStitch) -> Self {
+    Self {
+      x: partstitch.x,
+      y: partstitch.y,
+      palindex: partstitch.palindex,
+      kind: partstitch.kind.into(),
+    }
+  }
+}
+
 #[derive(
   Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, BorshSerialize, BorshDeserialize,
 )]
@@ -622,6 +637,16 @@ pub enum PartStitchDirection {
   Backward = 2,
 }
 
+impl From<(Coord, Coord)> for PartStitchDirection {
+  fn from((x, y): (Coord, Coord)) -> Self {
+    if (x.fract() < 0.5 && y.fract() < 0.5) || (x.fract() >= 0.5 && y.fract() >= 0.5) {
+      PartStitchDirection::Backward
+    } else {
+      PartStitchDirection::Forward
+    }
+  }
+}
+
 #[derive(
   Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, BorshSerialize, BorshDeserialize,
 )]
@@ -629,6 +654,15 @@ pub enum PartStitchDirection {
 pub enum PartStitchKind {
   Half = 0,
   Quarter = 1,
+}
+
+impl From<FullStitchKind> for PartStitchKind {
+  fn from(kind: FullStitchKind) -> Self {
+    match kind {
+      FullStitchKind::Full => PartStitchKind::Half,
+      FullStitchKind::Petite => PartStitchKind::Quarter,
+    }
+  }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
@@ -654,6 +688,18 @@ impl Ord for PartStitch {
       .then(self.y.cmp(&other.y))
       .then(self.direction.cmp(&other.direction))
       .then(self.kind.cmp(&other.kind))
+  }
+}
+
+impl From<FullStitch> for PartStitch {
+  fn from(fullstitch: FullStitch) -> Self {
+    Self {
+      x: fullstitch.x,
+      y: fullstitch.y,
+      palindex: fullstitch.palindex,
+      direction: PartStitchDirection::from((fullstitch.x, fullstitch.y)),
+      kind: fullstitch.kind.into(),
+    }
   }
 }
 

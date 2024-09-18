@@ -56,7 +56,7 @@
     // The current pattern is always available here.
     const patternKey = appStateStore.state.currentPattern!.key;
     const palitem = appStateStore.state.selectedPaletteItem;
-    const palindex = props.pattern.palette.indexOf(palitem);
+    const palindex = props.pattern.palette.findIndex((pi) => pi.color === palitem.color);
 
     const tool = appStateStore.state.selectedStitchTool;
     const kind = tool % 2; // Get 0 or 1.
@@ -69,7 +69,7 @@
           palindex,
           kind,
         };
-        await emitStitchCreated(patternKey, { fullstitch });
+        await emitStitchCreated(patternKey, { full: fullstitch });
         canvasService.drawFullStitch(fullstitch, palitem.color);
         break;
       }
@@ -87,7 +87,7 @@
           kind,
           direction,
         };
-        await emitStitchCreated(patternKey, { partstitch });
+        await emitStitchCreated(patternKey, { part: partstitch });
         canvasService.drawPartStitch(partstitch, palitem.color);
         break;
       }

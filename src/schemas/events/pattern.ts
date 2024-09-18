@@ -8,15 +8,15 @@ export interface StitchEventPayload<T> {
 }
 
 export interface CreatedStitchPayload {
-  fullstitch?: FullStitch;
-  partstitch?: PartStitch;
+  full?: FullStitch;
+  part?: PartStitch;
   line?: Line;
   node?: Node;
 }
 
 const CreatedStitchPayloadSchema = BorshSchema.Enum({
-  fullstitch: FullStitchSchema,
-  partstitch: PartStitchSchema,
+  full: FullStitchSchema,
+  part: PartStitchSchema,
   line: LineSchema,
   node: NodeSchema,
 });
@@ -33,11 +33,11 @@ export interface RemovedStitchPayload {
   node?: Node;
 }
 
-export const RemovedStitchPayloadSchema = BorshSchema.Enum({
+export const RemovedStitchPayloadSchema = BorshSchema.Struct({
   fullstitches: BorshSchema.Vec(FullStitchSchema),
   partstitches: BorshSchema.Vec(PartStitchSchema),
-  line: LineSchema,
-  node: NodeSchema,
+  line: BorshSchema.Option(LineSchema),
+  node: BorshSchema.Option(NodeSchema),
 });
 
 export const RemovedStitchEventPayloadSchema = BorshSchema.Struct({
