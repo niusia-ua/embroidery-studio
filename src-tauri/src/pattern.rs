@@ -610,9 +610,9 @@ impl PartialOrd for FullStitch {
 impl Ord for FullStitch {
   fn cmp(&self, other: &Self) -> Ordering {
     self
-      .x
-      .cmp(&other.x)
-      .then(self.y.cmp(&other.y))
+      .y
+      .cmp(&other.y)
+      .then(self.x.cmp(&other.x))
       .then(self.kind.cmp(&other.kind))
   }
 }
@@ -683,10 +683,9 @@ impl PartialOrd for PartStitch {
 impl Ord for PartStitch {
   fn cmp(&self, other: &Self) -> Ordering {
     self
-      .x
-      .cmp(&other.x)
-      .then(self.y.cmp(&other.y))
-      .then(self.direction.cmp(&other.direction))
+      .y
+      .cmp(&other.y)
+      .then(self.x.cmp(&other.x))
       .then(self.kind.cmp(&other.kind))
   }
 }
@@ -729,7 +728,7 @@ impl PartialOrd for Node {
 
 impl Ord for Node {
   fn cmp(&self, other: &Self) -> Ordering {
-    self.x.cmp(&other.x).then(self.y.cmp(&other.y))
+    self.y.cmp(&other.y).then(self.x.cmp(&other.x))
   }
 }
 
@@ -758,6 +757,6 @@ impl PartialOrd for Line {
 
 impl Ord for Line {
   fn cmp(&self, other: &Self) -> Ordering {
-    self.x.cmp(&other.x).then(self.y.cmp(&other.y))
+    self.y.cmp(&other.y).then(self.x.cmp(&other.x))
   }
 }
