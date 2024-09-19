@@ -5,7 +5,6 @@ import { createPersistedState } from "pinia-plugin-persistedstate";
 import ConfirmationService from "primevue/confirmationservice";
 import { createApp } from "vue";
 
-import "primeflex/primeflex.css";
 import "primeicons/primeicons.css";
 import "./assets/styles.css";
 
@@ -16,7 +15,17 @@ pinia.use(createPersistedState({ storage: sessionStorage, auto: true }));
 
 const app = createApp(App);
 app.use(pinia);
-app.use(PrimeVue, { theme: { preset: Aura } });
+app.use(PrimeVue, {
+  theme: {
+    preset: Aura,
+    options: {
+      cssLayer: {
+        name: "primevue",
+        order: "tailwind-base, primevue, tailwind-utilities",
+      },
+    },
+  },
+});
 app.use(ConfirmationService);
 
 app.mount("#app");

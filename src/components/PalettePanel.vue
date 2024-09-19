@@ -4,13 +4,13 @@
     :options="props.palette ?? []"
     empty-message="No palette items found"
     scroll-height="100%"
-    pt:root:class="surface-ground"
+    pt:root:class="bg-transparent"
     pt:list:class="gap-1"
     pt:option:class="p-0"
-    class="h-full border-noround border-none"
+    class="h-full rounded-none border-0"
   >
     <template #header>
-      <div class="w-full flex justify-content-between align-items-center">
+      <div class="w-full flex justify-between items-center">
         <div class="text-color">Palette</div>
         <Button
           type="button"
@@ -25,7 +25,7 @@
 
     <template #option="{ option: pi, selected }">
       <div
-        class="w-full h-2rem text-color px-2 py-1 white-space-nowrap overflow-hidden text-overflow-ellipsis select-none"
+        class="w-full h-8 text-color px-2 py-1 whitespace-nowrap overflow-hidden text-ellipsis select-none"
         :style="{
           backgroundColor: `#${pi.color}`,
           color: `${contrastColor(pi.color)} !important`,
@@ -41,12 +41,12 @@
 
   <Popover ref="paletteSettingsPopover">
     <div class="card">
-      <div class="flex items-center pb-3">
+      <div class="flex items-center pb-4">
         <ToggleSwitch v-model="displayOnlyPaletteItemColor" input-id="color-only" />
         <label for="color-only" class="ml-2">Color only</label>
       </div>
 
-      <div class="flex flex-column gap-2">
+      <div class="flex flex-col gap-2">
         <div class="flex items-center">
           <Checkbox
             v-model="paletteItemDisplayOptions.showBrand"

@@ -1,9 +1,9 @@
 <template>
   <ConfirmDialog />
   <BlockUI :blocked="loading" full-screen />
-  <div class="h-full flex flex-column">
+  <div class="h-full flex flex-col">
     <Toolbar
-      class="border-noround border-none border-bottom-1 p-0"
+      class="rounded-none border-0 border-b p-0"
       draggable="true"
       @dragstart="() => appWindow.startDragging()"
     >
@@ -29,16 +29,16 @@
       </template>
     </Toolbar>
 
-    <Splitter :gutter-size="2" class="h-full border-noround border-none">
+    <Splitter :gutter-size="2" class="h-full rounded-none border-0">
       <SplitterPanel :min-size="5" :size="15">
         <PalettePanel :palette="pattern?.palette" />
       </SplitterPanel>
 
       <SplitterPanel :min-size="85" :size="85">
-        <ProgressSpinner v-if="loading" class="absolute top-50 left-50" />
+        <ProgressSpinner v-if="loading" class="absolute top-1/2 left-1/2" />
         <CanvasPanel v-if="pattern" :pattern="pattern" />
-        <div v-else class="w-full h-full flex justify-content-center align-items-center relative">
-          <Panel header="No pattern loaded" class="w-3 border-none">
+        <div v-else class="w-full h-full flex justify-center items-center relative">
+          <Panel header="No pattern loaded" class="w-3/12 border-0">
             <p class="m-0">Open a pattern or create a new one to get started.</p>
           </Panel>
 

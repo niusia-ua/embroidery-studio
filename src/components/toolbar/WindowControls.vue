@@ -1,13 +1,13 @@
 <template>
   <ButtonGroup>
-    <Button icon="pi pi-minus" severity="secondary" text class="border-noround" @click="() => appWindow.minimize()" />
+    <Button icon="pi pi-minus" severity="secondary" text class="rounded-none" @click="() => appWindow.minimize()" />
     <Button
       :icon="`pi pi-window-${isMaximized ? 'minimize' : 'maximize'}`"
       severity="secondary"
       text
       @click="() => appWindow.toggleMaximize()"
     />
-    <Button icon="pi pi-times" severity="danger" text class="border-noround" @click="() => appWindow.close()" />
+    <Button icon="pi pi-times" severity="danger" text class="rounded-none" @click="() => appWindow.close()" />
   </ButtonGroup>
 </template>
 

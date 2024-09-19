@@ -4,7 +4,7 @@
     aria-haspopup="true"
     :aria-controls="id"
     severity="secondary"
-    class="border-noround"
+    class="rounded-none"
     text
     v-bind="props.button"
     @click="toggleMenu"

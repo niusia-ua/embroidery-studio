@@ -4,7 +4,7 @@
     :options="tools"
     option-label="name"
     option-value="kind"
-    pt:root:class="border-none border-noround surface-ground"
+    pt:root:class="border-0 rounded-none bg-transparent"
   />
 </template>
 
