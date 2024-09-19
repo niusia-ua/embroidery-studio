@@ -1,8 +1,8 @@
 use tauri::Manager;
 
 use embroidery_studio::{
-  pattern::{self, PatternKey},
-  state::AppStateType,
+  commands,
+  state::{AppStateType, PatternKey},
 };
 
 mod utils;
@@ -17,7 +17,7 @@ fn parses_supported_pattern_formats() {
   let paths = std::fs::read_dir(resources).unwrap();
   for path in paths {
     let path = path.unwrap().path();
-    assert!(pattern::load_pattern(path.clone(), state.clone()).is_ok());
+    assert!(commands::pattern::load_pattern(path.clone(), state.clone()).is_ok());
     assert!(state.read().unwrap().patterns.contains_key(&PatternKey::from(path)));
   }
 }
@@ -28,7 +28,7 @@ fn creates_new_pattern() {
   let handle = app.handle();
   let state = handle.state::<AppStateType>();
 
-  let (pattern_key, _) = pattern::create_pattern(state.clone());
+  let (pattern_key, _) = commands::pattern::create_pattern(state.clone());
   assert!(state.read().unwrap().patterns.contains_key(&pattern_key));
 }
 
@@ -41,8 +41,8 @@ fn saves_pattern() {
   let temp_dir = std::env::temp_dir();
   let file_path = temp_dir.join("pattern.json");
 
-  let (pattern_key, _) = pattern::create_pattern(state.clone());
-  assert!(pattern::save_pattern(pattern_key, file_path, state.clone()).is_ok());
+  let (pattern_key, _) = commands::pattern::create_pattern(state.clone());
+  assert!(commands::pattern::save_pattern(pattern_key, file_path, state.clone()).is_ok());
 }
 
 #[test]
@@ -51,7 +51,7 @@ fn closes_pattern() {
   let handle = app.handle();
   let state = handle.state::<AppStateType>();
 
-  let (pattern_key, _) = pattern::create_pattern(state.clone());
-  pattern::close_pattern(pattern_key.clone(), state.clone());
+  let (pattern_key, _) = commands::pattern::create_pattern(state.clone());
+  commands::pattern::close_pattern(pattern_key.clone(), state.clone());
   assert!(state.read().unwrap().patterns.get(&pattern_key).is_none());
 }

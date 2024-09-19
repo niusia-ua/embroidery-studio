@@ -5,11 +5,7 @@ use std::{fs, sync::RwLock};
 
 use tauri::Manager;
 
-use embroidery_studio::{
-  logger::setup_logger,
-  pattern::{self, events::setup_pattern_event_handlers},
-  state,
-};
+use embroidery_studio::{commands, events, logger, state};
 
 fn main() {
   tauri::Builder::default()
@@ -30,17 +26,17 @@ fn main() {
         }
       }
 
-      setup_pattern_event_handlers(app.get_window("main").unwrap(), app.handle());
+      events::pattern::setup_event_handlers(app.get_window("main").unwrap(), app.handle());
 
       Ok(())
     })
     .manage(RwLock::new(state::AppState::new()))
-    .plugin(setup_logger().build())
+    .plugin(logger::setup_logger().build())
     .invoke_handler(tauri::generate_handler![
-      pattern::load_pattern,
-      pattern::create_pattern,
-      pattern::save_pattern,
-      pattern::close_pattern
+      commands::pattern::load_pattern,
+      commands::pattern::create_pattern,
+      commands::pattern::save_pattern,
+      commands::pattern::close_pattern,
     ])
     .run(tauri::generate_context!())
     .expect("Error while running Embroidery Studio");

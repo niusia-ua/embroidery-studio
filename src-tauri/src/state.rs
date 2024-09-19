@@ -1,6 +1,19 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, path::PathBuf};
 
-use crate::pattern::{Pattern, PatternKey};
+use borsh::{BorshDeserialize, BorshSerialize};
+use serde::{Deserialize, Serialize};
+
+use crate::pattern::Pattern;
+
+#[derive(Debug, Hash, PartialEq, Eq, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+#[repr(transparent)]
+pub struct PatternKey(String);
+
+impl From<PathBuf> for PatternKey {
+  fn from(value: PathBuf) -> Self {
+    Self(value.to_string_lossy().to_string())
+  }
+}
 
 pub struct AppState {
   pub patterns: HashMap<PatternKey, Pattern>,

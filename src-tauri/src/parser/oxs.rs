@@ -2,7 +2,7 @@ use std::{fs, path::Path};
 
 use serde::Deserialize;
 
-use super::*;
+use crate::{error::Result, pattern::*};
 
 #[cfg(test)]
 #[path = "oxs.test.rs"]

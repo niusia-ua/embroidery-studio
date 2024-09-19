@@ -1,4 +1,4 @@
-use crate::pattern::xsd::*;
+use crate::parser::xsd::*;
 
 #[cfg(test)]
 mod xsd_read_tests {
@@ -113,7 +113,7 @@ fn reads_palette() {
       blends: None,
     },
     PaletteItem {
-      brand: String::from("Blends"),
+      brand: String::from("Blend"),
       number: String::from("57"),
       name: String::from(""),
       color: String::from("93D0D3"),
@@ -454,8 +454,8 @@ fn parses_xsd_pattern() {
     }
   );
 
-  assert_eq!(pattern.fullstitches.inner.len(), 1000);
-  assert_eq!(pattern.partstitches.inner.len(), 54);
-  assert_eq!(pattern.nodes.inner.len(), 18);
-  assert_eq!(pattern.lines.inner.len(), 446);
+  assert_eq!(pattern.fullstitches.len(), 1000);
+  assert_eq!(pattern.partstitches.len(), 54);
+  assert_eq!(pattern.nodes.len(), 18);
+  assert_eq!(pattern.lines.len(), 446);
 }

@@ -1,8 +1,10 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use tauri::{AppHandle, Manager, Window};
 
-use super::{PatternKey, Stitch, StitchConflicts};
-use crate::state::AppStateType;
+use crate::{
+  pattern::{Stitch, StitchConflicts},
+  state::{AppStateType, PatternKey},
+};
 
 #[derive(Debug, Clone, BorshSerialize, BorshDeserialize)]
 struct EventStitchPayload<T> {
@@ -13,7 +15,7 @@ struct EventStitchPayload<T> {
 static EVENT_STITCH_CREATE: &str = "pattern:stitch:create";
 static EVENT_STITCH_REMOVE: &str = "pattern:stitch:remove";
 
-pub fn setup_pattern_event_handlers(window: Window, app_handle: AppHandle) {
+pub fn setup_event_handlers(window: Window, app_handle: AppHandle) {
   log::trace!("Setting up pattern event handlers");
   window.clone().listen(EVENT_STITCH_CREATE, move |e| {
     log::trace!("Received stitch create event");

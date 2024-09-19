@@ -13,8 +13,12 @@ use std::{
 
 use byteorder::{LittleEndian, ReadBytesExt};
 use memchr::memchr;
+use ordered_float::NotNan;
 
-use super::*;
+use crate::{
+  error::{Error, Result},
+  pattern::*,
+};
 
 #[cfg(test)]
 #[path = "xsd.test.rs"]

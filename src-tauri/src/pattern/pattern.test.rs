@@ -1,6 +1,8 @@
 use crate::pattern::*;
 
 mod stitches {
+  use ordered_float::NotNan;
+
   use super::*;
   use std::sync::LazyLock;
 
