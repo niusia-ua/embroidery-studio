@@ -49,13 +49,13 @@
       <div class="flex flex-column gap-2">
         <div class="flex items-center">
           <Checkbox
-            v-model="paletteItemDisplayOptions.showVendor"
-            input-id="show-vendor"
-            name="show-vendor"
+            v-model="paletteItemDisplayOptions.showBrand"
+            input-id="show-brand"
+            name="show-brand"
             binary
             :disabled="displayOnlyPaletteItemColor"
           />
-          <label for="show-vendor" class="ml-2">Show floss vendor</label>
+          <label for="show-brand" class="ml-2">Show floss brand</label>
         </div>
 
         <div class="flex items-center">
@@ -104,7 +104,7 @@
 
   const paletteSettingsPopover = ref<typeof Popover>();
   const paletteItemDisplayOptions = reactive<PaletteItemDisplayOptions>({
-    showVendor: true,
+    showBrand: true,
     showNumber: true,
     showName: true,
   });

@@ -3,7 +3,7 @@ import type { Blend, PaletteItem } from "#/schemas/pattern";
 /** Interface representing display options for a palette item's title. */
 export interface PaletteItemDisplayOptions {
   /** If true, the vendor/brand will be displayed. */
-  showVendor: boolean;
+  showBrand: boolean;
   /** If true, the item number will be displayed. */
   showNumber: boolean;
   /** If true, the item name will be displayed. */
@@ -19,7 +19,7 @@ export interface PaletteItemDisplayOptions {
  */
 export function paletteItemTitle(pi: PaletteItem, options: PaletteItemDisplayOptions): string {
   const components = [];
-  if (options.showVendor) components.push(pi.brand);
+  if (options.showBrand) components.push(pi.brand);
   if (pi.blends?.length) {
     components.push(
       pi.blends
@@ -48,7 +48,7 @@ export function paletteItemTitle(pi: PaletteItem, options: PaletteItemDisplayOpt
  */
 export function blendTitle({ brand, number }: Blend, options: PaletteItemDisplayOptions): string {
   const components = [];
-  if (options.showVendor) components.push(brand);
+  if (options.showBrand) components.push(brand);
   if (options.showNumber) components.push(number);
   return components.join(" ");
 }
