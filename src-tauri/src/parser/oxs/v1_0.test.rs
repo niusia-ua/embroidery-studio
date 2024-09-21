@@ -1,9 +1,10 @@
-use crate::parser::oxs::*;
+use super::{parse_pattern, Software};
+use crate::pattern::*;
 
 #[test]
-fn parses_oxs_pattern() {
-  let pathbuf = Path::new(env!("CARGO_MANIFEST_DIR")).join("resources/patterns/piggies.oxs");
-  let pattern = parse_pattern(pathbuf.as_path());
+fn parses_oxs_v1_0_pattern() {
+  let pathbuf = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("resources/patterns/piggies.oxs");
+  let pattern = parse_pattern(pathbuf.as_path(), Software::Ursa);
   assert!(pattern.is_ok());
 
   let pattern = pattern.unwrap();
@@ -46,7 +47,7 @@ fn parses_oxs_pattern() {
     pattern.fabric,
     Fabric {
       stitches_per_inch: (14, 14),
-      kind: String::from(""),
+      kind: String::from("Aida"),
       name: String::from("cloth"),
       color: String::from("FFFFFF"),
     }

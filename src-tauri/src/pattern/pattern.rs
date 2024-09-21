@@ -100,12 +100,29 @@ pub struct PatternProperties {
   pub height: u16,
 }
 
+impl Default for PatternProperties {
+  fn default() -> Self {
+    Self { width: 100, height: 100 }
+  }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 pub struct PatternInfo {
   pub title: String,
   pub author: String,
   pub copyright: String,
   pub description: String,
+}
+
+impl Default for PatternInfo {
+  fn default() -> Self {
+    Self {
+      title: String::from("Untitled"),
+      author: String::new(),
+      copyright: String::new(),
+      description: String::new(),
+    }
+  }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
@@ -132,4 +149,15 @@ pub struct Fabric {
   pub kind: String,
   pub name: String,
   pub color: String,
+}
+
+impl Default for Fabric {
+  fn default() -> Self {
+    Self {
+      stitches_per_inch: (14, 14),
+      kind: String::from("Aida"),
+      name: String::from("White"),
+      color: String::from("FFFFFF"),
+    }
+  }
 }
