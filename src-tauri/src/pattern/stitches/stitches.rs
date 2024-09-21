@@ -5,6 +5,10 @@ use ordered_float::NotNan;
 
 use super::*;
 
+#[cfg(test)]
+#[path = "./stitches.test.rs"]
+mod tests;
+
 #[derive(Debug, Clone, BorshSerialize, BorshDeserialize)]
 pub enum Stitch {
   Full(FullStitch),

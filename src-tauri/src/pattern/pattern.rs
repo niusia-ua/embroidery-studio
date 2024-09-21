@@ -2,10 +2,6 @@ use borsh::{BorshDeserialize, BorshSerialize};
 
 use super::stitches::*;
 
-#[cfg(test)]
-#[path = "./pattern.test.rs"]
-mod tests;
-
 pub type Coord = ordered_float::NotNan<f32>;
 
 #[derive(Debug, Clone, BorshSerialize, BorshDeserialize)]
