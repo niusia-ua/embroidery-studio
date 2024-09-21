@@ -2,7 +2,6 @@ use std::collections::BTreeSet;
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use ordered_float::NotNan;
-use serde::{Deserialize, Serialize};
 
 use super::*;
 
@@ -58,8 +57,7 @@ impl StitchConflicts {
   }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
-#[serde(transparent)]
+#[derive(Debug, Clone, BorshSerialize, BorshDeserialize)]
 pub struct Stitches<T: Ord> {
   inner: BTreeSet<T>,
 }

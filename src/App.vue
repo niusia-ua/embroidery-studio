@@ -2,11 +2,7 @@
   <ConfirmDialog />
   <BlockUI :blocked="loading" full-screen />
   <div class="h-full flex flex-col">
-    <Toolbar
-      class="rounded-none border-0 border-b p-0"
-      draggable="true"
-      @dragstart="() => appWindow.startDragging()"
-    >
+    <Toolbar class="rounded-none border-0 border-b p-0" draggable="true" @dragstart="() => appWindow.startDragging()">
       <template #start>
         <DropdownTieredMenu id="general_menu" :button="{ icon: 'pi pi-bars' }" :tiered-menu="{ model: menuOptions }" />
         <StitchToolSelector />
@@ -99,7 +95,7 @@
             filters: [
               {
                 name: "Cross Stitch Pattern",
-                extensions: ["xsd", "oxs", "xml", "json"],
+                extensions: ["xsd", "oxs", "xml", "embx"],
               },
             ],
           });
@@ -123,7 +119,7 @@
             filters: [
               {
                 name: "Cross Stitch Pattern",
-                extensions: ["json"],
+                extensions: ["embx"],
               },
             ],
           });

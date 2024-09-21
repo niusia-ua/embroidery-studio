@@ -20,9 +20,9 @@ pub fn load_pattern(file_path: std::path::PathBuf, state: tauri::State<AppStateT
       let pattern = match pattern_format {
         PatternFormat::Xsd => parser::xsd::parse_pattern(file_path)?,
         PatternFormat::Oxs => parser::oxs::parse_pattern(file_path)?,
-        PatternFormat::Json => {
-          let content = std::fs::read_to_string(file_path)?;
-          serde_json::from_str(&content).unwrap()
+        PatternFormat::Embx => {
+          let mut reader = std::fs::File::open(file_path)?;
+          borsh::from_reader(&mut reader).unwrap()
         }
       };
       state.patterns.insert(pattern_key, pattern.clone());
@@ -55,7 +55,7 @@ pub fn save_pattern(
   log::trace!("Saving pattern to {:?}", file_path);
   let state = state.read().unwrap();
   let pattern = state.patterns.get(&pattern_key).unwrap();
-  std::fs::write(file_path, serde_json::to_string(pattern).unwrap())?;
+  std::fs::write(file_path, borsh::to_vec(pattern).unwrap())?;
   log::trace!("Pattern saved");
   Ok(())
 }

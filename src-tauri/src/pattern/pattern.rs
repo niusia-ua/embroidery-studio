@@ -1,5 +1,4 @@
 use borsh::{BorshDeserialize, BorshSerialize};
-use serde::{Deserialize, Serialize};
 
 use super::stitches::*;
 
@@ -9,7 +8,7 @@ mod tests;
 
 pub type Coord = ordered_float::NotNan<f32>;
 
-#[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Clone, BorshSerialize, BorshDeserialize)]
 pub struct Pattern {
   pub properties: PatternProperties,
   pub info: PatternInfo,
@@ -94,7 +93,7 @@ impl Default for Pattern {
   }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, BorshSerialize, BorshDeserialize)]
 pub struct PatternProperties {
   pub width: u16,
   pub height: u16,
@@ -106,7 +105,7 @@ impl Default for PatternProperties {
   }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, BorshSerialize, BorshDeserialize)]
 pub struct PatternInfo {
   pub title: String,
   pub author: String,
@@ -125,26 +124,24 @@ impl Default for PatternInfo {
   }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, BorshSerialize, BorshDeserialize)]
 pub struct PaletteItem {
   pub brand: String,
   pub number: String,
   pub name: String,
   pub color: String,
-  #[serde(skip_serializing_if = "Option::is_none")]
   pub blends: Option<Vec<Blend>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, BorshSerialize, BorshDeserialize)]
 pub struct Blend {
   pub brand: String,
   pub number: String,
   pub strands: u8,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, BorshSerialize, BorshDeserialize)]
 pub struct Fabric {
-  #[serde(rename = "stitchesPerInch")]
   pub stitches_per_inch: (u16, u16),
   pub kind: String,
   pub name: String,

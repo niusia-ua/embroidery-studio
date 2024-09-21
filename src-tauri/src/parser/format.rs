@@ -5,7 +5,7 @@ use crate::error::Error;
 pub enum PatternFormat {
   Xsd,
   Oxs,
-  Json,
+  Embx,
 }
 
 impl TryFrom<Option<&OsStr>> for PatternFormat {
@@ -17,7 +17,7 @@ impl TryFrom<Option<&OsStr>> for PatternFormat {
       match extension.to_lowercase().as_str() {
         "xsd" => Ok(Self::Xsd),
         "oxs" | "xml" => Ok(Self::Oxs),
-        "json" => Ok(Self::Json),
+        "embx" => Ok(Self::Embx),
         _ => Err(Error::UnsupportedPatternType {
           extension: extension.to_uppercase(),
         }),
