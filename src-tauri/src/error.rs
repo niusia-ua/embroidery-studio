@@ -1,22 +1,33 @@
-#[derive(Debug, thiserror::Error)]
-pub enum Error {
-  #[error("The signature of Pattern Maker v4 is incorrect, so it looks like it is not an embroidery pattern file.")]
-  XsdInvalidSignature,
+//! This is a set of utilities to make working with `anyhow` and `tauri` easier.
+//! It is based on https://github.com/TDiblik/anyhow-tauri.
 
-  #[error("Unsupported pattern type: {}.", extension)]
-  UnsupportedPatternType { extension: String },
+#[derive(Debug)]
+pub struct CommandError(anyhow::Error);
 
-  #[error(transparent)]
-  Io(#[from] std::io::Error),
-}
+impl std::error::Error for CommandError {}
 
-impl serde::Serialize for Error {
-  fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-  where
-    S: serde::ser::Serializer,
-  {
-    serializer.serialize_str(self.to_string().as_ref())
+impl std::fmt::Display for CommandError {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    write!(f, "{:#}", self.0)
   }
 }
 
-pub type Result<T, E = Error> = std::result::Result<T, E>;
+impl From<anyhow::Error> for CommandError {
+  fn from(error: anyhow::Error) -> Self {
+    Self(error)
+  }
+}
+
+impl From<std::io::Error> for CommandError {
+  fn from(error: std::io::Error) -> Self {
+    Self(anyhow::Error::from(error))
+  }
+}
+
+impl serde::Serialize for CommandError {
+  fn serialize<S: serde::Serializer>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> {
+    serializer.serialize_str(&format!("{:#}", self.0))
+  }
+}
+
+pub type CommandResult<T> = std::result::Result<T, CommandError>;

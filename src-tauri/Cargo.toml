@@ -7,7 +7,6 @@ edition = "2021"
 tauri-build = { version = "1.5.4", features = [] }
 
 [dependencies]
-thiserror = "1.0.63"
 byteorder = "1.5.0"
 encoding_rs = "0.8.34"
 memchr = "2.7.4"
@@ -20,6 +19,7 @@ log = "0.4.22"
 ordered-float = { version = "4.2.2", features = ["borsh", "serde"] }
 borsh = { version = "1.5.1", features = ["derive"] }
 quick-xml = "0.36.1"
+anyhow = "1.0.89"
 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!

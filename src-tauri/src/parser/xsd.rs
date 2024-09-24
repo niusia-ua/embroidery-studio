@@ -11,14 +11,12 @@ use std::{
   sync::LazyLock,
 };
 
+use anyhow::Result;
 use byteorder::{LittleEndian, ReadBytesExt};
 use memchr::memchr;
 use ordered_float::NotNan;
 
-use crate::{
-  error::{Error, Result},
-  pattern::*,
-};
+use crate::pattern::*;
 
 #[cfg(test)]
 #[path = "xsd.test.rs"]
@@ -149,6 +147,7 @@ impl XsdRead for Cursor {
       return Ok(String::from(""));
     }
 
+    // It is safe to unwrap because we have checked the presence of the null terminator.
     let cstr = CStr::from_bytes_until_nul(&buf).unwrap();
     let string = match cstr.to_str() {
       // The string is in UTF-8 (English).
@@ -169,12 +168,13 @@ impl XsdRead for Cursor {
 
   fn read_fractional_coors(&mut self) -> Result<(Coord, Coord)> {
     // The resolution of coordinates is 1/2 of a pattern cell.
-    let x = NotNan::new(self.read_u16::<LittleEndian>()? as f32).unwrap() / 2.0;
-    let y = NotNan::new(self.read_u16::<LittleEndian>()? as f32).unwrap() / 2.0;
+    let x = NotNan::new(self.read_u16::<LittleEndian>()? as f32)? / 2.0;
+    let y = NotNan::new(self.read_u16::<LittleEndian>()? as f32)? / 2.0;
     Ok((x, y))
   }
 }
 
+// TODO: Implement the rest of the parser.
 pub fn parse_pattern(path: impl AsRef<Path>) -> Result<Pattern> {
   log::info!("Parsing the XSD pattern file");
   let buf = fs::read(path)?;
@@ -183,7 +183,7 @@ pub fn parse_pattern(path: impl AsRef<Path>) -> Result<Pattern> {
   let signature = read_signature(&mut cursor)?;
   if signature != XSD_VALID_SIGNATURE {
     log::error!("The file has an invalid signature {:?}", signature);
-    return Err(Error::XsdInvalidSignature);
+    anyhow::bail!("The signature of Pattern Maker v4 is incorrect");
   }
 
   cursor.seek(SeekFrom::Current(739))?; // Skip the unknown data.
@@ -521,8 +521,8 @@ fn map_stitches_data_into_stitches(
       continue;
     }
 
-    let x = NotNan::new((i % pattern_width) as f32).unwrap();
-    let y = NotNan::new((i / pattern_width) as f32).unwrap();
+    let x = NotNan::new((i % pattern_width) as f32)?;
+    let y = NotNan::new((i / pattern_width) as f32)?;
 
     if stitch_buffer[3] == 0 {
       fullstitches.push(FullStitch {
@@ -603,7 +603,7 @@ fn skip_special_stitch_models(cursor: &mut Cursor) -> Result<()> {
     let mut special_stitch_kind_buf = vec![0; 4];
     cursor.read_exact(&mut special_stitch_kind_buf)?;
 
-    if String::from_utf8(special_stitch_kind_buf).unwrap() != "sps1" {
+    if String::from_utf8(special_stitch_kind_buf)? != "sps1" {
       continue;
     }
 

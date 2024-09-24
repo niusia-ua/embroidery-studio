@@ -1,12 +1,12 @@
 use crate::{
-  error::Result,
+  error::CommandResult,
   parser::{self, PatternFormat},
   pattern::Pattern,
   state::{AppStateType, PatternKey},
 };
 
 #[tauri::command]
-pub fn load_pattern(file_path: std::path::PathBuf, state: tauri::State<AppStateType>) -> Result<Vec<u8>> {
+pub fn load_pattern(file_path: std::path::PathBuf, state: tauri::State<AppStateType>) -> CommandResult<Vec<u8>> {
   log::trace!("Loading pattern from {:?}", file_path);
   let mut state = state.write().unwrap();
   let pattern_key = PatternKey::from(file_path.clone());
@@ -22,7 +22,7 @@ pub fn load_pattern(file_path: std::path::PathBuf, state: tauri::State<AppStateT
         PatternFormat::Oxs => parser::oxs::parse_pattern(file_path)?,
         PatternFormat::Embx => {
           let mut reader = std::fs::File::open(file_path)?;
-          borsh::from_reader(&mut reader).unwrap()
+          borsh::from_reader(&mut reader)?
         }
       };
       state.patterns.insert(pattern_key, pattern.clone());
@@ -30,7 +30,7 @@ pub fn load_pattern(file_path: std::path::PathBuf, state: tauri::State<AppStateT
     }
   };
   log::trace!("Pattern loaded");
-  Ok(borsh::to_vec(&pattern).unwrap())
+  Ok(borsh::to_vec(&pattern)?)
 }
 
 #[tauri::command]
@@ -42,6 +42,7 @@ pub fn create_pattern(state: tauri::State<AppStateType>) -> (PatternKey, Vec<u8>
   let pattern = Pattern::default();
   state.patterns.insert(pattern_key.clone(), pattern.clone());
   log::trace!("Pattern created");
+  // It is safe to unwrap here, because the pattern is always serializable.
   (pattern_key, borsh::to_vec(&pattern).unwrap())
 }
 
@@ -51,11 +52,11 @@ pub fn save_pattern(
   pattern_key: PatternKey,
   file_path: std::path::PathBuf,
   state: tauri::State<AppStateType>,
-) -> Result<()> {
+) -> CommandResult<()> {
   log::trace!("Saving pattern to {:?}", file_path);
   let state = state.read().unwrap();
   let pattern = state.patterns.get(&pattern_key).unwrap();
-  std::fs::write(file_path, borsh::to_vec(pattern).unwrap())?;
+  std::fs::write(file_path, borsh::to_vec(pattern)?)?;
   log::trace!("Pattern saved");
   Ok(())
 }
