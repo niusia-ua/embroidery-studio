@@ -1,4 +1,5 @@
-import { Application, Container, Graphics, LINE_CAP, Point, Polygon, type ColorSource } from "pixi.js";
+import { Application, Container, Graphics, LINE_CAP, Point, Polygon } from "pixi.js";
+import type { FederatedMouseEvent, ColorSource } from "pixi.js";
 import { Viewport } from "pixi-viewport";
 import { SpatialHash as SpatialHashCuller } from "pixi-cull";
 import { FullStitchKind, NodeKind, PartStitchDirection, PartStitchKind } from "#/schemas/pattern";
@@ -67,7 +68,7 @@ const NODE_GEOMETRIES = {
     .endFill().geometry,
 };
 
-export class CanvasService {
+export class CanvasService extends EventTarget {
   #pixi = new Application({ antialias: true, backgroundAlpha: 0 });
   #viewport = new Viewport({ events: this.#pixi.renderer.events });
   #culler = new SpatialHashCuller();
@@ -83,6 +84,8 @@ export class CanvasService {
   #startPoint: Point | undefined = undefined;
 
   constructor() {
+    super();
+
     // Configure the viewport.
     this.#viewport.scale.set(10);
     this.#viewport
@@ -109,6 +112,11 @@ export class CanvasService {
         this.#viewport.dirty = false;
       }
     });
+
+    // Set up event listeners.
+    this.#viewport.on("mousedown", this.#onMouseDown, this);
+    this.#viewport.on("mouseup", this.#onMouseUp, this);
+    this.#viewport.on("rightup", this.#onRightUp, this);
   }
 
   get view() {
@@ -276,27 +284,30 @@ export class CanvasService {
     return [x, y].toString();
   }
 
-  onDraw(callback: (start: Point, end: Point, ctrl: boolean) => void) {
-    this.#viewport.addEventListener("mousedown", (e) => {
-      const point = this.#viewport.toWorld(e.global);
-      this.#startPoint = this.#pointIsOutside(point) ? undefined : point;
-    });
+  #onMouseDown(e: FederatedMouseEvent) {
+    const point = this.#viewport.toWorld(e.global);
+    this.#startPoint = this.#pointIsOutside(point) ? undefined : point;
+  }
 
-    this.#viewport.addEventListener("mouseup", (e) => {
-      // If the start point is not set or the shift key is pressed, do nothing.
-      // Shift key is used to pan the viewport.
-      if (!this.#startPoint || e.shiftKey) return;
+  #onMouseUp(e: FederatedMouseEvent) {
+    // If the start point is not set or the shift key is pressed, do nothing.
+    // Shift key is used to pan the viewport.
+    if (!this.#startPoint || e.shiftKey) return;
 
-      const point = this.#viewport.toWorld(e.global);
-      if (this.#pointIsOutside(point)) return;
+    const point = this.#viewport.toWorld(e.global);
+    if (this.#pointIsOutside(point)) return;
 
-      const [start, end] = this.#orderPoints(this.#startPoint, point);
+    const [start, end] = this.#orderPoints(this.#startPoint, point);
 
-      // TODO: Improve the way to detect the control key.
-      // Control key is used to change the rotation of the node.
-      callback(start!, end!, e.ctrlKey);
-      this.#startPoint = undefined;
-    });
+    this.dispatchEvent(new CustomEvent("draw", { detail: { start, end, modifier: e.ctrlKey } }));
+    this.#startPoint = undefined;
+  }
+
+  #onRightUp(e: FederatedMouseEvent) {
+    const point = this.#viewport.toWorld(e.global);
+    if (this.#pointIsOutside(point)) return;
+
+    this.dispatchEvent(new CustomEvent("remove", { detail: { point } }));
   }
 
   #pointIsOutside({ x, y }: Point) {
@@ -305,7 +316,7 @@ export class CanvasService {
   }
 
   // Order points so that is no way to draw two lines with the same coordinates.
-  #orderPoints(start: Point, end: Point) {
+  #orderPoints(start: Point, end: Point): [Point, Point] {
     const x1 = Math.trunc(start.x);
     const y1 = Math.trunc(start.y);
     const x2 = Math.trunc(end.x);

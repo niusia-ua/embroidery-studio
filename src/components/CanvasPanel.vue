@@ -9,7 +9,7 @@
   import { CanvasService } from "#/services/canvas";
   import { useAppStateStore } from "#/stores/state";
   import { PartStitchDirection, StitchKind } from "#/schemas/pattern";
-  import { emitStitchCreated } from "#/services/events/pattern";
+  import { emitStitchCreated, emitStitchRemoved } from "#/services/events/pattern";
   import {
     RemovedStitchEventPayloadSchema,
     type RemovedStitchPayload,
@@ -43,8 +43,11 @@
 
   // A start point is needed to draw the lines.
   // An end point is needed to draw all the other kinds of stitches (in addition to lines).
-  canvasService.onDraw(async (start, end, ctrl) => {
+  canvasService.addEventListener("draw", async (e) => {
     if (!appStateStore.state.selectedPaletteItem) return;
+
+    // @ts-ignore
+    const { start, end, modifier } = e.detail;
 
     const x = Math.trunc(end.x);
     const y = Math.trunc(end.y);
@@ -115,10 +118,79 @@
           y: adjustStitchCoordinate(y, ydp, kind),
           palindex,
           kind,
-          rotated: ctrl,
+          rotated: modifier,
         };
         await emitStitchCreated(patternKey, { node });
         canvasService.drawNode(node, palitem.color);
+        break;
+      }
+    }
+  });
+
+  // TODO: Don't duplicate this code.
+  canvasService.addEventListener("remove", async (e) => {
+    if (!appStateStore.state.selectedPaletteItem) return;
+
+    // @ts-ignore
+    const { point } = e.detail;
+
+    const x = Math.trunc(point.x);
+    const y = Math.trunc(point.y);
+
+    // Decimal portion of the end coordinates.
+    const xdp = point.x - x;
+    const ydp = point.y - y;
+
+    // The current pattern is always available here.
+    const patternKey = appStateStore.state.currentPattern!.key;
+    const palitem = appStateStore.state.selectedPaletteItem;
+    const palindex = props.pattern.palette.findIndex((pi) => pi.color === palitem.color);
+
+    const tool = appStateStore.state.selectedStitchTool;
+    const kind = tool % 2; // Get 0 or 1.
+    switch (tool) {
+      case StitchKind.Full:
+      case StitchKind.Petite: {
+        const fullstitch: FullStitch = {
+          x: adjustStitchCoordinate(x, xdp, kind),
+          y: adjustStitchCoordinate(y, ydp, kind),
+          palindex,
+          kind,
+        };
+        await emitStitchRemoved(patternKey, { full: fullstitch });
+        canvasService.removeFullStitch(fullstitch);
+        break;
+      }
+
+      case StitchKind.Half:
+      case StitchKind.Quarter: {
+        const direction =
+          (xdp < 0.5 && ydp > 0.5) || (xdp > 0.5 && ydp < 0.5)
+            ? PartStitchDirection.Forward
+            : PartStitchDirection.Backward;
+        const partstitch: PartStitch = {
+          x: adjustStitchCoordinate(x, xdp, kind),
+          y: adjustStitchCoordinate(y, ydp, kind),
+          palindex,
+          kind,
+          direction,
+        };
+        await emitStitchRemoved(patternKey, { part: partstitch });
+        canvasService.removePartStitch(partstitch);
+        break;
+      }
+
+      case StitchKind.FrenchKnot:
+      case StitchKind.Bead: {
+        const node: Node = {
+          x: adjustStitchCoordinate(x, xdp, kind),
+          y: adjustStitchCoordinate(y, ydp, kind),
+          palindex,
+          kind,
+          rotated: false,
+        };
+        await emitStitchRemoved(patternKey, { node });
+        canvasService.removeNode(node);
         break;
       }
     }

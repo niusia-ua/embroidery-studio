@@ -6,3 +6,8 @@ export function emitStitchCreated(patternKey: string, payload: CreatedStitchPayl
   const buffer = borshSerialize(CreatedStitchEventPayloadSchema, { patternKey, payload });
   return appWindow.emit("pattern:stitch:create", buffer.toJSON().data);
 }
+
+export function emitStitchRemoved(patternKey: string, payload: CreatedStitchPayload) {
+  const buffer = borshSerialize(CreatedStitchEventPayloadSchema, { patternKey, payload });
+  return appWindow.emit("pattern:stitch:remove", buffer.toJSON().data);
+}

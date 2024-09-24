@@ -46,6 +46,16 @@ impl Pattern {
       Stitch::Line(line) => StitchConflicts::default().with_line(self.lines.insert(line)),
     }
   }
+
+  pub fn remove_stitch(&mut self, stitch: Stitch) -> bool {
+    log::trace!("Removing stitch");
+    match stitch {
+      Stitch::Full(fullstitch) => self.fullstitches.remove(&fullstitch),
+      Stitch::Part(partstitch) => self.partstitches.remove(&partstitch),
+      Stitch::Node(node) => self.nodes.remove(&node),
+      Stitch::Line(line) => self.lines.remove(&line),
+    }
+  }
 }
 
 // TODO: Load the default values from a bundlled pattern file.
