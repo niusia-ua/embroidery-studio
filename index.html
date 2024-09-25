@@ -10,10 +10,8 @@
     <div id="app" class="h-full"></div>
     <script type="module" src="/src/main.ts"></script>
     <script>
-      if (window.location.hostname === "tauri.localhost") {
-        // Disables a system context menu in production.
-        document.addEventListener("contextmenu", (e) => e.preventDefault());
-      }
+      // Disables a system context menu.
+      document.addEventListener("contextmenu", (e) => e.preventDefault());
     </script>
   </body>
 </html>
