@@ -27,6 +27,7 @@ impl Ord for PartStitch {
       .cmp(&other.y)
       .then(self.x.cmp(&other.x))
       .then(self.kind.cmp(&other.kind))
+      .then(self.direction.cmp(&other.direction))
   }
 }
 
