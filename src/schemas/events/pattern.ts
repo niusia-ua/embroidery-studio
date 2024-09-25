@@ -10,15 +10,15 @@ export interface StitchEventPayload<T> {
 export interface CreatedStitchPayload {
   full?: FullStitch;
   part?: PartStitch;
-  line?: Line;
   node?: Node;
+  line?: Line;
 }
 
 const CreatedStitchPayloadSchema = BorshSchema.Enum({
   full: FullStitchSchema,
   part: PartStitchSchema,
-  line: LineSchema,
   node: NodeSchema,
+  line: LineSchema,
 });
 
 export const CreatedStitchEventPayloadSchema = BorshSchema.Struct({
