@@ -1,0 +1,19 @@
+@layer tailwind-base, primevue, tailwind-utilities;
+
+@layer tailwind-base {
+  @tailwind base;
+}
+
+@layer tailwind-utilities {
+  @tailwind components;
+  @tailwind utilities;
+}
+
+@font-face {
+  font-family: "Noto Sans";
+  src: url("./fonts/NotoSans-VariableFont.ttf") format("truetype");
+}
+
+body {
+  font-family: "Noto Sans", "Arial", sans-serif;
+}

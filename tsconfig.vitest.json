@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.app.json",
+  "include": ["src/**/*.vue", "src/**/*.test.ts"],
+  "exclude": [],
+  "compilerOptions": {
+    "composite": true,
+    "baseUrl": ".",
+    "noUncheckedIndexedAccess": false,
+    "types": ["node", "jsdom"]
+  }
+}

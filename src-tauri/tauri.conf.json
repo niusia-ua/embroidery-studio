@@ -1,0 +1,54 @@
+{
+  "build": {
+    "beforeDevCommand": "vite",
+    "beforeBuildCommand": "vue-tsc --noEmit && vite build",
+    "devPath": "http://localhost:1420",
+    "distDir": "../dist"
+  },
+  "package": {
+    "productName": "Embroidery Studio",
+    "version": "0.0.0"
+  },
+  "tauri": {
+    "allowlist": {
+      "window": {
+        "close": true,
+        "hide": true,
+        "show": true,
+        "maximize": true,
+        "minimize": true,
+        "unmaximize": true,
+        "unminimize": true,
+        "startDragging": true
+      },
+      "dialog": {
+        "open": true,
+        "save": true
+      },
+      "path": {
+        "all": true
+      },
+      "fs": {
+        "readFile": true,
+        "scope": ["$RESOURCE/**/*"]
+      }
+    },
+    "windows": [
+      {
+        "title": "Embroidery Studio",
+        "maximized": true,
+        "decorations": false
+      }
+    ],
+    "security": {
+      "csp": null
+    },
+    "bundle": {
+      "active": true,
+      "targets": "msi",
+      "identifier": "studio.embroidery",
+      "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
+      "resources": ["resources/*"]
+    }
+  }
+}
