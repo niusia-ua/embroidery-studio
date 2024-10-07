@@ -4,7 +4,7 @@
 
 <script lang="ts" setup>
   import { onMounted, ref, watch } from "vue";
-  import { appWindow } from "@tauri-apps/api/window";
+  import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
   import { borshDeserialize } from "borsher";
   import { CanvasService } from "#/services/canvas";
   import { useAppStateStore } from "#/stores/state";
@@ -215,7 +215,8 @@
     }
   }
 
-  appWindow.listen<Uint8Array>("pattern:stitch:remove", (e) => {
+  const appWindow = getCurrentWebviewWindow();
+  appWindow.listen<Uint8Array>("pattern:stitches:remove", (e) => {
     const { payload } = borshDeserialize<StitchEventPayload<RemovedStitchPayload>>(
       RemovedStitchEventPayloadSchema,
       e.payload,

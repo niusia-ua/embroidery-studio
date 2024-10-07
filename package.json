@@ -2,14 +2,16 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "tauri": "tauri",
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
     "fmt": "prettier --check ./vite.config.ts src/",
     "lint": "eslint --ext .vue,.ts ./vite.config.ts src/",
     "test": "vitest --run"
   },
   "dependencies": {
     "@primevue/themes": "^4.0.4",
-    "@tauri-apps/api": "^1.6.0",
+    "@tauri-apps/api": "^2.0.1",
+    "@tauri-apps/plugin-dialog": "^2.0.0",
     "borsher": "^3.5.0",
     "pinia": "^2.2.2",
     "pinia-plugin-persistedstate": "^3.2.3",

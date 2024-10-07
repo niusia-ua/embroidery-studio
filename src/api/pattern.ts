@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/tauri";
+import { invoke } from "@tauri-apps/api/core";
 import { borshDeserialize } from "borsher";
 import { PatternSchema } from "#/schemas/pattern";
 import type { Pattern } from "#/schemas/pattern";

@@ -15,7 +15,8 @@
   import { ref } from "vue";
   import Button from "primevue/button";
   import ButtonGroup from "primevue/buttongroup";
-  import { appWindow } from "@tauri-apps/api/window";
+  import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+const appWindow = getCurrentWebviewWindow()
 
   // New window is maximized by default.
   const isMaximized = ref(true);

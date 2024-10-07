@@ -61,8 +61,8 @@
   import Toolbar from "primevue/toolbar";
   import { useConfirm } from "primevue/useconfirm";
   import type { MenuItem } from "primevue/menuitem";
-  import { open, save } from "@tauri-apps/api/dialog";
-  import { appWindow } from "@tauri-apps/api/window";
+  import { open, save } from "@tauri-apps/plugin-dialog";
+  import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
   import CanvasPanel from "./components/CanvasPanel.vue";
   import PalettePanel from "./components/PalettePanel.vue";
   import DropdownTieredMenu from "./components/toolbar/DropdownTieredMenu.vue";
@@ -73,6 +73,8 @@
   import { studioDocumentDir } from "./utils/path";
   import * as patternApi from "./api/pattern";
   import type { Pattern } from "./schemas/pattern";
+
+  const appWindow = getCurrentWebviewWindow();
 
   const appStateStore = useAppStateStore();
 
