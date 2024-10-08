@@ -1,0 +1,40 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: ["opened", "edited", "synchronize"]
+env:
+  CARGO_TERM_COLOR: always
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - name: Check formatting
+        run: npm run fmt
+      - name: Lint
+        run: npm run lint
+      - name: Test
+        run: npm run test
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src-tauri/
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install system dependencies
+        run: |
+          sudo apt update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Check formatting
+        run: cargo fmt --check
+      - name: Lint
+        run: cargo clippy -- -D warnings
+      - name: Test
+        run: cargo test
