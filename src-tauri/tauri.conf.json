@@ -1,7 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2.0.0",
   "productName": "Embroidery Studio",
-  "mainBinaryName": "Embroidery Studio",
   "identifier": "studio.embroidery",
   "version": "0.0.0",
   "build": {
@@ -12,9 +11,18 @@
   },
   "bundle": {
     "active": true,
-    "targets": "msi",
+    "targets": ["msi", "rpm", "deb"],
     "resources": ["resources/**/*"],
-    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"]
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
+    "license": "GPL-3.0-or-later",
+    "licenseFile": "../LICENSE",
+    "category": "GraphicsAndDesign",
+    "shortDescription": "A free and open-source desktop application for designing cross-stitch patterns.",
+    "fileAssociations": [
+      { "ext": ["xsd"], "description": "Cross-Stitch Desing (Pattern Maker)" },
+      { "ext": ["oxs"], "description": "Open Cross-Stitch Desing (WinStitch/MacStitch)" }
+    ],
+    "windows": { "wix": { "language": ["en-US", "uk-UA"] } }
   },
   "plugins": {},
   "app": {
