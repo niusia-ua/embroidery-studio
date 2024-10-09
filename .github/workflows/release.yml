@@ -1,0 +1,40 @@
+name: Release
+on:
+  push:
+    tags:
+      - "*"
+env:
+  CARGO_TERM_COLOR: always
+jobs:
+  release:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install system dependencies (Ubuntu-only)
+        if: matrix.platform == 'ubuntu-latest'
+        run: |
+          sudo apt update
+          sudo apt install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - run: npm ci
+      # We prefer to use Cargo Tauri CLI in development, but in CI, we use NPM.
+      - run: npm i -g @tauri-apps/cli
+      - uses: tauri-apps/tauri-action@dev
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: __VERSION__
+          releaseName: Embroidery Studio __VERSION__
+          releaseDraft: true
+          includeUpdaterJson: false
+          tauriScript: npx tauri
