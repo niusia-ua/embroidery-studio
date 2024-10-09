@@ -26,6 +26,9 @@ jobs:
           node-version: 20
           cache: npm
       - uses: dtolnay/rust-toolchain@stable
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
       - run: npm ci
       # We prefer to use Cargo Tauri CLI in development, but in CI, we use NPM.
       - run: npm i -g @tauri-apps/cli
