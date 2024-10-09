@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@primevue/themes": "^4.0.4",
-    "@tauri-apps/api": "^2.0.1",
+    "@tauri-apps/api": "^2.0.2",
     "@tauri-apps/plugin-dialog": "^2.0.0",
     "borsher": "^3.5.0",
     "pinia": "^2.2.2",
