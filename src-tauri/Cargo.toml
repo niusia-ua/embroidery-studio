@@ -39,4 +39,4 @@ anyhow = "1.0.89"
 log = "0.4.22"
 
 # Other
-ordered-float = { version = "4.2.2", features = ["borsh"] }
+ordered-float = { version = "4.3.0", features = ["borsh"] }
