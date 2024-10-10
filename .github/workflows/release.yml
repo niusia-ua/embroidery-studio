@@ -2,7 +2,7 @@ name: Release
 on:
   push:
     tags:
-      - "*"
+      - "v*"
 env:
   CARGO_TERM_COLOR: always
 jobs:
@@ -36,8 +36,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: __VERSION__
-          releaseName: Embroidery Studio __VERSION__
+          tagName: v__VERSION__
+          releaseName: Embroidery Studio v__VERSION__
           releaseDraft: true
           includeUpdaterJson: false
           tauriScript: npx tauri
