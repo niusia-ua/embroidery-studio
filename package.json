@@ -17,7 +17,7 @@
     "pinia-plugin-persistedstate": "^4.1.1",
     "pixi-cull": "^2.1.1",
     "pixi-viewport": "^5.0.3",
-    "pixi.js": "^7.4.2",
+    "pixi.js": "^8.4.1",
     "primeicons": "^7.0.0",
     "primevue": "^4.0.4",
     "tailwindcss-primeui": "^0.3.4",
