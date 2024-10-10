@@ -14,7 +14,7 @@
     "@tauri-apps/plugin-dialog": "^2.0.0",
     "borsher": "^3.5.0",
     "pinia": "^2.2.2",
-    "pinia-plugin-persistedstate": "^3.2.3",
+    "pinia-plugin-persistedstate": "^4.1.1",
     "pixi-cull": "^2.1.1",
     "pixi-viewport": "^5.0.3",
     "pixi.js": "^7.4.2",
