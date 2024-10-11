@@ -1,10 +1,12 @@
 use std::cmp::Ordering;
 
 use borsh::{BorshDeserialize, BorshSerialize};
+use serde::{Deserialize, Serialize};
+use serde_repr::{Deserialize_repr, Serialize_repr};
 
 use crate::pattern::Coord;
 
-#[derive(Debug, Clone, PartialEq, Eq, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 pub struct Line {
   pub x: (Coord, Coord),
   pub y: (Coord, Coord),
@@ -24,8 +26,11 @@ impl Ord for Line {
   }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, BorshSerialize, BorshDeserialize)]
+#[derive(
+  Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize_repr, Deserialize_repr, BorshSerialize, BorshDeserialize,
+)]
 #[borsh(use_discriminant = true)]
+#[repr(u8)]
 pub enum LineKind {
   Back = 0,
   Straight = 1,

@@ -3,19 +3,14 @@
 </template>
 
 <script lang="ts" setup>
-  import { onMounted, ref, watch } from "vue";
-  import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-  import { borshDeserialize } from "borsher";
+  import { getCurrentWindow } from "@tauri-apps/api/window";
+  import { onMounted, onUnmounted, ref, watch } from "vue";
   import { CanvasService } from "#/services/canvas";
   import { useAppStateStore } from "#/stores/state";
   import { PartStitchDirection, StitchKind } from "#/schemas/pattern";
   import { emitStitchCreated, emitStitchRemoved } from "#/services/events/pattern";
-  import {
-    RemovedStitchEventPayloadSchema,
-    type RemovedStitchPayload,
-    type StitchEventPayload,
-  } from "#/schemas/events/pattern";
   import type { FullStitch, Line, Node, PartStitch, Pattern } from "#/schemas/pattern";
+  import type { RemovedStitchPayload, StitchEventPayload } from "#/types/events/pattern";
 
   interface CanvasPanelProps {
     pattern: Pattern;
@@ -215,15 +210,19 @@
     }
   }
 
-  const appWindow = getCurrentWebviewWindow();
-  appWindow.listen<Uint8Array>("pattern:stitches:remove", (e) => {
-    const { payload } = borshDeserialize<StitchEventPayload<RemovedStitchPayload>>(
-      RemovedStitchEventPayloadSchema,
-      e.payload,
-    );
-    if (payload.fullstitches) canvasService.removeFullStitches(payload.fullstitches);
-    if (payload.partstitches) canvasService.removePartStitches(payload.partstitches);
-    if (payload.line) canvasService.removeLine(payload.line);
-    if (payload.node) canvasService.removeNode(payload.node);
+  const appWindow = getCurrentWindow();
+  const unlistenRemoveStitches = await appWindow.listen<StitchEventPayload<RemovedStitchPayload>>(
+    "pattern:stitches:remove",
+    (e) => {
+      const { payload } = e.payload;
+      if (payload.fullstitches) canvasService.removeFullStitches(payload.fullstitches);
+      if (payload.partstitches) canvasService.removePartStitches(payload.partstitches);
+      if (payload.line) canvasService.removeLine(payload.line);
+      if (payload.node) canvasService.removeNode(payload.node);
+    },
+  );
+
+  onUnmounted(() => {
+    unlistenRemoveStitches();
   });
 </script>
