@@ -7,9 +7,9 @@
   import { onMounted, onUnmounted, ref, watch } from "vue";
   import { CanvasService } from "#/services/canvas";
   import { useAppStateStore } from "#/stores/state";
-  import { PartStitchDirection, StitchKind } from "#/schemas/pattern";
   import { emitStitchCreated, emitStitchRemoved } from "#/services/events/pattern";
-  import type { FullStitch, Line, Node, PartStitch, Pattern } from "#/schemas/pattern";
+  import { PartStitchDirection, StitchKind } from "#/types/pattern";
+  import type { FullStitch, Line, Node, PartStitch, Pattern } from "#/types/pattern";
   import type { RemovedStitchPayload, StitchEventPayload } from "#/types/events/pattern";
 
   interface CanvasPanelProps {

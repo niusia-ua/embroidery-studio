@@ -2,8 +2,8 @@ import { Application, Container, Graphics, LINE_CAP, Point, Polygon } from "pixi
 import type { FederatedMouseEvent, ColorSource } from "pixi.js";
 import { Viewport } from "pixi-viewport";
 import { SpatialHash as SpatialHashCuller } from "pixi-cull";
-import { FullStitchKind, NodeKind, PartStitchDirection, PartStitchKind } from "#/schemas/pattern";
-import type { FullStitch, Line, Node, PartStitch, Pattern, PatternProperties } from "#/schemas/pattern";
+import { FullStitchKind, NodeKind, PartStitchDirection, PartStitchKind } from "#/types/pattern";
+import type { FullStitch, Line, Node, PartStitch, Pattern, PatternProperties } from "#/types/pattern";
 import type { GridSettings } from "#/types/view";
 
 const GRID_SETTINGS: GridSettings = {

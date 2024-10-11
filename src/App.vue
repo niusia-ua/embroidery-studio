@@ -73,7 +73,7 @@
   import { useAppStateStore } from "./stores/state";
   import { studioDocumentDir } from "./utils/path";
   import * as patternApi from "./api/pattern";
-  import type { Pattern } from "./schemas/pattern";
+  import type { Pattern } from "./types/pattern";
 
   const appStateStore = useAppStateStore();
 
@@ -153,7 +153,7 @@
     try {
       loading.value = true;
       pattern.value = await patternApi.loadPattern(path);
-      appStateStore.addOpenedPattern(pattern.value.info.title, path);
+      appStateStore.addOpenedPattern(pattern.value!.info.title, path);
     } catch (err) {
       confirm.require({
         header: "Error",
@@ -174,7 +174,7 @@
     loading.value = true;
     const { key, pattern: pat } = await patternApi.createPattern();
     pattern.value = pat;
-    appStateStore.addOpenedPattern(pattern.value.info.title, key);
+    appStateStore.addOpenedPattern(pattern.value!.info.title, key);
     loading.value = false;
   }
 
