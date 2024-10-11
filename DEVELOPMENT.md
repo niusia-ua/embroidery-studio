@@ -14,6 +14,7 @@ src/ # Everything related to the frontend.
 ├── schemas/ # Schemas and types for parsing borsh-serialized data.
 ├── services/ # Modules that encapsulate complex logic.
 ├── stores/ # Pinia stores to share some application state through components.
+├── types/ # Types definition.
 ├── utils/ # A set of utility functions.
 ├── App.vue # The main application component.
 └── main.ts # An entry point for the entire application.
