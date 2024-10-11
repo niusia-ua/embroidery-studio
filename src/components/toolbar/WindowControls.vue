@@ -12,16 +12,20 @@
 </template>
 
 <script setup lang="ts">
-  import { ref } from "vue";
-  import Button from "primevue/button";
+  import { getCurrentWindow } from "@tauri-apps/api/window";
+  import { onUnmounted, ref } from "vue";
   import ButtonGroup from "primevue/buttongroup";
-  import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+  import Button from "primevue/button";
 
   // New window is maximized by default.
   const isMaximized = ref(true);
 
-  const appWindow = getCurrentWebviewWindow();
-  appWindow.onResized(() => {
+  const appWindow = getCurrentWindow();
+  const unlistenResized = await appWindow.onResized(() => {
     isMaximized.value = !isMaximized.value;
+  });
+
+  onUnmounted(() => {
+    unlistenResized();
   });
 </script>

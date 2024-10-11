@@ -21,7 +21,9 @@
       </template>
 
       <template #end>
-        <WindowControls />
+        <Suspense>
+          <WindowControls />
+        </Suspense>
       </template>
     </Toolbar>
 
