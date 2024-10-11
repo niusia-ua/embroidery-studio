@@ -2,7 +2,7 @@
   <ConfirmDialog />
   <BlockUI :blocked="loading" full-screen />
   <div class="h-full flex flex-col">
-    <Toolbar class="rounded-none border-0 border-b p-0" draggable="true" @dragstart="() => appWindow.startDragging()">
+    <Toolbar data-tauri-drag-region class="rounded-none border-0 border-b p-0">
       <template #start>
         <DropdownTieredMenu id="general_menu" :button="{ icon: 'pi pi-bars' }" :tiered-menu="{ model: menuOptions }" />
         <StitchToolSelector />
@@ -64,7 +64,6 @@
   import { useConfirm } from "primevue/useconfirm";
   import type { MenuItem } from "primevue/menuitem";
   import { open, save } from "@tauri-apps/plugin-dialog";
-  import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
   import CanvasPanel from "./components/CanvasPanel.vue";
   import PalettePanel from "./components/PalettePanel.vue";
   import DropdownTieredMenu from "./components/toolbar/DropdownTieredMenu.vue";
@@ -75,8 +74,6 @@
   import { studioDocumentDir } from "./utils/path";
   import * as patternApi from "./api/pattern";
   import type { Pattern } from "./schemas/pattern";
-
-  const appWindow = getCurrentWebviewWindow();
 
   const appStateStore = useAppStateStore();
 
