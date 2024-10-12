@@ -71,11 +71,13 @@
   import StitchToolSelector from "./components/toolbar/StitchToolSelector.vue";
   import WindowControls from "./components/toolbar/WindowControls.vue";
   import { useAppStateStore } from "./stores/state";
+  import { usePreferencesStore } from "./stores/preferences";
   import { studioDocumentDir } from "./utils/path";
   import * as patternApi from "./api/pattern";
   import type { Pattern } from "./types/pattern";
 
   const appStateStore = useAppStateStore();
+  const preferencesStore = usePreferencesStore();
 
   const loading = ref(false);
   const pattern = ref<Pattern>();
@@ -142,9 +144,37 @@
       },
     ],
   };
-  const menuOptions = ref<MenuItem[]>([fileOptions]);
+  const preferencesOptions: MenuItem = {
+    label: "Preferences",
+    icon: "pi pi-cog",
+    items: [
+      {
+        label: "Theme",
+        icon: "pi pi-palette",
+        items: [
+          {
+            label: "Light",
+            icon: "pi pi-sun",
+            command: () => preferencesStore.setTheme("light"),
+          },
+          {
+            label: "Dark",
+            icon: "pi pi-moon",
+            command: () => preferencesStore.setTheme("dark"),
+          },
+          {
+            label: "System",
+            icon: "pi pi-desktop",
+            command: () => preferencesStore.setTheme("system"),
+          },
+        ],
+      },
+    ],
+  };
+  const menuOptions = ref<MenuItem[]>([fileOptions, preferencesOptions]);
 
   onMounted(async () => {
+    await preferencesStore.setTheme(preferencesStore.theme);
     const currentPattern = appStateStore.state.currentPattern;
     if (currentPattern) await loadPattern(currentPattern.key);
   });
