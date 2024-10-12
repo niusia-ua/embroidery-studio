@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { borshDeserialize } from "borsher";
 import { PatternSchema } from "#/schemas/pattern";
-import type { Pattern } from "#/schemas/pattern";
+import type { Pattern } from "#/types/pattern";
 
 export const loadPattern = async (filePath: string) => {
   const bytes = await invoke<Uint8Array>("load_pattern", { filePath });

@@ -92,7 +92,7 @@
   import { contrastColor } from "#/utils/color";
   import { paletteItemTitle, type PaletteItemDisplayOptions } from "#/utils/paletteItem";
   import { useAppStateStore } from "#/stores/state";
-  import type { PaletteItem } from "#/schemas/pattern";
+  import type { PaletteItem } from "#/types/pattern";
 
   interface PalettePanelProps {
     palette?: PaletteItem[];
