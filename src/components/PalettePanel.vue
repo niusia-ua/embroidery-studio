@@ -102,7 +102,7 @@
 
   const appState = useAppStateStore();
 
-  const paletteSettingsPopover = ref<typeof Popover>();
+  const paletteSettingsPopover = ref<InstanceType<typeof Popover>>();
   const paletteItemDisplayOptions = reactive<PaletteItemDisplayOptions>({
     showBrand: true,
     showNumber: true,
