@@ -84,7 +84,7 @@ Here is a recommended setup:
        "*.ts": "${capture}.test.ts",
        "*.rs": "${capture}.test.rs",
        // Hide all TypeScript configs under the main one.
-       "tsconfig.json": "tsconfig.*.json, *.d.ts",
+       "tsconfig.json": "tsconfig.*.json, *.d.ts, *.tsbuildinfo",
        // Hide lock files under the main manifests.
        "package.json": "package-lock.json",
        "Cargo.toml": "Cargo.lock, rustfmt.toml",
