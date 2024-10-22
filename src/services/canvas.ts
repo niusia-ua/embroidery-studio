@@ -65,9 +65,9 @@ export class CanvasService extends EventTarget {
     fabric: new Graphics(),
     fullstitches: new Container(),
     partstitches: new Container(),
+    grid: new Graphics(),
     lines: new Container(),
     nodes: new Container(),
-    grid: new Graphics(),
   };
 
   #startPoint: Point | undefined = undefined;
