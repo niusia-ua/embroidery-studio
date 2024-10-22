@@ -29,12 +29,12 @@
 
     <Splitter :gutter-size="2" class="h-full rounded-none border-0">
       <SplitterPanel :min-size="5" :size="15">
-        <PalettePanel :palette="pattern?.palette" />
+        <PalettePanel :palette="patproj?.pattern?.palette" />
       </SplitterPanel>
 
       <SplitterPanel :min-size="85" :size="85">
         <ProgressSpinner v-if="loading" class="absolute top-1/2 left-1/2" />
-        <Suspense v-if="pattern"><CanvasPanel :pattern="pattern" /></Suspense>
+        <Suspense v-if="patproj?.pattern"><CanvasPanel :patproj="patproj" /></Suspense>
         <div v-else class="w-full h-full flex justify-center items-center relative">
           <Panel header="No pattern loaded" class="w-3/12 border-0">
             <p class="m-0">Open a pattern or create a new one to get started.</p>
@@ -74,13 +74,13 @@
   import { usePreferencesStore } from "./stores/preferences";
   import { studioDocumentDir } from "./utils/path";
   import * as patternApi from "./api/pattern";
-  import type { Pattern } from "./types/pattern";
+  import type { PatternProject } from "./types/pattern/project";
 
   const appStateStore = useAppStateStore();
   const preferencesStore = usePreferencesStore();
 
   const loading = ref(false);
-  const pattern = ref<Pattern>();
+  const patproj = ref<PatternProject>();
 
   const confirm = useConfirm();
 
@@ -97,8 +97,8 @@
             multiple: false,
             filters: [
               {
-                name: "Cross Stitch Pattern",
-                extensions: ["xsd", "oxs", "xml", "embx"],
+                name: "Cross-Stitch Pattern",
+                extensions: ["xsd", "oxs", "xml", "embproj"],
               },
             ],
           });
@@ -138,7 +138,7 @@
           if (!appStateStore.state.currentPattern) return;
           await patternApi.closePattern(appStateStore.state.currentPattern.key);
           appStateStore.removeCurrentPattern();
-          if (!appStateStore.state.currentPattern) pattern.value = undefined;
+          if (!appStateStore.state.currentPattern) patproj.value = undefined;
           else await loadPattern(appStateStore.state.currentPattern.key);
         },
       },
@@ -182,8 +182,8 @@
   async function loadPattern(path: string) {
     try {
       loading.value = true;
-      pattern.value = await patternApi.loadPattern(path);
-      appStateStore.addOpenedPattern(pattern.value!.info.title, path);
+      patproj.value = await patternApi.loadPattern(path);
+      appStateStore.addOpenedPattern(patproj.value!.pattern.info.title, path);
     } catch (err) {
       confirm.require({
         header: "Error",
@@ -203,8 +203,8 @@
   async function createPattern() {
     loading.value = true;
     const { key, pattern: pat } = await patternApi.createPattern();
-    pattern.value = pat;
-    appStateStore.addOpenedPattern(pattern.value!.info.title, key);
+    patproj.value = pat;
+    appStateStore.addOpenedPattern(patproj.value!.pattern.info.title, key);
     loading.value = false;
   }
 

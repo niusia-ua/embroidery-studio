@@ -31,7 +31,7 @@ pub fn setup_event_handlers(window: &WebviewWindow, app_handle: &AppHandle) {
     // This is safe because the event is only emitted when the pattern exists.
     let pattern = state.patterns.get_mut(&pattern_key).unwrap();
 
-    emit_remove_stitches(&win, pattern_key, pattern.add_stitch(payload));
+    emit_remove_stitches(&win, pattern_key, pattern.pattern.add_stitch(payload));
   });
 
   let handle = app_handle.clone();
@@ -44,7 +44,7 @@ pub fn setup_event_handlers(window: &WebviewWindow, app_handle: &AppHandle) {
       serde_json::from_str::<EventStitchPayload<Stitch>>(e.payload()).unwrap();
     // This is safe because the event is only emitted when the pattern exists.
     let pattern = state.patterns.get_mut(&pattern_key).unwrap();
-    pattern.remove_stitch(payload);
+    pattern.pattern.remove_stitch(payload);
   });
 }
 

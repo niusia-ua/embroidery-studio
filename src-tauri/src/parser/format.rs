@@ -1,9 +1,19 @@
 use std::ffi::OsStr;
 
 pub enum PatternFormat {
+  /// Probably, stands for `Cross-Stitch Design`.
+  /// Only **read-only** mode is currently available.
   Xsd,
+
+  /// Stands for `Open Cross-Stitch`.
+  /// It is just an XML document.
+  /// This format is intended to be a lingua franca in the embroidery world.
   Oxs,
-  Embx,
+
+  /// Stands for `Embroidery Project`.
+  /// It is a ZIP archive with a pack of binary files.
+  /// This format is not recommended for other applications.
+  EmbProj,
 }
 
 impl TryFrom<Option<&OsStr>> for PatternFormat {
@@ -15,7 +25,7 @@ impl TryFrom<Option<&OsStr>> for PatternFormat {
       match extension.to_lowercase().as_str() {
         "xsd" => Ok(Self::Xsd),
         "oxs" | "xml" => Ok(Self::Oxs),
-        "embx" => Ok(Self::Embx),
+        "embproj" => Ok(Self::EmbProj),
         _ => anyhow::bail!("Unsupported pattern type: {extension}."),
       }
     } else {

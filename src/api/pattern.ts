@@ -1,16 +1,16 @@
 import { invoke } from "@tauri-apps/api/core";
 import { borshDeserialize } from "borsher";
-import { PatternSchema } from "#/schemas/pattern";
-import type { Pattern } from "#/types/pattern";
+import { PatternProjectSchema } from "#/schemas/";
+import type { PatternProject } from "#/types/pattern/project";
 
 export const loadPattern = async (filePath: string) => {
   const bytes = await invoke<Uint8Array>("load_pattern", { filePath });
-  return borshDeserialize<Pattern>(PatternSchema, bytes);
+  return borshDeserialize<PatternProject>(PatternProjectSchema, bytes);
 };
 
 export const createPattern = async () => {
   const [key, bytes] = await invoke<[string, Uint8Array]>("create_pattern");
-  return { key, pattern: borshDeserialize<Pattern>(PatternSchema, bytes) };
+  return { key, pattern: borshDeserialize<PatternProject>(PatternProjectSchema, bytes) };
 };
 
 export const savePattern = (patternKey: string, filePath: string) => {

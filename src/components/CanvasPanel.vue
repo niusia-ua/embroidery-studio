@@ -8,12 +8,13 @@
   import { CanvasService } from "#/services/canvas";
   import { useAppStateStore } from "#/stores/state";
   import { emitStitchCreated, emitStitchRemoved } from "#/services/events/pattern";
-  import { PartStitchDirection, StitchKind } from "#/types/pattern";
-  import type { FullStitch, Line, Node, PartStitch, Pattern } from "#/types/pattern";
+  import { PartStitchDirection, StitchKind } from "#/types/pattern/pattern";
   import type { RemovedStitchPayload, StitchEventPayload } from "#/types/events/pattern";
+  import type { FullStitch, Line, Node, PartStitch } from "#/types/pattern/pattern";
+  import type { PatternProject } from "#/types/pattern/project";
 
   interface CanvasPanelProps {
-    pattern: Pattern;
+    patproj: PatternProject;
   }
 
   const props = defineProps<CanvasPanelProps>();
@@ -28,12 +29,12 @@
     canvasService.resize(canvasContainer.value!.getBoundingClientRect());
     window.addEventListener("resize", () => canvasService.resize(canvasContainer.value!.getBoundingClientRect()));
     canvasContainer.value!.appendChild(canvasService.view as HTMLCanvasElement);
-    canvasService.drawPattern(props.pattern);
+    canvasService.drawPattern(props.patproj);
   });
 
   watch(
-    () => props.pattern,
-    (pattern) => canvasService.drawPattern(pattern),
+    () => props.patproj,
+    (patproj) => canvasService.drawPattern(patproj),
   );
 
   // A start point is needed to draw the lines.
@@ -54,7 +55,7 @@
     // The current pattern is always available here.
     const patternKey = appStateStore.state.currentPattern!.key;
     const palitem = appStateStore.state.selectedPaletteItem;
-    const palindex = props.pattern.palette.findIndex((pi) => pi.color === palitem.color);
+    const palindex = props.patproj.pattern.palette.findIndex((pi) => pi.color === palitem.color);
 
     const tool = appStateStore.state.selectedStitchTool;
     const kind = tool % 2; // Get 0 or 1.
@@ -139,7 +140,7 @@
     // The current pattern is always available here.
     const patternKey = appStateStore.state.currentPattern!.key;
     const palitem = appStateStore.state.selectedPaletteItem;
-    const palindex = props.pattern.palette.findIndex((pi) => pi.color === palitem.color);
+    const palindex = props.patproj.pattern.palette.findIndex((pi) => pi.color === palitem.color);
 
     const tool = appStateStore.state.selectedStitchTool;
     const kind = tool % 2; // Get 0 or 1.

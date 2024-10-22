@@ -1,4 +1,4 @@
-import type { Blend, PaletteItem } from "#/types/pattern";
+import type { Blend, PaletteItem } from "#/types/pattern/pattern";
 
 /** Interface representing display options for a palette item's title. */
 export interface PaletteItemDisplayOptions {

@@ -1,4 +1,4 @@
-import type { FullStitch, Line, Node, PartStitch } from "../pattern";
+import type { FullStitch, Line, Node, PartStitch } from "../pattern/pattern";
 
 export interface StitchEventPayload<T> {
   patternKey: string;

@@ -7,6 +7,8 @@ export interface Pattern {
   partstitches: PartStitch[];
   nodes: Node[];
   lines: Line[];
+  specialstitches: SpecialStitch[];
+  special_stitch_models: SpecialModelStitch[];
 }
 
 export interface PatternProperties {
@@ -17,6 +19,7 @@ export interface PatternProperties {
 export interface PatternInfo {
   title: string;
   author: string;
+  company: string;
   copyright: string;
   description: string;
 }
@@ -27,12 +30,30 @@ export interface PaletteItem {
   name: string;
   color: string;
   blends?: Blend[];
+  bead?: Bead;
+  strands: StitchStrands;
 }
 
 export interface Blend {
   brand: string;
   number: string;
   strands: number;
+}
+
+export interface Bead {
+  length: number;
+  diameter: number;
+}
+
+export interface StitchStrands {
+  full?: number;
+  petite?: number;
+  half?: number;
+  quarter?: number;
+  back?: number;
+  straight?: number;
+  french_knot?: number;
+  special?: number;
 }
 
 export interface Fabric {
@@ -95,6 +116,28 @@ export interface Line {
 export const enum LineKind {
   Back = 0,
   Straight = 1,
+}
+
+export interface SpecialStitch {
+  x: number;
+  y: number;
+  palindex: number;
+  modindex: number;
+}
+
+export interface SpecialModelStitch {
+  uniqueName: string;
+  name: string;
+  width: number;
+  height: number;
+  nodes: Node[];
+  lines: Line[];
+  curves: Curve[];
+}
+
+export interface Curve {
+  points: [number, number][];
+  palindex: number;
 }
 
 export const enum StitchKind {

@@ -2,8 +2,6 @@ use borsh::{BorshDeserialize, BorshSerialize};
 
 use super::stitches::*;
 
-pub type Coord = ordered_float::NotNan<f32>;
-
 #[derive(Debug, Clone, BorshSerialize, BorshDeserialize)]
 pub struct Pattern {
   pub properties: PatternProperties,
@@ -14,6 +12,8 @@ pub struct Pattern {
   pub partstitches: Stitches<PartStitch>,
   pub nodes: Stitches<Node>,
   pub lines: Stitches<Line>,
+  pub specialstitches: Stitches<SpecialStitch>,
+  pub special_stitch_models: Vec<SpecialStitchModel>,
 }
 
 impl Pattern {
@@ -66,6 +66,7 @@ impl Default for Pattern {
       info: PatternInfo {
         title: "Untitled".to_string(),
         author: "".to_string(),
+        company: "".to_string(),
         copyright: "".to_string(),
         description: "".to_string(),
       },
@@ -76,6 +77,8 @@ impl Default for Pattern {
           name: "Black".to_string(),
           color: "000000".to_string(),
           blends: None,
+          bead: None,
+          strands: StitchStrands::default(),
         },
         PaletteItem {
           brand: "DMC".to_string(),
@@ -83,10 +86,12 @@ impl Default for Pattern {
           name: "Coral-DK".to_string(),
           color: "C23131".to_string(),
           blends: None,
+          bead: None,
+          strands: StitchStrands::default(),
         },
       ]),
       fabric: Fabric {
-        stitches_per_inch: (14, 14),
+        spi: (14, 14),
         kind: "Aida".to_string(),
         name: "White".to_string(),
         color: "FFFFFF".to_string(),
@@ -95,11 +100,13 @@ impl Default for Pattern {
       partstitches: Stitches::new(),
       nodes: Stitches::new(),
       lines: Stitches::new(),
+      specialstitches: Stitches::new(),
+      special_stitch_models: Vec::new(),
     }
   }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize)]
 pub struct PatternProperties {
   pub width: u16,
   pub height: u16,
@@ -111,10 +118,11 @@ impl Default for PatternProperties {
   }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize)]
 pub struct PatternInfo {
   pub title: String,
   pub author: String,
+  pub company: String,
   pub copyright: String,
   pub description: String,
 }
@@ -124,31 +132,54 @@ impl Default for PatternInfo {
     Self {
       title: String::from("Untitled"),
       author: String::new(),
+      company: String::new(),
       copyright: String::new(),
       description: String::new(),
     }
   }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize)]
 pub struct PaletteItem {
   pub brand: String,
   pub number: String,
   pub name: String,
   pub color: String,
   pub blends: Option<Vec<Blend>>,
+  pub bead: Option<Bead>,
+  pub strands: StitchStrands,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize)]
 pub struct Blend {
   pub brand: String,
   pub number: String,
   pub strands: u8,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, BorshSerialize, BorshDeserialize)]
+pub type Millimetres = ordered_float::NotNan<f32>;
+
+#[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize)]
+pub struct Bead {
+  pub length: Millimetres,
+  pub diameter: Millimetres,
+}
+
+#[derive(Debug, Default, Clone, PartialEq, BorshSerialize, BorshDeserialize)]
+pub struct StitchStrands {
+  pub full: Option<u16>,
+  pub petite: Option<u16>,
+  pub half: Option<u16>,
+  pub quarter: Option<u16>,
+  pub back: Option<u16>,
+  pub straight: Option<u16>,
+  pub french_knot: Option<u16>,
+  pub special: Option<u16>,
+}
+
+#[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize)]
 pub struct Fabric {
-  pub stitches_per_inch: (u16, u16),
+  pub spi: (u16, u16),
   pub kind: String,
   pub name: String,
   pub color: String,
@@ -157,7 +188,7 @@ pub struct Fabric {
 impl Default for Fabric {
   fn default() -> Self {
     Self {
-      stitches_per_inch: (14, 14),
+      spi: (14, 14),
       kind: String::from("Aida"),
       name: String::from("White"),
       color: String::from("FFFFFF"),

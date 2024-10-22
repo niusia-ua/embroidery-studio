@@ -10,6 +10,8 @@ use super::*;
 #[path = "./stitches.test.rs"]
 mod tests;
 
+pub type Coord = ordered_float::NotNan<f32>;
+
 #[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Stitch {
