@@ -1,4 +1,4 @@
-use borsh::{BorshDeserialize, BorshSerialize};
+use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Listener, Manager, WebviewWindow};
 
 use crate::{
@@ -6,7 +6,8 @@ use crate::{
   state::{AppStateType, PatternKey},
 };
 
-#[derive(Debug, Clone, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct EventStitchPayload<T> {
   pattern_key: PatternKey,
   payload: T,
@@ -25,13 +26,12 @@ pub fn setup_event_handlers(window: &WebviewWindow, app_handle: &AppHandle) {
     let state = handle.state::<AppStateType>();
     let mut state = state.write().unwrap();
 
-    let payload = serde_json::from_str::<Vec<u8>>(e.payload()).unwrap();
     let EventStitchPayload { pattern_key, payload } =
-      borsh::from_slice::<EventStitchPayload<Stitch>>(&payload).unwrap();
+      serde_json::from_str::<EventStitchPayload<Stitch>>(e.payload()).unwrap();
     // This is safe because the event is only emitted when the pattern exists.
     let pattern = state.patterns.get_mut(&pattern_key).unwrap();
 
-    emit_remove_stitches(&win, pattern_key, pattern.add_stitch(payload));
+    emit_remove_stitches(&win, pattern_key, pattern.pattern.add_stitch(payload));
   });
 
   let handle = app_handle.clone();
@@ -40,18 +40,16 @@ pub fn setup_event_handlers(window: &WebviewWindow, app_handle: &AppHandle) {
     let state = handle.state::<AppStateType>();
     let mut state = state.write().unwrap();
 
-    let payload = serde_json::from_str::<Vec<u8>>(e.payload()).unwrap();
     let EventStitchPayload { pattern_key, payload } =
-      borsh::from_slice::<EventStitchPayload<Stitch>>(&payload).unwrap();
+      serde_json::from_str::<EventStitchPayload<Stitch>>(e.payload()).unwrap();
     // This is safe because the event is only emitted when the pattern exists.
     let pattern = state.patterns.get_mut(&pattern_key).unwrap();
-    pattern.remove_stitch(payload);
+    pattern.pattern.remove_stitch(payload);
   });
 }
 
 fn emit_remove_stitches(window: &WebviewWindow, pattern_key: PatternKey, payload: StitchConflicts) {
   log::trace!("Emitting remove stitches event");
   let payload = EventStitchPayload { pattern_key, payload };
-  let payload = borsh::to_vec(&payload).unwrap();
   window.emit("pattern:stitches:remove", payload).unwrap();
 }

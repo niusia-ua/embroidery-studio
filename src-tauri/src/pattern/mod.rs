@@ -4,3 +4,9 @@ pub use pattern::*;
 
 mod stitches;
 pub use stitches::*;
+
+pub mod display;
+pub mod print;
+
+mod project;
+pub use project::*;

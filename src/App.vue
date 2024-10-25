@@ -2,7 +2,7 @@
   <ConfirmDialog />
   <BlockUI :blocked="loading" full-screen />
   <div class="h-full flex flex-col">
-    <Toolbar class="rounded-none border-0 border-b p-0" draggable="true" @dragstart="() => appWindow.startDragging()">
+    <Toolbar data-tauri-drag-region class="rounded-none border-0 border-b p-0">
       <template #start>
         <DropdownTieredMenu id="general_menu" :button="{ icon: 'pi pi-bars' }" :tiered-menu="{ model: menuOptions }" />
         <StitchToolSelector />
@@ -21,18 +21,20 @@
       </template>
 
       <template #end>
-        <WindowControls />
+        <Suspense>
+          <WindowControls />
+        </Suspense>
       </template>
     </Toolbar>
 
     <Splitter :gutter-size="2" class="h-full rounded-none border-0">
       <SplitterPanel :min-size="5" :size="15">
-        <PalettePanel :palette="pattern?.palette" />
+        <PalettePanel :palette="patproj?.pattern?.palette" />
       </SplitterPanel>
 
       <SplitterPanel :min-size="85" :size="85">
         <ProgressSpinner v-if="loading" class="absolute top-1/2 left-1/2" />
-        <CanvasPanel v-if="pattern" :pattern="pattern" />
+        <Suspense v-if="patproj?.pattern"><CanvasPanel :patproj="patproj" /></Suspense>
         <div v-else class="w-full h-full flex justify-center items-center relative">
           <Panel header="No pattern loaded" class="w-3/12 border-0">
             <p class="m-0">Open a pattern or create a new one to get started.</p>
@@ -62,7 +64,6 @@
   import { useConfirm } from "primevue/useconfirm";
   import type { MenuItem } from "primevue/menuitem";
   import { open, save } from "@tauri-apps/plugin-dialog";
-  import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
   import CanvasPanel from "./components/CanvasPanel.vue";
   import PalettePanel from "./components/PalettePanel.vue";
   import DropdownTieredMenu from "./components/toolbar/DropdownTieredMenu.vue";
@@ -70,16 +71,16 @@
   import StitchToolSelector from "./components/toolbar/StitchToolSelector.vue";
   import WindowControls from "./components/toolbar/WindowControls.vue";
   import { useAppStateStore } from "./stores/state";
+  import { usePreferencesStore } from "./stores/preferences";
   import { studioDocumentDir } from "./utils/path";
   import * as patternApi from "./api/pattern";
-  import type { Pattern } from "./schemas/pattern";
-
-  const appWindow = getCurrentWebviewWindow();
+  import type { PatternProject } from "./types/pattern/project";
 
   const appStateStore = useAppStateStore();
+  const preferencesStore = usePreferencesStore();
 
   const loading = ref(false);
-  const pattern = ref<Pattern>();
+  const patproj = ref<PatternProject>();
 
   const confirm = useConfirm();
 
@@ -96,8 +97,8 @@
             multiple: false,
             filters: [
               {
-                name: "Cross Stitch Pattern",
-                extensions: ["xsd", "oxs", "xml", "embx"],
+                name: "Cross-Stitch Pattern",
+                extensions: ["xsd", "oxs", "xml", "embproj"],
               },
             ],
           });
@@ -137,15 +138,43 @@
           if (!appStateStore.state.currentPattern) return;
           await patternApi.closePattern(appStateStore.state.currentPattern.key);
           appStateStore.removeCurrentPattern();
-          if (!appStateStore.state.currentPattern) pattern.value = undefined;
+          if (!appStateStore.state.currentPattern) patproj.value = undefined;
           else await loadPattern(appStateStore.state.currentPattern.key);
         },
       },
     ],
   };
-  const menuOptions = ref<MenuItem[]>([fileOptions]);
+  const preferencesOptions: MenuItem = {
+    label: "Preferences",
+    icon: "pi pi-cog",
+    items: [
+      {
+        label: "Theme",
+        icon: "pi pi-palette",
+        items: [
+          {
+            label: "Light",
+            icon: "pi pi-sun",
+            command: () => preferencesStore.setTheme("light"),
+          },
+          {
+            label: "Dark",
+            icon: "pi pi-moon",
+            command: () => preferencesStore.setTheme("dark"),
+          },
+          {
+            label: "System",
+            icon: "pi pi-desktop",
+            command: () => preferencesStore.setTheme("system"),
+          },
+        ],
+      },
+    ],
+  };
+  const menuOptions = ref<MenuItem[]>([fileOptions, preferencesOptions]);
 
   onMounted(async () => {
+    await preferencesStore.setTheme(preferencesStore.theme);
     const currentPattern = appStateStore.state.currentPattern;
     if (currentPattern) await loadPattern(currentPattern.key);
   });
@@ -153,8 +182,8 @@
   async function loadPattern(path: string) {
     try {
       loading.value = true;
-      pattern.value = await patternApi.loadPattern(path);
-      appStateStore.addOpenedPattern(pattern.value.info.title, path);
+      patproj.value = await patternApi.loadPattern(path);
+      appStateStore.addOpenedPattern(patproj.value!.pattern.info.title, path);
     } catch (err) {
       confirm.require({
         header: "Error",
@@ -174,8 +203,8 @@
   async function createPattern() {
     loading.value = true;
     const { key, pattern: pat } = await patternApi.createPattern();
-    pattern.value = pat;
-    appStateStore.addOpenedPattern(pattern.value.info.title, key);
+    patproj.value = pat;
+    appStateStore.addOpenedPattern(patproj.value!.pattern.info.title, key);
     loading.value = false;
   }
 

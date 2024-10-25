@@ -12,16 +12,24 @@
 </template>
 
 <script setup lang="ts">
-  import { ref } from "vue";
-  import Button from "primevue/button";
+  import { getCurrentWindow } from "@tauri-apps/api/window";
+  import { onUnmounted, ref } from "vue";
   import ButtonGroup from "primevue/buttongroup";
-  import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+  import Button from "primevue/button";
 
   // New window is maximized by default.
   const isMaximized = ref(true);
 
-  const appWindow = getCurrentWebviewWindow();
-  appWindow.onResized(() => {
-    isMaximized.value = !isMaximized.value;
+  const appWindow = getCurrentWindow();
+  const maxWindowSize = await appWindow.innerSize();
+
+  // For some reason, the event is fired twice on Linux.
+  // This is a workaround to prevent the icon from flickering.
+  const unlistenResized = await appWindow.onResized(({ payload }) => {
+    isMaximized.value = maxWindowSize.width === payload.width && maxWindowSize.height === payload.height;
+  });
+
+  onUnmounted(() => {
+    unlistenResized();
   });
 </script>

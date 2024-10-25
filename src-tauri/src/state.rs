@@ -3,7 +3,7 @@ use std::{collections::HashMap, path::PathBuf};
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 
-use crate::pattern::Pattern;
+use crate::pattern::PatternProject;
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 #[repr(transparent)]
@@ -16,7 +16,7 @@ impl From<PathBuf> for PatternKey {
 }
 
 pub struct AppState {
-  pub patterns: HashMap<PatternKey, Pattern>,
+  pub patterns: HashMap<PatternKey, PatternProject>,
 }
 
 impl AppState {

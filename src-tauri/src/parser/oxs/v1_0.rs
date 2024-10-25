@@ -1,18 +1,17 @@
 use quick_xml::events::Event;
 
-use crate::pattern::*;
-
 use super::utils::{process_attributes, Software};
+use crate::pattern::{display::DisplaySettings, print::PrintSettings, *};
 
 #[cfg(test)]
 #[path = "v1_0.test.rs"]
 mod tests;
 
 // TODO: Implement the comprehensive parser for the OXS 1.0 format
-pub fn parse_pattern(path: &std::path::Path, software: Software) -> anyhow::Result<Pattern> {
+pub fn parse_pattern(file_path: std::path::PathBuf, software: Software) -> anyhow::Result<PatternProject> {
   log::trace!("OXS version is 1.0 in the {software:?} edition");
 
-  let mut reader = quick_xml::Reader::from_file(path)?;
+  let mut reader = quick_xml::Reader::from_file(&file_path)?;
   let mut buf = Vec::new();
 
   let mut properties = PatternProperties::default();
@@ -39,11 +38,12 @@ pub fn parse_pattern(path: &std::path::Path, software: Software) -> anyhow::Resu
           info = PatternInfo {
             title: attributes.get("charttitle").unwrap().to_owned(),
             author: attributes.get("author").unwrap().to_owned(),
+            company: String::from(""),
             copyright: attributes.get("copyright").unwrap().to_owned(),
             description: attributes.get("instructions").unwrap().to_owned(),
           };
 
-          fabric.stitches_per_inch = (
+          fabric.spi = (
             attributes.get("stitchesperinch").unwrap().parse()?,
             attributes.get("stitchesperinch_y").unwrap().parse()?,
           );
@@ -63,6 +63,8 @@ pub fn parse_pattern(path: &std::path::Path, software: Software) -> anyhow::Resu
               name: attributes.get("name").unwrap().to_owned(),
               color: attributes.get("color").unwrap().to_owned(),
               blends: None,
+              bead: None,
+              strands: StitchStrands::default(),
             });
           }
         }
@@ -162,14 +164,21 @@ pub fn parse_pattern(path: &std::path::Path, software: Software) -> anyhow::Resu
     buf.clear();
   }
 
-  Ok(Pattern {
-    properties,
-    info,
-    palette,
-    fabric,
-    fullstitches: Stitches::from_iter(fullstitches),
-    partstitches: Stitches::from_iter(partstitches),
-    nodes: Stitches::from_iter(nodes),
-    lines: Stitches::from_iter(backstitches),
+  Ok(PatternProject {
+    file_path: Some(file_path),
+    display_settings: DisplaySettings::new(palette.len()),
+    print_settings: PrintSettings::default(),
+    pattern: Pattern {
+      properties,
+      info,
+      palette,
+      fabric,
+      fullstitches: Stitches::from_iter(fullstitches),
+      partstitches: Stitches::from_iter(partstitches),
+      nodes: Stitches::from_iter(nodes),
+      lines: Stitches::from_iter(backstitches),
+      specialstitches: Stitches::new(),
+      special_stitch_models: Vec::new(),
+    },
   })
 }

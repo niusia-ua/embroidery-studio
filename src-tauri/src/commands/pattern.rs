@@ -1,7 +1,7 @@
 use crate::{
   error::CommandResult,
   parser::{self, PatternFormat},
-  pattern::Pattern,
+  pattern::{display::DisplaySettings, print::PrintSettings, Pattern, PatternProject},
   state::{AppStateType, PatternKey},
 };
 
@@ -12,7 +12,7 @@ pub fn load_pattern(file_path: std::path::PathBuf, state: tauri::State<AppStateT
   let pattern_key = PatternKey::from(file_path.clone());
   let pattern = match state.patterns.get(&pattern_key) {
     Some(pattern) => {
-      log::trace!("Pattern already loaded");
+      log::trace!("Pattern has been already loaded");
       pattern.to_owned()
     }
     None => {
@@ -20,10 +20,11 @@ pub fn load_pattern(file_path: std::path::PathBuf, state: tauri::State<AppStateT
       let pattern = match pattern_format {
         PatternFormat::Xsd => parser::xsd::parse_pattern(file_path)?,
         PatternFormat::Oxs => parser::oxs::parse_pattern(file_path)?,
-        PatternFormat::Embx => {
-          let mut reader = std::fs::File::open(file_path)?;
-          borsh::from_reader(&mut reader)?
-        }
+        // PatternFormat::EmbProj => {
+        //   let mut reader = std::fs::File::open(file_path)?;
+        //   borsh::from_reader(&mut reader)?
+        // }
+        PatternFormat::EmbProj => todo!(),
       };
       state.patterns.insert(pattern_key, pattern.clone());
       pattern
@@ -38,10 +39,15 @@ pub fn create_pattern(state: tauri::State<AppStateType>) -> (PatternKey, Vec<u8>
   log::trace!("Creating new pattern");
   let mut state = state.write().unwrap();
   let file_path = std::path::PathBuf::from(format!("Untitled-{:?}.json", std::time::Instant::now()));
-  let pattern_key = PatternKey::from(file_path);
-  let pattern = Pattern::default();
+  let pattern_key = PatternKey::from(file_path.clone());
+  let pattern = PatternProject {
+    file_path: Some(file_path),
+    pattern: Pattern::default(),
+    display_settings: DisplaySettings::new(2),
+    print_settings: PrintSettings::default(),
+  };
   state.patterns.insert(pattern_key.clone(), pattern.clone());
-  log::trace!("Pattern created");
+  log::trace!("Pattern has been created");
   // It is safe to unwrap here, because the pattern is always serializable.
   (pattern_key, borsh::to_vec(&pattern).unwrap())
 }

@@ -2,6 +2,7 @@ use std::collections::BTreeSet;
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use ordered_float::NotNan;
+use serde::{Deserialize, Serialize};
 
 use super::*;
 
@@ -9,7 +10,10 @@ use super::*;
 #[path = "./stitches.test.rs"]
 mod tests;
 
-#[derive(Debug, Clone, BorshSerialize, BorshDeserialize)]
+pub type Coord = ordered_float::NotNan<f32>;
+
+#[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum Stitch {
   Full(FullStitch),
   Part(PartStitch),
@@ -17,7 +21,7 @@ pub enum Stitch {
   Line(Line),
 }
 
-#[derive(Debug, Default, Clone, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 pub struct StitchConflicts {
   fullstitches: Vec<FullStitch>,
   partstitches: Vec<PartStitch>,

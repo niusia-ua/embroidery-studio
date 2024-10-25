@@ -14,6 +14,7 @@ src/ # Everything related to the frontend.
 ├── schemas/ # Schemas and types for parsing borsh-serialized data.
 ├── services/ # Modules that encapsulate complex logic.
 ├── stores/ # Pinia stores to share some application state through components.
+├── types/ # Types definition.
 ├── utils/ # A set of utility functions.
 ├── App.vue # The main application component.
 └── main.ts # An entry point for the entire application.
@@ -83,7 +84,7 @@ Here is a recommended setup:
        "*.ts": "${capture}.test.ts",
        "*.rs": "${capture}.test.rs",
        // Hide all TypeScript configs under the main one.
-       "tsconfig.json": "tsconfig.*.json, *.d.ts",
+       "tsconfig.json": "tsconfig.*.json, *.d.ts, *.tsbuildinfo",
        // Hide lock files under the main manifests.
        "package.json": "package-lock.json",
        "Cargo.toml": "Cargo.lock, rustfmt.toml",

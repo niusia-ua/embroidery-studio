@@ -1,13 +1,9 @@
-use super::{parse_pattern, Software};
-use crate::pattern::*;
+use super::*;
 
 #[test]
 fn parses_oxs_v1_0_pattern() {
-  let pathbuf = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("resources/patterns/piggies.oxs");
-  let pattern = parse_pattern(pathbuf.as_path(), Software::Ursa);
-  assert!(pattern.is_ok());
-
-  let pattern = pattern.unwrap();
+  let file_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("resources/patterns/piggies.oxs");
+  let pattern = parse_pattern(file_path, Software::Ursa).unwrap().pattern;
 
   assert_eq!(pattern.properties, PatternProperties { width: 69, height: 73 });
 
@@ -16,6 +12,7 @@ fn parses_oxs_v1_0_pattern() {
     PatternInfo {
       title: String::from(""),
       author: String::from(""),
+      company: String::from(""),
       copyright: String::from("by Ursa Software"),
       description: String::from(""),
     }
@@ -30,6 +27,8 @@ fn parses_oxs_v1_0_pattern() {
       name: String::from("Turquoise VY DK"),
       color: String::from("23725C"),
       blends: None,
+      bead: None,
+      strands: StitchStrands::default()
     }
   );
   assert_eq!(
@@ -40,13 +39,15 @@ fn parses_oxs_v1_0_pattern() {
       name: String::from("Pistachio Green dark"),
       color: String::from("406647"),
       blends: None,
+      bead: None,
+      strands: StitchStrands::default()
     }
   );
 
   assert_eq!(
     pattern.fabric,
     Fabric {
-      stitches_per_inch: (14, 14),
+      spi: (14, 14),
       kind: String::from("Aida"),
       name: String::from("cloth"),
       color: String::from("FFFFFF"),

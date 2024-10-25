@@ -3,22 +3,18 @@
 </template>
 
 <script lang="ts" setup>
-  import { onMounted, ref, watch } from "vue";
-  import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-  import { borshDeserialize } from "borsher";
+  import { getCurrentWindow } from "@tauri-apps/api/window";
+  import { onMounted, onUnmounted, ref, watch } from "vue";
   import { CanvasService } from "#/services/canvas";
   import { useAppStateStore } from "#/stores/state";
-  import { PartStitchDirection, StitchKind } from "#/schemas/pattern";
   import { emitStitchCreated, emitStitchRemoved } from "#/services/events/pattern";
-  import {
-    RemovedStitchEventPayloadSchema,
-    type RemovedStitchPayload,
-    type StitchEventPayload,
-  } from "#/schemas/events/pattern";
-  import type { FullStitch, Line, Node, PartStitch, Pattern } from "#/schemas/pattern";
+  import { PartStitchDirection, StitchKind } from "#/types/pattern/pattern";
+  import type { RemovedStitchPayload, StitchEventPayload } from "#/types/events/pattern";
+  import type { FullStitch, Line, Node, PartStitch } from "#/types/pattern/pattern";
+  import type { PatternProject } from "#/types/pattern/project";
 
   interface CanvasPanelProps {
-    pattern: Pattern;
+    patproj: PatternProject;
   }
 
   const props = defineProps<CanvasPanelProps>();
@@ -33,12 +29,12 @@
     canvasService.resize(canvasContainer.value!.getBoundingClientRect());
     window.addEventListener("resize", () => canvasService.resize(canvasContainer.value!.getBoundingClientRect()));
     canvasContainer.value!.appendChild(canvasService.view as HTMLCanvasElement);
-    canvasService.drawPattern(props.pattern);
+    canvasService.drawPattern(props.patproj);
   });
 
   watch(
-    () => props.pattern,
-    (pattern) => canvasService.drawPattern(pattern),
+    () => props.patproj,
+    (patproj) => canvasService.drawPattern(patproj),
   );
 
   // A start point is needed to draw the lines.
@@ -59,7 +55,7 @@
     // The current pattern is always available here.
     const patternKey = appStateStore.state.currentPattern!.key;
     const palitem = appStateStore.state.selectedPaletteItem;
-    const palindex = props.pattern.palette.findIndex((pi) => pi.color === palitem.color);
+    const palindex = props.patproj.pattern.palette.findIndex((pi) => pi.color === palitem.color);
 
     const tool = appStateStore.state.selectedStitchTool;
     const kind = tool % 2; // Get 0 or 1.
@@ -144,7 +140,7 @@
     // The current pattern is always available here.
     const patternKey = appStateStore.state.currentPattern!.key;
     const palitem = appStateStore.state.selectedPaletteItem;
-    const palindex = props.pattern.palette.findIndex((pi) => pi.color === palitem.color);
+    const palindex = props.patproj.pattern.palette.findIndex((pi) => pi.color === palitem.color);
 
     const tool = appStateStore.state.selectedStitchTool;
     const kind = tool % 2; // Get 0 or 1.
@@ -215,15 +211,19 @@
     }
   }
 
-  const appWindow = getCurrentWebviewWindow();
-  appWindow.listen<Uint8Array>("pattern:stitches:remove", (e) => {
-    const { payload } = borshDeserialize<StitchEventPayload<RemovedStitchPayload>>(
-      RemovedStitchEventPayloadSchema,
-      e.payload,
-    );
-    if (payload.fullstitches) canvasService.removeFullStitches(payload.fullstitches);
-    if (payload.partstitches) canvasService.removePartStitches(payload.partstitches);
-    if (payload.line) canvasService.removeLine(payload.line);
-    if (payload.node) canvasService.removeNode(payload.node);
+  const appWindow = getCurrentWindow();
+  const unlistenRemoveStitches = await appWindow.listen<StitchEventPayload<RemovedStitchPayload>>(
+    "pattern:stitches:remove",
+    (e) => {
+      const { payload } = e.payload;
+      if (payload.fullstitches) canvasService.removeFullStitches(payload.fullstitches);
+      if (payload.partstitches) canvasService.removePartStitches(payload.partstitches);
+      if (payload.line) canvasService.removeLine(payload.line);
+      if (payload.node) canvasService.removeNode(payload.node);
+    },
+  );
+
+  onUnmounted(() => {
+    unlistenRemoveStitches();
   });
 </script>

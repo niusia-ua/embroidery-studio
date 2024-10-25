@@ -4,7 +4,7 @@ import { createTestingPinia } from "@pinia/testing";
 import { PrimeVue } from "@primevue/core";
 import Popover from "primevue/popover";
 import PalettePanel from "./PalettePanel.vue";
-import type { Blend, PaletteItem } from "#/schemas/pattern";
+import type { Blend, PaletteItem } from "#/types/pattern/pattern";
 import ToggleSwitch from "primevue/toggleswitch";
 import Checkbox from "primevue/checkbox";
 
@@ -27,18 +27,21 @@ describe("PalettePanel", () => {
       number: "310",
       name: "Black",
       color: "2C3225",
+      strands: {},
     },
     {
       brand: "Anchor",
       number: "9159",
       name: "Glacier Blue",
       color: "B2D8E5",
+      strands: {},
     },
     {
       brand: "Madeira",
       number: "0705",
       name: "Plum-DK",
       color: "901b6b",
+      strands: {},
     },
     {
       brand: "Blends",
@@ -46,6 +49,7 @@ describe("PalettePanel", () => {
       name: "",
       color: "A382AE",
       blends: BLENDS,
+      strands: {},
     },
   ];
 
@@ -99,8 +103,6 @@ describe("PalettePanel", () => {
     const popover = wrapper.findComponent(Popover);
     const paletteItemsTitles = wrapper.findAll("ul > li > div > div");
     const initialTexts = paletteItemsTitles.map((title) => title.text());
-
-    console.log(initialTexts);
 
     // Open the popover.
     await wrapper.get("button").trigger("click");

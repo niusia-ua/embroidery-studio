@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { blendTitle, paletteItemTitle, type PaletteItemDisplayOptions } from "./paletteItem";
-import type { Blend, PaletteItem } from "#/schemas/pattern";
+import type { Blend, PaletteItem } from "#/types/pattern/pattern";
 
 const BLENDS: Blend[] = [
   {
@@ -20,18 +20,21 @@ const PALETTE: PaletteItem[] = [
     number: "310",
     name: "Black",
     color: "2C3225",
+    strands: {},
   },
   {
     brand: "Anchor",
     number: "9159",
     name: "Glacier Blue",
     color: "B2D8E5",
+    strands: {},
   },
   {
     brand: "Madeira",
     number: "0705",
     name: "Plum-DK",
     color: "901b6b",
+    strands: {},
   },
   {
     brand: "Blends",
@@ -39,6 +42,7 @@ const PALETTE: PaletteItem[] = [
     name: "",
     color: "A382AE",
     blends: BLENDS,
+    strands: {},
   },
 ];
 

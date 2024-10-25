@@ -92,7 +92,7 @@
   import { contrastColor } from "#/utils/color";
   import { paletteItemTitle, type PaletteItemDisplayOptions } from "#/utils/paletteItem";
   import { useAppStateStore } from "#/stores/state";
-  import type { PaletteItem } from "#/schemas/pattern";
+  import type { PaletteItem } from "#/types/pattern/pattern";
 
   interface PalettePanelProps {
     palette?: PaletteItem[];
@@ -102,7 +102,7 @@
 
   const appState = useAppStateStore();
 
-  const paletteSettingsPopover = ref<typeof Popover>();
+  const paletteSettingsPopover = ref<InstanceType<typeof Popover>>();
   const paletteItemDisplayOptions = reactive<PaletteItemDisplayOptions>({
     showBrand: true,
     showNumber: true,

@@ -2,21 +2,10 @@ import { Application, Container, Graphics, LINE_CAP, Point, Polygon } from "pixi
 import type { FederatedMouseEvent, ColorSource } from "pixi.js";
 import { Viewport } from "pixi-viewport";
 import { SpatialHash as SpatialHashCuller } from "pixi-cull";
-import { FullStitchKind, NodeKind, PartStitchDirection, PartStitchKind } from "#/schemas/pattern";
-import type { FullStitch, Line, Node, PartStitch, Pattern, PatternProperties } from "#/schemas/pattern";
-import type { GridSettings } from "#/types/view";
-
-const GRID_SETTINGS: GridSettings = {
-  majorLinesEveryStitches: 10,
-  minorLines: {
-    thickness: 0.05,
-    color: "000000",
-  },
-  majorLines: {
-    thickness: 0.1,
-    color: "000000",
-  },
-};
+import type { PatternProject } from "#/types/pattern/project";
+import type { Grid } from "#/types/pattern/display";
+import type { FullStitch, Line, Node, PartStitch, PatternProperties } from "#/types/pattern/pattern";
+import { FullStitchKind, NodeKind, PartStitchDirection, PartStitchKind } from "#/types/pattern/pattern";
 
 const FULL_STITCH_GEOMETRIES = {
   [FullStitchKind.Full]: new Graphics().beginFill("FFFFFF").drawRect(0, 0, 1, 1).endFill().geometry,
@@ -76,9 +65,9 @@ export class CanvasService extends EventTarget {
     fabric: new Graphics(),
     fullstitches: new Container(),
     partstitches: new Container(),
+    grid: new Graphics(),
     lines: new Container(),
     nodes: new Container(),
-    grid: new Graphics(),
   };
 
   #startPoint: Point | undefined = undefined;
@@ -135,11 +124,11 @@ export class CanvasService extends EventTarget {
     }
   }
 
-  drawPattern(pattern: Pattern) {
+  drawPattern({ pattern, displaySettings }: PatternProject) {
     this.clearPattern();
     this.#viewport.moveCenter(pattern.properties.width / 2, pattern.properties.height / 2);
     this.drawFabric(pattern.properties, pattern.fabric.color);
-    this.drawGrid(pattern.properties, GRID_SETTINGS);
+    this.drawGrid(pattern.properties, displaySettings.grid);
     // prettier-ignore
     for (const fullstitch of pattern.fullstitches) this.drawFullStitch(fullstitch, pattern.palette[fullstitch.palindex]!.color);
     // prettier-ignore
@@ -152,33 +141,41 @@ export class CanvasService extends EventTarget {
     this.#stages.fabric.beginFill(color).drawRect(0, 0, width, height).endFill();
   }
 
-  drawGrid({ width, height }: PatternProperties, gridSettings: GridSettings) {
+  drawGrid({ width, height }: PatternProperties, grid: Grid) {
     const graphics = this.#stages.grid;
     {
-      // Drawing major grid lines.
-      const interval = gridSettings.majorLinesEveryStitches;
-      const { thickness, color } = gridSettings.majorLines;
-      graphics.lineStyle({ width: thickness, color });
-      for (let i = 0; i < width / interval; i++) {
-        graphics.moveTo(i * interval, 0);
-        graphics.lineTo(i * interval, height);
-      }
-      for (let i = 0; i < height / interval; i++) {
-        graphics.moveTo(0, i * interval);
-        graphics.lineTo(width, i * interval);
-      }
-    }
-    {
-      // Drawing minor grid lines.
-      const { thickness, color } = gridSettings.minorLines;
-      graphics.lineStyle({ width: thickness, color });
-      for (let i = 0; i < width; i++) {
+      const { thickness, color } = grid.minorScreenLines;
+      graphics.lineStyle({ width: thickness, color: color as ColorSource });
+
+      // Draw horizontal lines.
+      for (let i = 1; i < width; i++) {
         graphics.moveTo(i, 0);
         graphics.lineTo(i, height);
       }
-      for (let i = 0; i < height; i++) {
+
+      // Draw vertical lines.
+      for (let i = 1; i < height; i++) {
         graphics.moveTo(0, i);
         graphics.lineTo(width, i);
+      }
+    }
+    {
+      const interval = grid.majorLineEveryStitches;
+      const { thickness, color } = grid.majorScreenLines;
+      graphics.lineStyle({ width: thickness, color: color as ColorSource });
+
+      // Draw horizontal lines.
+      for (let i = 0; i <= Math.ceil(height / interval); i++) {
+        const point = Math.min(i * interval, height);
+        graphics.moveTo(0, point);
+        graphics.lineTo(width, point);
+      }
+
+      // Draw vertical lines.
+      for (let i = 0; i <= Math.ceil(width / interval); i++) {
+        const point = Math.min(i * interval, width);
+        graphics.moveTo(point, 0);
+        graphics.lineTo(point, height);
       }
     }
   }

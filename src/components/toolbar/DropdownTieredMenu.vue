@@ -24,7 +24,7 @@
   }
 
   const props = defineProps<DropdownTieredMenuProps>();
-  const menu = ref<typeof TieredMenu>();
+  const menu = ref<InstanceType<typeof TieredMenu>>();
 
   function toggleMenu(event: Event) {
     menu.value!.toggle(event);

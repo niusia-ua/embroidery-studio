@@ -1,17 +1,17 @@
 use anyhow::{bail, Result};
 use quick_xml::events::Event;
 
-use crate::pattern::Pattern;
+use crate::pattern::PatternProject;
 
 use super::{
   utils::{process_attributes, OxsVersion, Software},
   v1_0,
 };
 
-pub fn parse_pattern(path: impl AsRef<std::path::Path>) -> Result<Pattern> {
+pub fn parse_pattern(file_path: std::path::PathBuf) -> Result<PatternProject> {
   log::trace!("Parsing the OXS pattern");
 
-  let mut reader = quick_xml::Reader::from_file(path.as_ref())?;
+  let mut reader = quick_xml::Reader::from_file(&file_path)?;
   let mut buf = Vec::new();
   let (oxs_version, software) = loop {
     match reader.read_event_into(&mut buf) {
@@ -33,9 +33,9 @@ pub fn parse_pattern(path: impl AsRef<std::path::Path>) -> Result<Pattern> {
     buf.clear();
   };
 
-  let pattern = match oxs_version {
-    OxsVersion::V1_0 => v1_0::parse_pattern(path.as_ref(), software)?,
+  let pattern_project = match oxs_version {
+    OxsVersion::V1_0 => v1_0::parse_pattern(file_path, software)?,
   };
 
-  Ok(pattern)
+  Ok(pattern_project)
 }
