@@ -10,7 +10,7 @@
     class="h-full rounded-none border-0"
   >
     <template #header>
-      <div class="w-full flex justify-between items-center">
+      <div class="flex w-full items-center justify-between">
         <div class="text-color">Palette</div>
         <Button
           type="button"
@@ -25,7 +25,7 @@
 
     <template #option="{ option: pi, selected }">
       <div
-        class="w-full h-8 text-color px-2 py-1 whitespace-nowrap overflow-hidden text-ellipsis select-none"
+        class="h-8 w-full select-none overflow-hidden text-ellipsis whitespace-nowrap px-2 py-1 text-color"
         :style="{
           backgroundColor: `#${pi.color}`,
           color: `${contrastColor(pi.color)} !important`,

@@ -1,7 +1,7 @@
 <template>
   <ConfirmDialog />
   <BlockUI :blocked="loading" full-screen />
-  <div class="h-full flex flex-col">
+  <div class="flex h-full flex-col">
     <Toolbar data-tauri-drag-region class="rounded-none border-0 border-b p-0">
       <template #start>
         <DropdownTieredMenu id="general_menu" :button="{ icon: 'pi pi-bars' }" :tiered-menu="{ model: menuOptions }" />
@@ -33,16 +33,16 @@
       </SplitterPanel>
 
       <SplitterPanel :min-size="85" :size="85">
-        <ProgressSpinner v-if="loading" class="absolute top-1/2 left-1/2" />
+        <ProgressSpinner v-if="loading" class="absolute left-1/2 top-1/2" />
         <Suspense v-if="patproj?.pattern"><CanvasPanel :patproj="patproj" /></Suspense>
-        <div v-else class="w-full h-full flex justify-center items-center relative">
+        <div v-else class="relative flex h-full w-full items-center justify-center">
           <Panel header="No pattern loaded" class="w-3/12 border-0">
             <p class="m-0">Open a pattern or create a new one to get started.</p>
           </Panel>
 
           <!-- Credits -->
-          <div class="w-full absolute bottom-0">
-            <p class="my-2 text-xs text-center">
+          <div class="absolute bottom-0 w-full">
+            <p class="my-2 text-center text-xs">
               Developed with love in Ukraine | GNU General Public License v3.0 or later
             </p>
           </div>
