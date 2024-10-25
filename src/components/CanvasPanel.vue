@@ -43,7 +43,7 @@
   canvasService.addEventListener("draw", async (e) => {
     if (!appStateStore.state.selectedPaletteItem) return;
 
-    // @ts-ignore
+    // @ts-expect-error ...
     const { start, end, modifier } = e.detail;
 
     const x = Math.trunc(end.x);
@@ -128,7 +128,7 @@
   canvasService.addEventListener("remove", async (e) => {
     if (!appStateStore.state.selectedPaletteItem) return;
 
-    // @ts-ignore
+    // @ts-expect-error ...
     const { point } = e.detail;
 
     const x = Math.trunc(point.x);

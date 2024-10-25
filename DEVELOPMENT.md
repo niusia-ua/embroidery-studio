@@ -89,7 +89,7 @@ Here is a recommended setup:
        "package.json": "package-lock.json",
        "Cargo.toml": "Cargo.lock, rustfmt.toml",
        // Hide ESLint and Prettier configurations under `.editorconfig`.
-       ".editorconfig": ".eslintrc.json, .prettierrc.json",
+       ".editorconfig": "eslint.config.js, .prettierrc.json",
        // Hide PostCSS and Tailwind configs under Vite config.
        "vite.config.ts": "postcss.config.js, tailwind.config.ts"
      },

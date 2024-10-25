@@ -1,7 +1,7 @@
 export interface PrintSettings {
   font: Font;
-  header: String;
-  footer: String;
+  header: string;
+  footer: string;
   margins: PageMargins;
   showPageNumbers: boolean;
   showAdjacentPageNumbers: boolean;
@@ -9,7 +9,7 @@ export interface PrintSettings {
 }
 
 export interface Font {
-  name: String;
+  name: string;
   size: number;
   weight: number;
   italic: boolean;

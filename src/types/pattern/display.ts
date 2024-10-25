@@ -1,5 +1,5 @@
 export interface DisplaySettings {
-  defaultStitchFont: String;
+  defaultStitchFont: string;
   symbols: Symbols[];
   symbolSettings: SymbolSettings;
   formats: Formats[];
@@ -50,13 +50,13 @@ export interface Formats {
 
 export interface SymbolFormat {
   useAltBgColor: boolean;
-  bgColor: String;
-  fgColor: String;
+  bgColor: string;
+  fgColor: string;
 }
 
 export interface LineFormat {
   useAltColor: boolean;
-  color: String;
+  color: string;
   style: LineStyle;
   thickness: number;
 }
@@ -76,12 +76,12 @@ export const enum LineStyle {
 export interface NodeFormat {
   useDotStyle: boolean;
   useAltColor: boolean;
-  color: String;
+  color: string;
   diameter: number;
 }
 
 export interface FontFormat {
-  fontName?: String;
+  fontName?: string;
   bold: boolean;
   italic: boolean;
   stitctSize: number;
@@ -97,7 +97,7 @@ export interface Grid {
 }
 
 export interface GridLineStyle {
-  color: String;
+  color: string;
   thickness: number;
 }
 
@@ -110,7 +110,7 @@ export const enum View {
 }
 
 export interface StitchOutline {
-  color?: String;
+  color?: string;
   colorPercentage: number;
   thickness: number;
 }
