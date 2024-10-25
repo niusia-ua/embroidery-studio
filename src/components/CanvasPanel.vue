@@ -23,6 +23,7 @@
 
   const canvasContainer = ref<HTMLDivElement>();
   const canvasService = new CanvasService();
+  await canvasService.init();
 
   onMounted(() => {
     // Resizing the canvas to set its initial size.
