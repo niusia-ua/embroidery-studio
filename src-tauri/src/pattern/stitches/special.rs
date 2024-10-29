@@ -10,6 +10,8 @@ use crate::pattern::Coord;
 pub struct SpecialStitch {
   pub x: Coord,
   pub y: Coord,
+  pub rotation: u16,
+  pub flip: (bool, bool),
   pub palindex: u8,
   pub modindex: u16,
 }
@@ -30,8 +32,6 @@ impl Ord for SpecialStitch {
 pub struct SpecialStitchModel {
   pub unique_name: String,
   pub name: String,
-  pub width: u16,
-  pub height: u16,
   pub nodes: Vec<Node>,
   pub lines: Vec<Line>,
   pub curves: Vec<Curve>,

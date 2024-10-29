@@ -853,20 +853,21 @@ fn read_special_stitch_models<R: Read + Seek>(reader: &mut R) -> Result<Vec<Spec
     let mut special_stitch_model = SpecialStitchModel {
       unique_name: reader.read_cstring(SPECIAL_STITCH_NAME_LENGTH)?,
       name: reader.read_cstring(SPECIAL_STITCH_NAME_LENGTH)?,
-      width: 0,
-      height: 0,
       nodes: Vec::new(),
       lines: Vec::new(),
       curves: Vec::new(),
     };
+    let mut shift = (NotNan::default(), NotNan::default());
     reader.seek_relative(2)?;
 
     for i in 0..3 {
       if i == 0 {
-        reader.seek_relative(6)?;
-        // let shift = (reader.read_u16::<LittleEndian>()?, reader.read_u16::<LittleEndian>()?);
-        special_stitch_model.width = reader.read_u16::<LittleEndian>()?;
-        special_stitch_model.height = reader.read_u16::<LittleEndian>()?;
+        reader.seek_relative(2)?;
+        shift = (
+          NotNan::new(reader.read_u16::<LittleEndian>()? as f32)? / 2.0,
+          NotNan::new(reader.read_u16::<LittleEndian>()? as f32)? / 2.0,
+        );
+        reader.seek_relative(4)?;
       } else {
         reader.seek_relative(10)?;
       }
@@ -888,6 +889,11 @@ fn read_special_stitch_models<R: Read + Seek>(reader: &mut R) -> Result<Vec<Spec
       } else {
         read_joints(reader, joints_count)?;
       }
+    }
+
+    // Adjust the coordinates of the curves.
+    for curve in special_stitch_model.curves.iter_mut() {
+      curve.points = curve.points.iter().map(|(x, y)| (*x - shift.0, *y - shift.1)).collect();
     }
 
     special_stitch_models.push(special_stitch_model);
@@ -978,8 +984,10 @@ fn read_joints<R: Read + Seek>(reader: &mut R, joints_count: u16) -> io::Result<
           palindex: 0,
         };
         for _ in 0..points_count {
-          let x = NotNan::new(reader.read_u16::<LittleEndian>()? as f32)? / 15.0;
-          let y = NotNan::new(reader.read_u16::<LittleEndian>()? as f32)? / 15.0;
+          // 15.0 is the resolution of the curve points.
+          // 2.0 is the factor that is used to convert the XSD coordinates to the pattern coordinates.
+          let x = NotNan::new(reader.read_u16::<LittleEndian>()? as f32)? / 15.0 / 2.0;
+          let y = NotNan::new(reader.read_u16::<LittleEndian>()? as f32)? / 15.0 / 2.0;
           curve.points.push((x, y));
         }
         curves.push(curve);
@@ -989,16 +997,48 @@ fn read_joints<R: Read + Seek>(reader: &mut R, joints_count: u16) -> io::Result<
         reader.seek_relative(2)?;
         let palindex = reader.read_u8()?;
         reader.seek_relative(4)?;
-        // let shift = (reader.read_u8()?, reader.read_u8()?);
         let x = NotNan::new(reader.read_u16::<LittleEndian>()? as f32)? / 2.0;
         let y = NotNan::new(reader.read_u16::<LittleEndian>()? as f32)? / 2.0;
-        // let param = reader.read_u16::<LittleEndian>()?;
-        // let param = reader.read_u16::<LittleEndian>()?;
-        // let param = reader.read_u16::<LittleEndian>()?;
-        // let param = reader.read_u16::<LittleEndian>()?;
-        reader.seek_relative(10)?;
+        let (rotation, flip) = {
+          let mut flip = (false, false);
+          let mut rotation = 0;
+
+          let param1 = reader.read_u16::<LittleEndian>()?;
+          let param2 = reader.read_u16::<LittleEndian>()?;
+          let param3 = reader.read_u16::<LittleEndian>()?;
+          let param4 = reader.read_u16::<LittleEndian>()?;
+
+          if param1 == 0xffff && param2 == 0 && param3 == 0 && param4 == 1 {
+            flip.0 = true;
+          } else if param1 == 1 && param2 == 0 && param3 == 0 && param4 == 0xffff {
+            flip.1 = true;
+          } else if param1 == 0xffff && param2 == 0 && param3 == 0 && param4 == 0xffff {
+            flip.0 = true;
+            flip.1 = true;
+          } else if param1 == 0 && param2 == 0xffff && param3 == 1 && param4 == 0 {
+            rotation = 90;
+          } else if param1 == 0 && param2 == 1 && param3 == 0xffff && param4 == 0 {
+            rotation = 270;
+          } else if param1 == 0 && param2 == 1 && param3 == 1 && param4 == 0 {
+            flip.1 = true;
+            rotation = 90;
+          } else if param1 == 0 && param2 == 0xffff && param3 == 0xffff && param4 == 0 {
+            flip.0 = true;
+            rotation = 90;
+          }
+
+          (rotation, flip)
+        };
+        reader.seek_relative(2)?;
         let modindex = reader.read_u16::<LittleEndian>()?;
-        specials.push(SpecialStitch { x, y, palindex, modindex });
+        specials.push(SpecialStitch {
+          x,
+          y,
+          palindex,
+          modindex,
+          rotation,
+          flip,
+        });
       }
 
       XsdJointKind::Bead => {

@@ -90,6 +90,8 @@ const CurveSchema = BorshSchema.Struct({
 const SpecialStitchSchema = BorshSchema.Struct({
   x: BorshSchema.f32,
   y: BorshSchema.f32,
+  rotation: BorshSchema.u16,
+  flip: BorshSchema.Array(BorshSchema.bool, 2),
   palindex: BorshSchema.u8,
   modindex: BorshSchema.u16,
 });
@@ -97,8 +99,6 @@ const SpecialStitchSchema = BorshSchema.Struct({
 const SpecialStitchModelSchema = BorshSchema.Struct({
   uniqueName: BorshSchema.String,
   name: BorshSchema.String,
-  width: BorshSchema.u16,
-  height: BorshSchema.u16,
   nodes: BorshSchema.Vec(NodeSchema),
   lines: BorshSchema.Vec(LineSchema),
   curves: BorshSchema.Vec(CurveSchema),

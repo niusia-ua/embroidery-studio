@@ -225,6 +225,7 @@
   );
 
   onUnmounted(() => {
+    canvasService.clearPattern();
     unlistenRemoveStitches();
   });
 </script>

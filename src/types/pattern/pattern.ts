@@ -8,7 +8,7 @@ export interface Pattern {
   nodes: Node[];
   lines: Line[];
   specialstitches: SpecialStitch[];
-  special_stitch_models: SpecialModelStitch[];
+  specialStitchModels: SpecialStitchModel[];
 }
 
 export interface PatternProperties {
@@ -121,15 +121,15 @@ export const enum LineKind {
 export interface SpecialStitch {
   x: number;
   y: number;
+  rotation: number;
+  flip: [boolean, boolean];
   palindex: number;
   modindex: number;
 }
 
-export interface SpecialModelStitch {
+export interface SpecialStitchModel {
   uniqueName: string;
   name: string;
-  width: number;
-  height: number;
   nodes: Node[];
   lines: Line[];
   curves: Curve[];
