@@ -84,7 +84,6 @@ const LineSchema = BorshSchema.Struct({
 
 const CurveSchema = BorshSchema.Struct({
   points: BorshSchema.Vec(BorshSchema.Array(BorshSchema.f32, 2)),
-  palindex: BorshSchema.u8,
 });
 
 const SpecialStitchSchema = BorshSchema.Struct({

@@ -137,7 +137,6 @@ export interface SpecialStitchModel {
 
 export interface Curve {
   points: [number, number][];
-  palindex: number;
 }
 
 export const enum StitchKind {

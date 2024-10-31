@@ -40,5 +40,4 @@ pub struct SpecialStitchModel {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 pub struct Curve {
   pub points: Vec<(Coord, Coord)>,
-  pub palindex: u8,
 }

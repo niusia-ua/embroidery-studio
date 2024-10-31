@@ -981,7 +981,6 @@ fn read_joints<R: Read + Seek>(reader: &mut R, joints_count: u16) -> io::Result<
         let points_count = reader.read_u16::<LittleEndian>()? as usize;
         let mut curve = Curve {
           points: Vec::with_capacity(points_count),
-          palindex: 0,
         };
         for _ in 0..points_count {
           // 15.0 is the resolution of the curve points.
