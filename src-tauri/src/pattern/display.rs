@@ -218,11 +218,11 @@ impl Default for Grid {
     Self {
       major_line_every_stitches: 10,
       minor_screen_lines: GridLineStyle {
-        color: String::from("000000"),
+        color: String::from("C8C8C8"),
         thickness: NotNan::new(0.072).unwrap(),
       },
       major_screen_lines: GridLineStyle {
-        color: String::from("000000"),
+        color: String::from("646464"),
         thickness: NotNan::new(0.072).unwrap(),
       },
       minor_printer_lines: GridLineStyle {

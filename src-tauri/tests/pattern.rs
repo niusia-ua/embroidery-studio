@@ -13,8 +13,11 @@ fn parses_supported_pattern_formats() {
   let handle = app.handle();
   let state = handle.state::<AppStateType>();
 
-  let resources = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("resources/patterns");
-  let paths = std::fs::read_dir(resources).unwrap();
+  let sample_patterns = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("resources/patterns");
+  let test_patterns = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("testdata/patterns");
+  let paths = std::fs::read_dir(sample_patterns)
+    .unwrap()
+    .chain(std::fs::read_dir(test_patterns).unwrap());
   for path in paths {
     let path = path.unwrap().path();
     assert!(commands::pattern::load_pattern(path.clone(), state.clone()).is_ok());

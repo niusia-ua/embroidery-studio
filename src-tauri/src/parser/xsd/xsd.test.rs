@@ -11,11 +11,15 @@ fn load_fixture(name: &str) -> File {
 
 #[test]
 fn reads_signature() {
-  let buf: Vec<u8> = vec![0x10, 0x05];
-  assert_eq!(read_signature(&mut Cursor::new(buf)).unwrap(), VALID_SIGNATURE);
+  assert_eq!(
+    read_signature(&mut Cursor::new(vec![0x10, 0x05])).unwrap(),
+    VALID_SIGNATURE
+  );
 
-  let buf = vec![0x00, 0x00];
-  assert_ne!(read_signature(&mut Cursor::new(buf)).unwrap(), VALID_SIGNATURE);
+  assert_ne!(
+    read_signature(&mut Cursor::new(vec![0x00, 0x00])).unwrap(),
+    VALID_SIGNATURE
+  );
 }
 
 #[test]
@@ -88,16 +92,202 @@ fn reads_palette() {
 }
 
 #[test]
+fn reads_formats() {
+  let loaded_formats = read_formats(&mut load_fixture("formats"), 2).unwrap();
+  let expected_formats = vec![
+    Formats {
+      symbol: SymbolFormat {
+        use_alt_bg_color: false,
+        bg_color: String::from("FFFFFF"),
+        fg_color: String::from("000000"),
+      },
+      back: LineFormat {
+        use_alt_color: false,
+        color: String::from("000000"),
+        style: LineStyle::Solid,
+        thickness: NotNan::new(1.0).unwrap(),
+      },
+      straight: LineFormat {
+        use_alt_color: false,
+        color: String::from("000000"),
+        style: LineStyle::Solid,
+        thickness: NotNan::new(1.0).unwrap(),
+      },
+      french: NodeFormat {
+        use_dot_style: true,
+        use_alt_color: false,
+        color: String::from("000000"),
+        diameter: NotNan::new(4.0).unwrap(),
+      },
+      bead: NodeFormat {
+        use_dot_style: true,
+        use_alt_color: false,
+        color: String::from("000000"),
+        diameter: NotNan::new(4.0).unwrap(),
+      },
+      special: LineFormat {
+        use_alt_color: false,
+        color: String::from("000000"),
+        style: LineStyle::Solid,
+        thickness: NotNan::new(1.0).unwrap(),
+      },
+      font: FontFormat {
+        font_name: Some(String::from("CrossStitch3")),
+        bold: false,
+        italic: false,
+        stitch_size: 100,
+        small_stitch_size: 60,
+      },
+    },
+    Formats {
+      symbol: SymbolFormat {
+        use_alt_bg_color: false,
+        bg_color: String::from("FFFFFF"),
+        fg_color: String::from("000000"),
+      },
+      back: LineFormat {
+        use_alt_color: false,
+        color: String::from("FFFFFF"),
+        style: LineStyle::Dashed,
+        thickness: NotNan::new(1.5).unwrap(),
+      },
+      straight: LineFormat {
+        use_alt_color: false,
+        color: String::from("FFFFFF"),
+        style: LineStyle::Dotted,
+        thickness: NotNan::new(0.8).unwrap(),
+      },
+      french: NodeFormat {
+        use_dot_style: false,
+        use_alt_color: false,
+        color: String::from("FFFFFF"),
+        diameter: NotNan::new(4.0).unwrap(),
+      },
+      bead: NodeFormat {
+        use_dot_style: false,
+        use_alt_color: false,
+        color: String::from("FFFFFF"),
+        diameter: NotNan::new(4.0).unwrap(),
+      },
+      special: LineFormat {
+        use_alt_color: false,
+        color: String::from("FFFFFF"),
+        style: LineStyle::Solid,
+        thickness: NotNan::new(1.5).unwrap(),
+      },
+      font: FontFormat {
+        font_name: Some(String::from("CrossStitch3")),
+        bold: false,
+        italic: false,
+        stitch_size: 80,
+        small_stitch_size: 50,
+      },
+    },
+  ];
+  for (loaded, expected) in loaded_formats.iter().zip(expected_formats.iter()) {
+    assert_eq!(loaded, expected);
+  }
+}
+
+#[test]
+fn reads_symbols() {
+  let loaded_symbols = read_symbols(&mut load_fixture("symbols"), 2).unwrap();
+  let expected_symbols = vec![
+    Symbols {
+      full: Some(33),
+      petite: Some(34),
+      half: Some(35),
+      quarter: Some(36),
+      french_knot: Some(37),
+      bead: Some(38),
+    },
+    Symbols {
+      full: Some(164),
+      petite: None,
+      half: None,
+      quarter: None,
+      french_knot: None,
+      bead: None,
+    },
+  ];
+  for (loaded, expected) in loaded_symbols.iter().zip(expected_symbols.iter()) {
+    assert_eq!(loaded, expected);
+  }
+}
+
+#[test]
+fn reads_pattern_settings() {
+  assert_eq!(
+    read_pattern_settings(&mut load_fixture("pattern_settings")).unwrap(),
+    XsdPatternSettings {
+      stitch_font_name: String::from("CrossStitch3"),
+      font: Font {
+        name: String::from("Courier New"),
+        size: 10,
+        weight: 400,
+        italic: false,
+      },
+      view: View::Solid,
+      zoom: 400,
+      show_grid: true,
+      show_rulers: true,
+      show_centering_marks: false,
+      show_fabric_colors_with_symbols: false,
+      gaps_between_stitches: false,
+      page_header: String::from("&l&t &r&n"),
+      page_footer: String::from(""),
+      page_margins: PageMargins {
+        left: NotNan::new(0.5).unwrap(),
+        right: NotNan::new(0.5).unwrap(),
+        top: NotNan::new(0.5).unwrap(),
+        bottom: NotNan::new(0.5).unwrap(),
+        header: NotNan::new(0.5).unwrap(),
+        footer: NotNan::new(0.5).unwrap(),
+      },
+      show_page_numbers: true,
+      show_adjacent_page_numbers: true,
+      center_chart_on_pages: false,
+    }
+  );
+}
+
+#[test]
+fn reads_grid_settings() {
+  assert_eq!(
+    read_grid_settings(&mut load_fixture("grid_settings")).unwrap(),
+    Grid::default()
+  );
+}
+
+#[test]
 fn reads_pattern_info() {
-  let loaded_pattern_info = read_pattern_info(&mut load_fixture("pattern_info")).unwrap();
-  let expected_pattern_info = PatternInfo {
-    title: String::from("Embroidery Studio Demo"),
-    author: String::from("Nazar Antoniuk"),
-    company: String::from("Embroidery Studio"),
-    copyright: String::from("Embroidery Studio"),
-    description: String::from("Shows different stitch types"),
-  };
-  assert_eq!(loaded_pattern_info, expected_pattern_info);
+  assert_eq!(
+    read_pattern_info(&mut load_fixture("pattern_info")).unwrap(),
+    PatternInfo {
+      title: String::from("Embroidery Studio Demo"),
+      author: String::from("Nazar Antoniuk"),
+      company: String::from("Embroidery Studio"),
+      copyright: String::from("Embroidery Studio"),
+      description: String::from("Shows different stitch types"),
+    }
+  );
+}
+
+#[test]
+fn reads_stitch_settings() {
+  let (stitch_settings, outlined_stitches, stitch_outline) =
+    read_stitch_settings(&mut load_fixture("stitch_settings")).unwrap();
+  assert_eq!(stitch_settings, StitchSettings::default());
+  assert_eq!(outlined_stitches, true);
+  assert_eq!(stitch_outline, StitchOutline::default());
+}
+
+#[test]
+fn reads_symbol_settings() {
+  assert_eq!(
+    read_symbol_settings(&mut load_fixture("symbol_settings")).unwrap(),
+    SymbolSettings::default()
+  );
 }
 
 #[test]
@@ -233,28 +423,109 @@ fn reads_stitches() {
 }
 
 #[test]
+fn reads_special_stitch_models() {
+  let loaded_special_stitch_models = read_special_stitch_models(&mut load_fixture("special_stitch_models")).unwrap();
+  let expected_speciql_stitch_models = vec![
+    SpecialStitchModel {
+      unique_name: String::from("Lasy Daisy Over 2x1"),
+      name: String::from(""),
+      nodes: vec![],
+      lines: vec![],
+      curves: vec![Curve {
+        points: vec![
+          (NotNan::new(1.5666666).unwrap(), NotNan::new(2.0666666).unwrap()),
+          (NotNan::new(0.6).unwrap(), NotNan::new(0.8333333).unwrap()),
+          (NotNan::new(0.6333333).unwrap(), NotNan::new(0.23333333).unwrap()),
+          (NotNan::new(0.79999995).unwrap(), NotNan::new(0.06666667).unwrap()),
+          (NotNan::new(1.1333333).unwrap(), NotNan::new(0.2).unwrap()),
+          (NotNan::new(1.3666667).unwrap(), NotNan::new(0.56666666).unwrap()),
+          (NotNan::new(1.5666666).unwrap(), NotNan::new(2.0666666).unwrap()),
+        ],
+      }],
+    },
+    SpecialStitchModel {
+      unique_name: String::from("Rhodes Heart - over 6"),
+      name: String::from("Rhodes Heart"),
+      nodes: vec![],
+      lines: vec![
+        Line {
+          x: (NotNan::new(1.0).unwrap(), NotNan::new(2.0).unwrap()),
+          y: (NotNan::new(2.0).unwrap(), NotNan::new(0.0).unwrap()),
+          palindex: 0,
+          kind: LineKind::Straight,
+        },
+        Line {
+          x: (NotNan::new(0.5).unwrap(), NotNan::new(2.5).unwrap()),
+          y: (NotNan::new(1.5).unwrap(), NotNan::new(0.0).unwrap()),
+          palindex: 0,
+          kind: LineKind::Straight,
+        },
+        Line {
+          x: (NotNan::new(0.0).unwrap(), NotNan::new(3.0).unwrap()),
+          y: (NotNan::new(1.0).unwrap(), NotNan::new(0.5).unwrap()),
+          palindex: 0,
+          kind: LineKind::Straight,
+        },
+        Line {
+          x: (NotNan::new(0.0).unwrap(), NotNan::new(3.0).unwrap()),
+          y: (NotNan::new(0.5).unwrap(), NotNan::new(1.0).unwrap()),
+          palindex: 0,
+          kind: LineKind::Straight,
+        },
+        Line {
+          x: (NotNan::new(0.5).unwrap(), NotNan::new(2.5).unwrap()),
+          y: (NotNan::new(0.0).unwrap(), NotNan::new(1.5).unwrap()),
+          palindex: 0,
+          kind: LineKind::Straight,
+        },
+        Line {
+          x: (NotNan::new(1.0).unwrap(), NotNan::new(2.0).unwrap()),
+          y: (NotNan::new(0.0).unwrap(), NotNan::new(2.0).unwrap()),
+          palindex: 0,
+          kind: LineKind::Straight,
+        },
+        Line {
+          x: (NotNan::new(1.5).unwrap(), NotNan::new(1.5).unwrap()),
+          y: (NotNan::new(0.5).unwrap(), NotNan::new(2.5).unwrap()),
+          palindex: 0,
+          kind: LineKind::Straight,
+        },
+      ],
+      curves: vec![],
+    },
+  ];
+  for (loaded, expected) in loaded_special_stitch_models
+    .iter()
+    .zip(expected_speciql_stitch_models.iter())
+  {
+    assert_eq!(loaded, expected);
+  }
+}
+
+#[test]
 fn reads_joints() {
-  let (loaded_nodes, loaded_lines, ..) = read_joints(&mut load_fixture("joints"), 8).unwrap();
+  let (loaded_nodes, loaded_lines, _, loaded_special_stitches) = read_joints(&mut load_fixture("joints"), 16).unwrap();
+
   let expected_nodes = [
     Node {
       x: NotNan::new(3.0).unwrap(),
       y: NotNan::new(3.0).unwrap(),
       rotated: false,
-      palindex: 2,
+      palindex: 0,
       kind: NodeKind::FrenchKnot,
     },
     Node {
       x: NotNan::new(3.0).unwrap(),
       y: NotNan::new(4.5).unwrap(),
       rotated: false,
-      palindex: 3,
+      palindex: 2,
       kind: NodeKind::Bead,
     },
     Node {
       x: NotNan::new(3.0).unwrap(),
       y: NotNan::new(5.5).unwrap(),
       rotated: true,
-      palindex: 3,
+      palindex: 2,
       kind: NodeKind::Bead,
     },
   ];
@@ -265,12 +536,6 @@ fn reads_joints() {
   let expected_lines = [
     Line {
       x: (NotNan::new(1.0).unwrap(), NotNan::new(2.0).unwrap()),
-      y: (NotNan::new(1.0).unwrap(), NotNan::new(1.0).unwrap()),
-      palindex: 1,
-      kind: LineKind::Back,
-    },
-    Line {
-      x: (NotNan::new(2.0).unwrap(), NotNan::new(3.0).unwrap()),
       y: (NotNan::new(1.0).unwrap(), NotNan::new(2.0).unwrap()),
       palindex: 1,
       kind: LineKind::Back,
@@ -290,74 +555,89 @@ fn reads_joints() {
     Line {
       x: (NotNan::new(1.0).unwrap(), NotNan::new(5.0).unwrap()),
       y: (NotNan::new(2.0).unwrap(), NotNan::new(2.0).unwrap()),
-      palindex: 0,
+      palindex: 1,
       kind: LineKind::Straight,
     },
   ];
   for (loaded, expected) in loaded_lines.iter().zip(expected_lines.iter()) {
     assert_eq!(loaded, expected);
   }
-}
 
-#[test]
-fn parses_xsd_pattern() {
-  let file_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("resources/patterns/piggies.xsd");
-  let pattern = parse_pattern(file_path).unwrap().pattern;
-
-  assert_eq!(pattern.properties, PatternProperties { width: 69, height: 73 });
-
-  assert_eq!(
-    pattern.info,
-    PatternInfo {
-      title: String::from("Piggies"),
-      author: String::from(""),
-      company: String::from(""),
-      copyright: String::from("by Ursa Software"),
-      description: String::from(""),
-    }
-  );
-
-  assert_eq!(pattern.palette.len(), 8);
-  assert_eq!(
-    pattern.palette[0],
-    PaletteItem {
-      brand: String::from("DMC"),
-      number: String::from("943"),
-      name: String::from("Bright Green-MD"),
-      color: String::from("1B997F"),
-      blends: None,
-      bead: None,
-      strands: StitchStrands::default()
-    }
-  );
-  assert_eq!(
-    pattern.palette[7],
-    PaletteItem {
-      brand: String::from("Mill Hill Glass Seed Bead"),
-      number: String::from("00968"),
-      name: String::from("Red"),
-      color: String::from("C74761"),
-      blends: None,
-      bead: Some(Bead {
-        length: NotNan::new(1.5).unwrap(),
-        diameter: NotNan::new(2.5).unwrap()
-      }),
-      strands: StitchStrands::default()
-    }
-  );
-
-  assert_eq!(
-    pattern.fabric,
-    Fabric {
-      spi: (14, 14),
-      kind: String::from("Aida"),
-      name: String::from("White"),
-      color: String::from("FFFFFF"),
-    }
-  );
-
-  assert_eq!(pattern.fullstitches.len(), 1000);
-  assert_eq!(pattern.partstitches.len(), 54);
-  assert_eq!(pattern.nodes.len(), 18);
-  assert_eq!(pattern.lines.len(), 446);
+  let expected_special_stitches = [
+    SpecialStitch {
+      x: NotNan::new(5.5).unwrap(),
+      y: NotNan::new(1.0).unwrap(),
+      rotation: 0,
+      flip: (false, false),
+      palindex: 0,
+      modindex: 0,
+    },
+    SpecialStitch {
+      x: NotNan::new(9.0).unwrap(),
+      y: NotNan::new(1.0).unwrap(),
+      rotation: 0,
+      flip: (true, false),
+      palindex: 0,
+      modindex: 0,
+    },
+    SpecialStitch {
+      x: NotNan::new(8.5).unwrap(),
+      y: NotNan::new(3.0).unwrap(),
+      rotation: 0,
+      flip: (false, true),
+      palindex: 0,
+      modindex: 0,
+    },
+    SpecialStitch {
+      x: NotNan::new(12.0).unwrap(),
+      y: NotNan::new(3.0).unwrap(),
+      rotation: 0,
+      flip: (true, true),
+      palindex: 0,
+      modindex: 0,
+    },
+    SpecialStitch {
+      x: NotNan::new(9.0).unwrap(),
+      y: NotNan::new(4.5).unwrap(),
+      rotation: 90,
+      flip: (false, false),
+      palindex: 0,
+      modindex: 0,
+    },
+    SpecialStitch {
+      x: NotNan::new(9.0).unwrap(),
+      y: NotNan::new(5.5).unwrap(),
+      rotation: 270,
+      flip: (false, false),
+      palindex: 0,
+      modindex: 0,
+    },
+    SpecialStitch {
+      x: NotNan::new(9.0).unwrap(),
+      y: NotNan::new(6.5).unwrap(),
+      rotation: 90,
+      flip: (false, true),
+      palindex: 0,
+      modindex: 0,
+    },
+    SpecialStitch {
+      x: NotNan::new(9.0).unwrap(),
+      y: NotNan::new(8.0).unwrap(),
+      rotation: 90,
+      flip: (true, false),
+      palindex: 0,
+      modindex: 0,
+    },
+    SpecialStitch {
+      x: NotNan::new(11.0).unwrap(),
+      y: NotNan::new(5.0).unwrap(),
+      rotation: 0,
+      flip: (false, false),
+      palindex: 1,
+      modindex: 1,
+    },
+  ];
+  for (loaded, expected) in loaded_special_stitches.iter().zip(expected_special_stitches.iter()) {
+    assert_eq!(loaded, expected);
+  }
 }

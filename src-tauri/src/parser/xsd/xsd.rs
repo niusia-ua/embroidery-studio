@@ -180,6 +180,7 @@ fn read_palette<R: Read + Seek>(reader: &mut R) -> Result<Vec<PaletteItem>> {
   Ok(palette)
 }
 
+// TODO: Implement reading the palette item notes.
 /// Reads a single palette item.
 fn read_palette_item<R: Read + Seek>(reader: &mut R) -> Result<PaletteItem> {
   /// Reads the blend colors of the palette item.
@@ -499,7 +500,7 @@ fn read_pattern_settings<R: Read + Seek>(reader: &mut R) -> Result<XsdPatternSet
 fn read_grid_settings<R: Read + Seek>(reader: &mut R) -> Result<Grid> {
   fn read_grid_line_style<R: Read + Seek>(reader: &mut R) -> Result<GridLineStyle> {
     let thickness = reader.read_u16::<LittleEndian>()?;
-    let thickness = NotNan::new(thickness as f32)? * (72.0 / 1000.0); // Convert to points.
+    let thickness = NotNan::new((thickness * 72) as f32)? / 1000.0; // Convert to points.
     reader.seek_relative(2)?;
     let color = reader.read_hex_color()?;
     reader.seek_relative(3)?;
