@@ -9,7 +9,7 @@ use super::{
 };
 
 pub fn parse_pattern(file_path: std::path::PathBuf) -> Result<PatternProject> {
-  log::trace!("Parsing the OXS pattern");
+  log::info!("Parsing the OXS pattern");
 
   let mut reader = quick_xml::Reader::from_file(&file_path)?;
   let mut buf = Vec::new();
@@ -38,4 +38,9 @@ pub fn parse_pattern(file_path: std::path::PathBuf) -> Result<PatternProject> {
   };
 
   Ok(pattern_project)
+}
+
+pub fn save_pattern(patproj: &PatternProject) -> Result<()> {
+  log::info!("Saving the OXS pattern");
+  v1_0::save_pattern(patproj)
 }

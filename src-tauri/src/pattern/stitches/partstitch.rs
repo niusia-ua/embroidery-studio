@@ -1,5 +1,3 @@
-use std::cmp::Ordering;
-
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
@@ -16,14 +14,32 @@ pub struct PartStitch {
   pub kind: PartStitchKind,
 }
 
+impl PartStitch {
+  pub fn is_on_top_left(&self) -> bool {
+    self.x.fract() < 0.5 && self.y.fract() < 0.5
+  }
+
+  pub fn is_on_top_right(&self) -> bool {
+    self.x.fract() >= 0.5 && self.y.fract() < 0.5
+  }
+
+  pub fn is_on_bottom_right(&self) -> bool {
+    self.x.fract() >= 0.5 && self.y.fract() >= 0.5
+  }
+
+  pub fn is_on_bottom_left(&self) -> bool {
+    self.x.fract() < 0.5 && self.y.fract() >= 0.5
+  }
+}
+
 impl PartialOrd for PartStitch {
-  fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+  fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
     Some(self.cmp(other))
   }
 }
 
 impl Ord for PartStitch {
-  fn cmp(&self, other: &Self) -> Ordering {
+  fn cmp(&self, other: &Self) -> std::cmp::Ordering {
     self
       .y
       .cmp(&other.y)

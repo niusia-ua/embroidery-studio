@@ -19,9 +19,10 @@ impl FromStr for OxsVersion {
   }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Software {
-  Ursa,
+  UrsaSoftware,
+  EmbroideryStudio,
 }
 
 impl FromStr for Software {
@@ -29,13 +30,16 @@ impl FromStr for Software {
 
   fn from_str(s: &str) -> Result<Self, Self::Err> {
     match s {
-      "Ursa Software" => Ok(Software::Ursa),
+      "Ursa Software" => Ok(Software::UrsaSoftware),
+      "Embroidery Studio" => Ok(Software::EmbroideryStudio),
       _ => anyhow::bail!("Unsupported software: {s}"),
     }
   }
 }
 
-pub fn process_attributes(attributes: Attributes) -> Result<HashMap<String, String>> {
+pub type MapAttributes = HashMap<String, String>;
+
+pub fn process_attributes(attributes: Attributes) -> Result<MapAttributes> {
   let mut map = HashMap::new();
   for attr in attributes {
     let attr = attr?;

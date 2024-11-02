@@ -2,7 +2,7 @@ use borsh::{BorshDeserialize, BorshSerialize};
 
 use super::stitches::*;
 
-#[derive(Debug, Clone, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Default, Clone, BorshSerialize, BorshDeserialize)]
 pub struct Pattern {
   pub properties: PatternProperties,
   pub info: PatternInfo,
@@ -54,54 +54,6 @@ impl Pattern {
       Stitch::Part(partstitch) => self.partstitches.remove(&partstitch),
       Stitch::Node(node) => self.nodes.remove(&node),
       Stitch::Line(line) => self.lines.remove(&line),
-    }
-  }
-}
-
-// TODO: Load the default values from a bundlled pattern file.
-impl Default for Pattern {
-  fn default() -> Self {
-    Self {
-      properties: PatternProperties { width: 100, height: 100 },
-      info: PatternInfo {
-        title: "Untitled".to_string(),
-        author: "".to_string(),
-        company: "".to_string(),
-        copyright: "".to_string(),
-        description: "".to_string(),
-      },
-      palette: Vec::from([
-        PaletteItem {
-          brand: "DMC".to_string(),
-          number: "310".to_string(),
-          name: "Black".to_string(),
-          color: "000000".to_string(),
-          blends: None,
-          bead: None,
-          strands: StitchStrands::default(),
-        },
-        PaletteItem {
-          brand: "DMC".to_string(),
-          number: "349".to_string(),
-          name: "Coral-DK".to_string(),
-          color: "C23131".to_string(),
-          blends: None,
-          bead: None,
-          strands: StitchStrands::default(),
-        },
-      ]),
-      fabric: Fabric {
-        spi: (14, 14),
-        kind: "Aida".to_string(),
-        name: "White".to_string(),
-        color: "FFFFFF".to_string(),
-      },
-      fullstitches: Stitches::new(),
-      partstitches: Stitches::new(),
-      nodes: Stitches::new(),
-      lines: Stitches::new(),
-      specialstitches: Stitches::new(),
-      special_stitch_models: Vec::new(),
     }
   }
 }
@@ -177,9 +129,11 @@ pub struct StitchStrands {
   pub special: Option<u16>,
 }
 
+pub type StitchesPerInch = (u16, u16);
+
 #[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize)]
 pub struct Fabric {
-  pub spi: (u16, u16),
+  pub spi: StitchesPerInch,
   pub kind: String,
   pub name: String,
   pub color: String,

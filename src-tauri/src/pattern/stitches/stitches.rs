@@ -96,11 +96,21 @@ impl<T: Ord> Stitches<T> {
   pub fn get(&self, stitch: &T) -> Option<&T> {
     self.inner.get(stitch)
   }
+
+  pub fn extend(&mut self, stitches: Stitches<T>) {
+    self.inner.extend(stitches.inner);
+  }
 }
 
 impl<T: Ord> FromIterator<T> for Stitches<T> {
   fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
     Self { inner: BTreeSet::from_iter(iter) }
+  }
+}
+
+impl<T: Ord> Default for Stitches<T> {
+  fn default() -> Self {
+    Self::new()
   }
 }
 

@@ -118,11 +118,11 @@
           const currentPattern = appStateStore.state.currentPattern;
           if (!currentPattern) return;
           const path = await save({
-            defaultPath: await studioDocumentDir(),
+            defaultPath: await patternApi.getPatternFilePath(currentPattern.key),
             filters: [
               {
-                name: "Cross Stitch Pattern",
-                extensions: ["embx"],
+                name: "Cross-Stitch Pattern",
+                extensions: ["oxs", "embproj"],
               },
             ],
           });

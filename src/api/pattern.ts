@@ -18,3 +18,5 @@ export const savePattern = (patternKey: string, filePath: string) => {
 };
 
 export const closePattern = (patternKey: string) => invoke<void>("close_pattern", { patternKey });
+
+export const getPatternFilePath = (patternKey: string) => invoke<string>("get_pattern_file_path", { patternKey });

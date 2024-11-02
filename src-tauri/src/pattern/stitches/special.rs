@@ -1,5 +1,3 @@
-use std::cmp::Ordering;
-
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 
@@ -17,13 +15,13 @@ pub struct SpecialStitch {
 }
 
 impl PartialOrd for SpecialStitch {
-  fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+  fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
     Some(self.cmp(other))
   }
 }
 
 impl Ord for SpecialStitch {
-  fn cmp(&self, other: &Self) -> Ordering {
+  fn cmp(&self, other: &Self) -> std::cmp::Ordering {
     self.y.cmp(&other.y).then(self.x.cmp(&other.x))
   }
 }

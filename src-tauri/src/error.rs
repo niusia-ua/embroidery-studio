@@ -24,6 +24,12 @@ impl From<std::io::Error> for CommandError {
   }
 }
 
+impl From<tauri::Error> for CommandError {
+  fn from(error: tauri::Error) -> Self {
+    Self(anyhow::Error::from(error))
+  }
+}
+
 impl serde::Serialize for CommandError {
   fn serialize<S: serde::Serializer>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> {
     serializer.serialize_str(&format!("{:#}", self.0))

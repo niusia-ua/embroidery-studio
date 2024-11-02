@@ -5,7 +5,7 @@ use super::{display::DisplaySettings, print::PrintSettings, Pattern};
 #[derive(Debug, Clone, BorshSerialize, BorshDeserialize)]
 pub struct PatternProject {
   #[borsh(skip)]
-  pub file_path: Option<std::path::PathBuf>,
+  pub file_path: std::path::PathBuf,
   pub pattern: Pattern,
   pub display_settings: DisplaySettings,
   pub print_settings: PrintSettings,

@@ -1,5 +1,3 @@
-use std::cmp::Ordering;
-
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
@@ -16,13 +14,13 @@ pub struct Node {
 }
 
 impl PartialOrd for Node {
-  fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+  fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
     Some(self.cmp(other))
   }
 }
 
 impl Ord for Node {
-  fn cmp(&self, other: &Self) -> Ordering {
+  fn cmp(&self, other: &Self) -> std::cmp::Ordering {
     self.y.cmp(&other.y).then(self.x.cmp(&other.x))
   }
 }
@@ -35,4 +33,29 @@ impl Ord for Node {
 pub enum NodeKind {
   FrenchKnot = 0,
   Bead = 1,
+}
+
+impl std::fmt::Display for NodeKind {
+  fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    match self {
+      NodeKind::FrenchKnot => write!(f, "knot"),
+      NodeKind::Bead => write!(f, "bead"),
+    }
+  }
+}
+
+impl std::str::FromStr for NodeKind {
+  type Err = &'static str;
+
+  fn from_str(s: &str) -> Result<Self, Self::Err> {
+    if s == "knot" {
+      return Ok(NodeKind::FrenchKnot);
+    }
+
+    if s.starts_with("bead") {
+      return Ok(NodeKind::Bead);
+    }
+
+    Err("Unknown node kind")
+  }
 }

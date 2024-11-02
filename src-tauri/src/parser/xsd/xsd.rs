@@ -107,7 +107,7 @@ pub fn parse_pattern(file_path: std::path::PathBuf) -> Result<PatternProject> {
   let (nodes, lines, _curves, specialstitches) = read_joints(&mut cursor, joints_count)?;
 
   Ok(PatternProject {
-    file_path: Some(file_path),
+    file_path,
     pattern: Pattern {
       properties: pattern_properties,
       info: pattern_info,

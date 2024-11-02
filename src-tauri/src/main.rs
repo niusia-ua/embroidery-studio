@@ -36,6 +36,7 @@ fn main() {
       commands::pattern::create_pattern,
       commands::pattern::save_pattern,
       commands::pattern::close_pattern,
+      commands::pattern::get_pattern_file_path,
     ])
     .run(tauri::generate_context!())
     .expect("Error while running Embroidery Studio");
