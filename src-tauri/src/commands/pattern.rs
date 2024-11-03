@@ -18,25 +18,24 @@ pub fn load_pattern(file_path: std::path::PathBuf, state: tauri::State<AppStateT
     }
     None => {
       let mut new_file_path = file_path.clone();
-      new_file_path.set_extension("oxs");
+      new_file_path.set_extension(PatternFormat::default().to_string());
 
       let mut pattern = match PatternFormat::try_from(file_path.extension())? {
         PatternFormat::Xsd => parser::xsd::parse_pattern(file_path)?,
         PatternFormat::Oxs => parser::oxs::parse_pattern(file_path)?,
-        PatternFormat::EmbProj => todo!(),
-        // PatternFormat::EmbProj => {
-        //   let mut reader = std::fs::File::open(file_path)?;
-        //   borsh::from_reader(&mut reader)?
-        // }
+        PatternFormat::EmbProj => parser::embproj::parse_pattern(file_path)?,
       };
       pattern.file_path = new_file_path;
 
-      state.patterns.insert(pattern_key, pattern.clone());
       pattern
     }
   };
+  let result = borsh::to_vec(&pattern)?;
+
+  state.patterns.insert(pattern_key, pattern.clone());
   log::trace!("Pattern loaded");
-  Ok(borsh::to_vec(&pattern)?)
+
+  Ok(result)
 }
 
 #[tauri::command]
@@ -46,18 +45,23 @@ pub fn create_pattern<R: tauri::Runtime>(
 ) -> CommandResult<(PatternKey, Vec<u8>)> {
   log::trace!("Creating new pattern");
   let mut state = state.write().unwrap();
-  let file_path = app_document_dir(&app_handle)?.join("Untitled.oxs");
-  let pattern_key = PatternKey::from(file_path.clone());
-  let pattern = PatternProject {
-    file_path,
-    pattern: Pattern::default(),
+
+  let pattern = Pattern::default();
+  let patproj = PatternProject {
+    file_path: app_document_dir(&app_handle)?.join(format!("{}.{}", pattern.info.title, PatternFormat::default())),
+    pattern,
     display_settings: DisplaySettings::new(2),
     print_settings: PrintSettings::default(),
   };
-  state.patterns.insert(pattern_key.clone(), pattern.clone());
-  log::trace!("Pattern has been created");
+
+  let pattern_key = PatternKey::from(patproj.file_path.clone());
   // It is safe to unwrap here, because the pattern is always serializable.
-  Ok((pattern_key, borsh::to_vec(&pattern).unwrap()))
+  let result = (pattern_key.clone(), borsh::to_vec(&patproj).unwrap());
+
+  state.patterns.insert(pattern_key, patproj);
+  log::trace!("Pattern has been created");
+
+  Ok(result)
 }
 
 #[tauri::command]
@@ -73,11 +77,7 @@ pub fn save_pattern(
   match PatternFormat::try_from(patproj.file_path.extension())? {
     PatternFormat::Xsd => Err(anyhow::anyhow!("The XSD format is not supported for saving.")),
     PatternFormat::Oxs => parser::oxs::save_pattern(patproj),
-    PatternFormat::EmbProj => todo!(),
-    // PatternFormat::EmbProj => {
-    //   let mut reader = std::fs::File::open(file_path)?;
-    //   borsh::from_reader(&mut reader)?
-    // }
+    PatternFormat::EmbProj => parser::embproj::save_pattern(patproj),
   }?;
   log::trace!("Pattern saved");
   Ok(())

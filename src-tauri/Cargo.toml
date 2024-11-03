@@ -3,9 +3,6 @@ name = "embroidery-studio"
 version = "0.0.0"
 edition = "2021"
 
-[profile.dev]
-incremental = true
-
 [profile.release]
 opt-level = "s"
 lto = true
@@ -26,6 +23,7 @@ encoding_rs = "0.8.35"
 memchr = "2.7.4"
 hex = "0.4.3"
 quick-xml = "0.37.0"
+zip = { version = "2.2.0", features = ["zstd", "time"], default-features = false }
 
 # Serialization
 serde = { version = "1.0.213", features = ["derive"] }

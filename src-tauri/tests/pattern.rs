@@ -54,7 +54,7 @@ fn saves_pattern() {
     commands::pattern::load_pattern(file_path.clone(), state.clone()).unwrap();
     let pattern_key = PatternKey::from(file_path);
 
-    for extension in ["oxs"] {
+    for extension in ["oxs", "embproj"] {
       let file_path = std::env::temp_dir().join(format!("pattern.{}", extension));
       // If we can save the pattern and then parse it back, we can consider it a success.
       assert!(commands::pattern::save_pattern(pattern_key.clone(), file_path.clone(), state.clone()).is_ok());

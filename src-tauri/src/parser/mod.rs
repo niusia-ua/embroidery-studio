@@ -1,3 +1,4 @@
+pub mod embproj;
 pub mod oxs;
 pub mod xsd;
 

@@ -1,5 +1,6 @@
 use std::ffi::OsStr;
 
+#[derive(Default)]
 pub enum PatternFormat {
   /// Probably, stands for `Cross-Stitch Design`.
   /// Only **read-only** mode is currently available.
@@ -13,6 +14,7 @@ pub enum PatternFormat {
   /// Stands for `Embroidery Project`.
   /// It is a ZIP archive with a pack of binary files.
   /// This format is not recommended for other applications.
+  #[default]
   EmbProj,
 }
 
@@ -30,6 +32,16 @@ impl TryFrom<Option<&OsStr>> for PatternFormat {
       }
     } else {
       anyhow::bail!("Unsupported pattern type")
+    }
+  }
+}
+
+impl std::fmt::Display for PatternFormat {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    match self {
+      Self::Xsd => write!(f, "xsd"),
+      Self::Oxs => write!(f, "oxs"),
+      Self::EmbProj => write!(f, "embproj"),
     }
   }
 }
