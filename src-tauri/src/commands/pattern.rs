@@ -1,10 +1,9 @@
-use tauri::Manager;
-
 use crate::{
   error::CommandResult,
   parser::{self, PatternFormat},
   pattern::{display::DisplaySettings, print::PrintSettings, Pattern, PatternProject},
   state::{AppStateType, PatternKey},
+  utils::path::app_document_dir,
 };
 
 #[tauri::command]
@@ -47,11 +46,7 @@ pub fn create_pattern<R: tauri::Runtime>(
 ) -> CommandResult<(PatternKey, Vec<u8>)> {
   log::trace!("Creating new pattern");
   let mut state = state.write().unwrap();
-  let file_path = app_handle
-    .path()
-    .document_dir()?
-    .join(app_handle.config().product_name.clone().unwrap())
-    .join("Untitled.oxs");
+  let file_path = app_document_dir(&app_handle)?.join("Untitled.oxs");
   let pattern_key = PatternKey::from(file_path.clone());
   let pattern = PatternProject {
     file_path,

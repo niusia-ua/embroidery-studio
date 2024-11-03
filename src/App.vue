@@ -72,9 +72,9 @@
   import WindowControls from "./components/toolbar/WindowControls.vue";
   import { useAppStateStore } from "./stores/state";
   import { usePreferencesStore } from "./stores/preferences";
-  import { studioDocumentDir } from "./utils/path";
   import * as patternApi from "./api/pattern";
   import type { PatternProject } from "./types/pattern/project";
+  import * as pathApi from "./api/path";
 
   const appStateStore = useAppStateStore();
   const preferencesStore = usePreferencesStore();
@@ -93,7 +93,7 @@
         icon: "pi pi-file",
         command: async () => {
           const path = await open({
-            defaultPath: await studioDocumentDir(),
+            defaultPath: await pathApi.getAppDocumentDir(),
             multiple: false,
             filters: [
               {

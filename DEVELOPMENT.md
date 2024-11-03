@@ -30,6 +30,7 @@ src-tauri/ # Everything related to the backend.
 │   │   └── xsd.rs # XSD parser.
 │   ├── pattern/ # Pattern structure definition that is used internally.
 │   │   └── stitches/ # Definitions of the various stitch kinds and their methods.
+│   ├── utils/ # A set of utility functions.
 │   ├── error.rs # Defines custom error type for the command result.
 │   ├── logger.rs # Configures the Tauri logger plugin.
 │   ├── state.rs # Defines the application state.
