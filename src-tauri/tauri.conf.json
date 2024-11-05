@@ -20,7 +20,8 @@
     "shortDescription": "A free and open-source desktop application for designing cross-stitch patterns.",
     "fileAssociations": [
       { "ext": ["xsd"], "description": "Cross-Stitch Desing (Pattern Maker)" },
-      { "ext": ["oxs"], "description": "Open Cross-Stitch Desing (WinStitch/MacStitch)" }
+      { "ext": ["oxs"], "description": "Open Cross-Stitch Desing (WinStitch/MacStitch)" },
+      { "ext": ["embproj"], "description": "Embroidery Project (Embroidery Studio)" }
     ],
     "windows": { "wix": { "language": ["en-US", "uk-UA"] } }
   },
