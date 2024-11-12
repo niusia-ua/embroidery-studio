@@ -1,9 +1,9 @@
+import { createApp } from "vue";
 import { PrimeVue } from "@primevue/core";
+import { Tooltip, ConfirmationService } from "primevue";
 import Aura from "@primevue/themes/aura";
 import { createPinia } from "pinia";
 import { createPersistedState } from "pinia-plugin-persistedstate";
-import ConfirmationService from "primevue/confirmationservice";
-import { createApp } from "vue";
 
 import "primeicons/primeicons.css";
 import "./assets/styles.css";
@@ -27,5 +27,6 @@ app.use(PrimeVue, {
   },
 });
 app.use(ConfirmationService);
+app.directive("tooltip", Tooltip);
 
 app.mount("#app");

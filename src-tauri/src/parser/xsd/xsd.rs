@@ -174,7 +174,7 @@ fn read_palette<R: Read + Seek>(reader: &mut R) -> Result<Vec<PaletteItem>> {
   skip_palette_items_notes(reader, palette_size)?;
 
   for pi in palette.iter_mut() {
-    pi.strands = read_palette_item_strands(reader)?;
+    pi.strands = Some(read_palette_item_strands(reader)?);
   }
 
   Ok(palette)
@@ -237,7 +237,7 @@ fn read_palette_item<R: Read + Seek>(reader: &mut R) -> Result<PaletteItem> {
     color,
     blends,
     bead,
-    strands: StitchStrands::default(),
+    strands: None,
   })
 }
 

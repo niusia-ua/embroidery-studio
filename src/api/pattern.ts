@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { borshDeserialize } from "borsher";
 import { PatternProjectSchema } from "#/schemas/";
 import type { PatternProject } from "#/types/pattern/project";
+import type { PaletteItem } from "#/types/pattern/pattern";
 
 export const loadPattern = async (filePath: string) => {
   const bytes = await invoke<Uint8Array>("load_pattern", { filePath });
@@ -20,3 +21,7 @@ export const savePattern = (patternKey: string, filePath: string) => {
 export const closePattern = (patternKey: string) => invoke<void>("close_pattern", { patternKey });
 
 export const getPatternFilePath = (patternKey: string) => invoke<string>("get_pattern_file_path", { patternKey });
+
+export const addPaletteItem = (patternKey: string, paletteItem: PaletteItem) => {
+  return invoke<void>("add_palette_item", { patternKey, paletteItem });
+};

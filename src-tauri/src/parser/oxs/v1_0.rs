@@ -210,7 +210,7 @@ fn read_palette<R: io::BufRead>(
           color: attributes.get("color").unwrap().to_owned(),
           blends: None,
           bead: None,
-          strands: StitchStrands::default(),
+          strands: None,
         }
       };
 

@@ -14,7 +14,7 @@
             (patternPath) => {
               loadPattern(patternPath);
               // TODO: Store the selected palette item per opened pattern.
-              appStateStore.state.selectedPaletteItem = undefined;
+              appStateStore.state.selectedPaletteItemIndex = undefined;
             }
           "
         />
@@ -27,12 +27,14 @@
       </template>
     </Toolbar>
 
-    <Splitter :gutter-size="2" class="h-full rounded-none border-0">
-      <SplitterPanel :min-size="5" :size="15">
-        <PalettePanel :palette="patproj?.pattern?.palette" />
+    <Splitter :gutter-size="2" class="grow overflow-y-auto rounded-none border-0">
+      <SplitterPanel :min-size="6" :size="15" pt:root:class="overflow-y-clip overflow-x-visible">
+        <Suspense>
+          <PalettePanel :palette="patproj?.pattern?.palette" @add-palette-item="addPaletteItem" />
+        </Suspense>
       </SplitterPanel>
 
-      <SplitterPanel :min-size="85" :size="85">
+      <SplitterPanel :size="85">
         <ProgressSpinner v-if="loading" class="absolute left-1/2 top-1/2" />
         <Suspense v-if="patproj?.pattern"><CanvasPanel :patproj="patproj" /></Suspense>
         <div v-else class="relative flex h-full w-full items-center justify-center">
@@ -54,18 +56,20 @@
 
 <script lang="ts" setup>
   import { onMounted, ref } from "vue";
-  import BlockUI from "primevue/blockui";
-  import Panel from "primevue/panel";
-  import ConfirmDialog from "primevue/confirmdialog";
-  import ProgressSpinner from "primevue/progressspinner";
-  import Splitter from "primevue/splitter";
-  import SplitterPanel from "primevue/splitterpanel";
-  import Toolbar from "primevue/toolbar";
-  import { useConfirm } from "primevue/useconfirm";
+  import {
+    BlockUI,
+    Panel,
+    ConfirmDialog,
+    ProgressSpinner,
+    Splitter,
+    SplitterPanel,
+    Toolbar,
+    useConfirm,
+  } from "primevue";
   import type { MenuItem } from "primevue/menuitem";
   import { open, save } from "@tauri-apps/plugin-dialog";
   import CanvasPanel from "./components/CanvasPanel.vue";
-  import PalettePanel from "./components/PalettePanel.vue";
+  import PalettePanel from "./components/palette/PalettePanel.vue";
   import DropdownTieredMenu from "./components/toolbar/DropdownTieredMenu.vue";
   import PatternSelector from "./components/toolbar/PatternSelector.vue";
   import StitchToolSelector from "./components/toolbar/StitchToolSelector.vue";
@@ -73,8 +77,9 @@
   import { useAppStateStore } from "./stores/state";
   import { usePreferencesStore } from "./stores/preferences";
   import * as patternApi from "./api/pattern";
-  import type { PatternProject } from "./types/pattern/project";
   import * as pathApi from "./api/path";
+  import type { PatternProject } from "./types/pattern/project";
+  import type { PaletteItem } from "./types/pattern/pattern";
 
   const appStateStore = useAppStateStore();
   const preferencesStore = usePreferencesStore();
@@ -173,12 +178,6 @@
   };
   const menuOptions = ref<MenuItem[]>([fileOptions, preferencesOptions]);
 
-  onMounted(async () => {
-    await preferencesStore.setTheme(preferencesStore.theme);
-    const currentPattern = appStateStore.state.currentPattern;
-    if (currentPattern) await loadPattern(currentPattern.key);
-  });
-
   async function loadPattern(path: string) {
     try {
       loading.value = true;
@@ -226,4 +225,15 @@
       loading.value = false;
     }
   }
+
+  async function addPaletteItem(pi: PaletteItem) {
+    await patternApi.addPaletteItem(appStateStore.state.currentPattern!.key, pi);
+    patproj.value!.pattern.palette.push(pi);
+  }
+
+  onMounted(async () => {
+    await preferencesStore.setTheme(preferencesStore.theme);
+    const currentPattern = appStateStore.state.currentPattern;
+    if (currentPattern) await loadPattern(currentPattern.key);
+  });
 </script>

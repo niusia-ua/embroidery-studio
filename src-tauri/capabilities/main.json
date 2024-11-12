@@ -10,6 +10,14 @@
     "core:window:allow-close",
     "core:window:allow-set-theme",
     "dialog:allow-open",
-    "dialog:allow-save"
+    "dialog:allow-save",
+    {
+      "identifier": "fs:allow-read-dir",
+      "allow": [{ "path": "$RESOURCE/**/*" }]
+    },
+    {
+      "identifier": "fs:allow-read-text-file",
+      "allow": [{ "path": "$RESOURCE/**/*" }]
+    }
   ]
 }

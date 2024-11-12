@@ -25,7 +25,6 @@
     ],
     "windows": { "wix": { "language": ["en-US", "uk-UA"] } }
   },
-  "plugins": {},
   "app": {
     "security": {
       "csp": {

@@ -80,6 +80,10 @@ impl<T: Ord> Stitches<T> {
     self.inner.iter()
   }
 
+  pub fn retain<F: FnMut(&T) -> bool>(&mut self, f: F) {
+    self.inner.retain(f)
+  }
+
   #[cfg(test)]
   pub fn len(&self) -> usize {
     self.inner.len()

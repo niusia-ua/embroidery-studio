@@ -33,7 +33,7 @@ fn reads_palette() {
       color: String::from("2C3225"),
       blends: None,
       bead: None,
-      strands: StitchStrands::default(),
+      strands: Some(StitchStrands::default()),
     },
     PaletteItem {
       brand: String::from("PNK Kirova"),
@@ -42,7 +42,7 @@ fn reads_palette() {
       color: String::from("B40032"),
       blends: None,
       bead: None,
-      strands: StitchStrands::default(),
+      strands: Some(StitchStrands::default()),
     },
     PaletteItem {
       brand: String::from("Mill Hill Frosted Glass Seed Bead"),
@@ -54,7 +54,7 @@ fn reads_palette() {
         length: NotNan::new(1.5).unwrap(),
         diameter: NotNan::new(2.5).unwrap(),
       }),
-      strands: StitchStrands::default(),
+      strands: Some(StitchStrands::default()),
     },
     PaletteItem {
       brand: String::from("Blend"),
@@ -74,7 +74,7 @@ fn reads_palette() {
         },
       ]),
       bead: None,
-      strands: StitchStrands {
+      strands: Some(StitchStrands {
         full: Some(2),
         petite: Some(2),
         half: Some(2),
@@ -83,7 +83,7 @@ fn reads_palette() {
         straight: Some(2),
         french_knot: Some(2),
         special: Some(2),
-      },
+      }),
     },
   ];
   for (loaded, expected) in loaded_palette.iter().zip(expected_palette.iter()) {

@@ -42,7 +42,7 @@ const PaletteItemSchema = BorshSchema.Struct({
   color: BorshSchema.String,
   blends: BorshSchema.Option(BorshSchema.Vec(BlendSchema)),
   bead: BorshSchema.Option(BeadSchema),
-  strands: StitchStrandsSchema,
+  strands: BorshSchema.Option(StitchStrandsSchema),
 });
 
 const FabricSchema = BorshSchema.Struct({
