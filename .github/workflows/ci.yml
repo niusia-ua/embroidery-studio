@@ -1,9 +1,8 @@
 name: CI
 on:
-  push:
-    branches: [main]
   pull_request:
-    types: ["opened", "edited", "synchronize"]
+    branches: ["main"]
+    types: ["opened", "reopened", "edited", "synchronize"]
 concurrency:
   group: ${{ github.ref }}
   cancel-in-progress: true
