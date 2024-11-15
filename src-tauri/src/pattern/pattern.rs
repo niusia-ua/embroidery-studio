@@ -1,4 +1,5 @@
 use borsh::{BorshDeserialize, BorshSerialize};
+use serde::{Deserialize, Serialize};
 
 use super::stitches::*;
 
@@ -91,7 +92,7 @@ impl Default for PatternInfo {
   }
 }
 
-#[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 pub struct PaletteItem {
   pub brand: String,
   pub number: String,
@@ -99,10 +100,10 @@ pub struct PaletteItem {
   pub color: String,
   pub blends: Option<Vec<Blend>>,
   pub bead: Option<Bead>,
-  pub strands: StitchStrands,
+  pub strands: Option<StitchStrands>,
 }
 
-#[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 pub struct Blend {
   pub brand: String,
   pub number: String,
@@ -111,13 +112,13 @@ pub struct Blend {
 
 pub type Millimetres = ordered_float::NotNan<f32>;
 
-#[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 pub struct Bead {
   pub length: Millimetres,
   pub diameter: Millimetres,
 }
 
-#[derive(Debug, Default, Clone, PartialEq, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 pub struct StitchStrands {
   pub full: Option<u16>,
   pub petite: Option<u16>,

@@ -31,6 +31,7 @@ fn main() {
     .manage(RwLock::new(state::AppState::new()))
     .plugin(logger::setup_logger().build())
     .plugin(tauri_plugin_dialog::init())
+    .plugin(tauri_plugin_fs::init())
     .invoke_handler(tauri::generate_handler![
       commands::path::get_app_document_dir,
       commands::pattern::load_pattern,
@@ -38,6 +39,7 @@ fn main() {
       commands::pattern::save_pattern,
       commands::pattern::close_pattern,
       commands::pattern::get_pattern_file_path,
+      commands::pattern::add_palette_item,
     ])
     .run(tauri::generate_context!())
     .expect("Error while running Embroidery Studio");

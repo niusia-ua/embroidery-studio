@@ -41,7 +41,7 @@
   // A start point is needed to draw the lines.
   // An end point is needed to draw all the other kinds of stitches (in addition to lines).
   canvasService.addEventListener("draw", async (e) => {
-    if (!appStateStore.state.selectedPaletteItem) return;
+    if (!appStateStore.state.selectedPaletteItemIndex) return;
 
     // @ts-expect-error ...
     const { start, end, modifier } = e.detail;
@@ -55,8 +55,8 @@
 
     // The current pattern is always available here.
     const patternKey = appStateStore.state.currentPattern!.key;
-    const palitem = appStateStore.state.selectedPaletteItem;
-    const palindex = props.patproj.pattern.palette.findIndex((pi) => pi.color === palitem.color);
+    const palindex = appStateStore.state.selectedPaletteItemIndex;
+    const palitem = props.patproj.pattern.palette[palindex]!;
 
     const tool = appStateStore.state.selectedStitchTool;
     const kind = tool % 2; // Get 0 or 1.
@@ -126,7 +126,7 @@
 
   // TODO: Don't duplicate this code.
   canvasService.addEventListener("remove", async (e) => {
-    if (!appStateStore.state.selectedPaletteItem) return;
+    if (!appStateStore.state.selectedPaletteItemIndex) return;
 
     // @ts-expect-error ...
     const { point } = e.detail;
@@ -140,8 +140,7 @@
 
     // The current pattern is always available here.
     const patternKey = appStateStore.state.currentPattern!.key;
-    const palitem = appStateStore.state.selectedPaletteItem;
-    const palindex = props.patproj.pattern.palette.findIndex((pi) => pi.color === palitem.color);
+    const palindex = appStateStore.state.selectedPaletteItemIndex;
 
     const tool = appStateStore.state.selectedStitchTool;
     const kind = tool % 2; // Get 0 or 1.

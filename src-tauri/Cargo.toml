@@ -15,7 +15,9 @@ tauri-build = { version = "2.0.3", features = [] }
 # Tauri
 tauri = { version = "2.0.6", features = ["test"] }
 tauri-plugin-dialog = "2.0.3"
+tauri-plugin-fs = "2.0.3"
 tauri-plugin-log = "2.0.2"
+
 
 # Parsing
 byteorder = "1.5.0"

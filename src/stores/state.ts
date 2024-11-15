@@ -1,6 +1,6 @@
 import { reactive } from "vue";
 import { defineStore } from "pinia";
-import { StitchKind, type PaletteItem } from "#/types/pattern/pattern";
+import { StitchKind } from "#/types/pattern/pattern";
 
 interface OpenedPattern {
   title: string;
@@ -9,7 +9,7 @@ interface OpenedPattern {
 
 export interface AppState {
   selectedStitchTool: StitchKind;
-  selectedPaletteItem?: PaletteItem;
+  selectedPaletteItemIndex?: number;
   openedPatterns?: OpenedPattern[];
   currentPattern?: OpenedPattern;
 }
