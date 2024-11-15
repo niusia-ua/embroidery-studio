@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Listener, Manager, WebviewWindow};
 
 use crate::{
-  pattern::{Stitch, StitchConflicts},
+  core::pattern::{Stitch, StitchConflicts},
   state::{AppStateType, PatternKey},
 };
 

@@ -1,7 +1,9 @@
 use crate::{
+  core::{
+    parser::{self, PatternFormat},
+    pattern::{display::DisplaySettings, print::PrintSettings, PaletteItem, Pattern, PatternProject},
+  },
   error::CommandResult,
-  parser::{self, PatternFormat},
-  pattern::{display::DisplaySettings, print::PrintSettings, PaletteItem, Pattern, PatternProject},
   state::{AppStateType, PatternKey},
   utils::path::app_document_dir,
 };

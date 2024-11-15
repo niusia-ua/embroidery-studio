@@ -8,7 +8,7 @@ use quick_xml::{
 };
 
 use super::utils::*;
-use crate::pattern::{display::DisplaySettings, print::PrintSettings, *};
+use crate::core::pattern::{display::DisplaySettings, print::PrintSettings, *};
 
 pub fn parse_pattern(file_path: std::path::PathBuf, software: Software) -> Result<PatternProject> {
   log::trace!("OXS version is 1.0 in the {software:?} edition");

@@ -1,7 +1,7 @@
 use anyhow::{bail, Result};
 use quick_xml::events::Event;
 
-use crate::pattern::PatternProject;
+use crate::core::pattern::PatternProject;
 
 use super::{
   utils::{process_attributes, OxsVersion, Software},

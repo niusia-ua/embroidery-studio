@@ -13,7 +13,7 @@ use byteorder::{LittleEndian, ReadBytesExt};
 use ordered_float::NotNan;
 
 use super::read::ReadXsdExt;
-use crate::pattern::{display::*, print::*, *};
+use crate::core::pattern::{display::*, print::*, *};
 
 #[cfg(test)]
 #[path = "xsd.test.rs"]
