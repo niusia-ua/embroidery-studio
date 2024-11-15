@@ -9,14 +9,14 @@ lto = true
 strip = true
 
 [build-dependencies]
-tauri-build = { version = "2.0.2", features = [] }
+tauri-build = { version = "2.0.3", features = [] }
 
 [dependencies]
 # Tauri
 tauri = { version = "2.0.6", features = ["test"] }
 tauri-plugin-dialog = "2.0.3"
 tauri-plugin-fs = "2.0.3"
-tauri-plugin-log = "2.0.1"
+tauri-plugin-log = "2.0.2"
 
 # Parsing
 byteorder = "1.5.0"
@@ -27,13 +27,13 @@ quick-xml = "0.37.0"
 zip = { version = "2.2.0", features = ["zstd", "time"], default-features = false }
 
 # Serialization
-serde = { version = "1.0.214", features = ["derive"] }
+serde = { version = "1.0.215", features = ["derive"] }
 serde_json = "1.0.132"
 serde_repr = "0.1.19"
-borsh = { version = "1.5.1", features = ["derive"] }
+borsh = { version = "1.5.3", features = ["derive"] }
 
 # Error handling
-anyhow = "1.0.92"
+anyhow = "1.0.93"
 
 # Logging
 log = "0.4.22"
