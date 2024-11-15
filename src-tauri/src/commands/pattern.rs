@@ -34,7 +34,8 @@ pub fn load_pattern(file_path: std::path::PathBuf, state: tauri::State<AppStateT
   };
   let result = borsh::to_vec(&pattern)?;
 
-  state.patterns.insert(pattern_key, pattern.clone());
+  state.patterns.insert(pattern_key.clone(), pattern.clone());
+  state.history.insert(pattern_key, Vec::new());
   log::trace!("Pattern loaded");
 
   Ok(result)
@@ -60,7 +61,8 @@ pub fn create_pattern<R: tauri::Runtime>(
   // It is safe to unwrap here, because the pattern is always serializable.
   let result = (pattern_key.clone(), borsh::to_vec(&patproj).unwrap());
 
-  state.patterns.insert(pattern_key, patproj);
+  state.patterns.insert(pattern_key.clone(), patproj);
+  state.history.insert(pattern_key, Vec::new());
   log::trace!("Pattern has been created");
 
   Ok(result)
@@ -88,7 +90,9 @@ pub fn save_pattern(
 #[tauri::command]
 pub fn close_pattern(pattern_key: PatternKey, state: tauri::State<AppStateType>) {
   log::trace!("Closing pattern {:?}", pattern_key);
-  state.write().unwrap().patterns.remove(&pattern_key);
+  let mut state = state.write().unwrap();
+  state.patterns.remove(&pattern_key);
+  state.history.remove(&pattern_key);
   log::trace!("Pattern closed");
 }
 

@@ -3,7 +3,7 @@ use std::{collections::HashMap, path::PathBuf};
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 
-use crate::core::pattern::PatternProject;
+use crate::core::{commands::Command, pattern::PatternProject};
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 #[repr(transparent)]
@@ -15,15 +15,10 @@ impl From<PathBuf> for PatternKey {
   }
 }
 
+#[derive(Default)]
 pub struct AppState {
   pub patterns: HashMap<PatternKey, PatternProject>,
-}
-
-impl AppState {
-  #[allow(clippy::new_without_default)]
-  pub fn new() -> Self {
-    Self { patterns: HashMap::new() }
-  }
+  pub history: HashMap<PatternKey, Vec<Box<dyn Command>>>,
 }
 
 pub type AppStateType = std::sync::RwLock<AppState>;

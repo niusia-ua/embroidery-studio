@@ -8,7 +8,7 @@ use embroidery_studio::state::AppState;
 
 pub fn setup_app() -> App<MockRuntime> {
   mock_builder()
-    .manage(std::sync::RwLock::new(AppState::new()))
+    .manage(std::sync::RwLock::new(AppState::default()))
     .build(generate_context!())
     .unwrap()
 }

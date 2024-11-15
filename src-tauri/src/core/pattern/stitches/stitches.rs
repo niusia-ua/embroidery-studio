@@ -23,10 +23,10 @@ pub enum Stitch {
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 pub struct StitchConflicts {
-  fullstitches: Vec<FullStitch>,
-  partstitches: Vec<PartStitch>,
-  node: Option<Node>,
-  line: Option<Line>,
+  pub fullstitches: Vec<FullStitch>,
+  pub partstitches: Vec<PartStitch>,
+  pub node: Option<Node>,
+  pub line: Option<Line>,
 }
 
 impl StitchConflicts {
@@ -62,6 +62,10 @@ impl StitchConflicts {
   pub fn with_line(mut self, line: Option<Line>) -> Self {
     self.line = line;
     self
+  }
+
+  pub fn is_empty(&self) -> bool {
+    self.fullstitches.is_empty() && self.partstitches.is_empty() && self.node.is_none() && self.line.is_none()
   }
 }
 

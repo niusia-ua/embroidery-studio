@@ -28,7 +28,7 @@ fn main() {
 
       Ok(())
     })
-    .manage(RwLock::new(state::AppState::new()))
+    .manage(RwLock::new(state::AppState::default()))
     .plugin(logger::setup_logger().build())
     .plugin(tauri_plugin_dialog::init())
     .plugin(tauri_plugin_fs::init())
@@ -40,6 +40,7 @@ fn main() {
       commands::pattern::close_pattern,
       commands::pattern::get_pattern_file_path,
       commands::pattern::add_palette_item,
+      commands::stitches::add_stitch,
     ])
     .run(tauri::generate_context!())
     .expect("Error while running Embroidery Studio");
