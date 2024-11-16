@@ -1,9 +1,9 @@
 import { createApp } from "vue";
+import { createPinia } from "pinia";
+import piniaPluginPersistedState from "pinia-plugin-persistedstate";
 import { PrimeVue } from "@primevue/core";
 import { Tooltip, ConfirmationService } from "primevue";
 import Aura from "@primevue/themes/aura";
-import { createPinia } from "pinia";
-import { createPersistedState } from "pinia-plugin-persistedstate";
 
 import "primeicons/primeicons.css";
 import "./assets/styles.css";
@@ -11,7 +11,7 @@ import "./assets/styles.css";
 import App from "./App.vue";
 
 const pinia = createPinia();
-pinia.use(createPersistedState({ storage: sessionStorage, auto: true }));
+pinia.use(piniaPluginPersistedState);
 
 const app = createApp(App);
 app.use(pinia);
