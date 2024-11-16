@@ -39,7 +39,7 @@ fn main() {
       commands::pattern::save_pattern,
       commands::pattern::close_pattern,
       commands::pattern::get_pattern_file_path,
-      commands::pattern::add_palette_item,
+      commands::palette::add_palette_item,
       commands::stitches::add_stitch,
     ])
     .run(tauri::generate_context!())

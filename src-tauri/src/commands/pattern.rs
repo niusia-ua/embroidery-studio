@@ -1,7 +1,7 @@
 use crate::{
   core::{
     parser::{self, PatternFormat},
-    pattern::{display::DisplaySettings, print::PrintSettings, PaletteItem, Pattern, PatternProject},
+    pattern::{display::DisplaySettings, print::PrintSettings, Pattern, PatternProject},
   },
   error::CommandResult,
   state::{AppStateType, PatternKey},
@@ -101,11 +101,4 @@ pub fn get_pattern_file_path(pattern_key: PatternKey, state: tauri::State<AppSta
   let state = state.read().unwrap();
   let patproj = state.patterns.get(&pattern_key).unwrap();
   patproj.file_path.to_string_lossy().to_string()
-}
-
-#[tauri::command]
-pub fn add_palette_item(pattern_key: PatternKey, palette_item: PaletteItem, state: tauri::State<AppStateType>) {
-  let mut state = state.write().unwrap();
-  let patproj = state.patterns.get_mut(&pattern_key).unwrap();
-  patproj.pattern.palette.push(palette_item);
 }
