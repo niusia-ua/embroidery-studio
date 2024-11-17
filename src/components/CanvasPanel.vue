@@ -34,7 +34,7 @@
   // A start point is needed to draw the lines.
   // An end point is needed to draw all the other kinds of stitches (in addition to lines).
   canvasService.addEventListener("draw", async (e) => {
-    if (!appStateStore.state.selectedPaletteItemIndex) return;
+    if (appStateStore.state.selectedPaletteItemIndex === undefined) return;
 
     // @ts-expect-error ...
     const { start, end, modifier } = e.detail;
@@ -114,7 +114,7 @@
 
   // TODO: Don't duplicate this code.
   canvasService.addEventListener("remove", async (e) => {
-    if (!appStateStore.state.selectedPaletteItemIndex) return;
+    if (appStateStore.state.selectedPaletteItemIndex === undefined) return;
 
     // @ts-expect-error ...
     const { point } = e.detail;
