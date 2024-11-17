@@ -6,7 +6,7 @@ use crate::{
 };
 
 #[tauri::command]
-pub fn undo(window: WebviewWindow, state: tauri::State<AppStateType>, pattern_key: PatternKey) -> CommandResult<()> {
+pub fn undo(pattern_key: PatternKey, window: WebviewWindow, state: tauri::State<AppStateType>) -> CommandResult<()> {
   let mut state = state.write().unwrap();
   let history = state.history.get_mut(&pattern_key).unwrap();
   if let Some(command) = history.undo() {
@@ -16,7 +16,7 @@ pub fn undo(window: WebviewWindow, state: tauri::State<AppStateType>, pattern_ke
 }
 
 #[tauri::command]
-pub fn redo(window: WebviewWindow, state: tauri::State<AppStateType>, pattern_key: PatternKey) -> CommandResult<()> {
+pub fn redo(pattern_key: PatternKey, window: WebviewWindow, state: tauri::State<AppStateType>) -> CommandResult<()> {
   let mut state = state.write().unwrap();
   let history = state.history.get_mut(&pattern_key).unwrap();
   if let Some(command) = history.redo() {

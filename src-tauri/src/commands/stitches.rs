@@ -8,10 +8,10 @@ use crate::{
 };
 
 #[tauri::command]
-pub fn add_stitch(
+pub fn add_stitch<R: tauri::Runtime>(
   pattern_key: PatternKey,
   stitch: Stitch,
-  window: tauri::WebviewWindow,
+  window: tauri::WebviewWindow<R>,
   state: tauri::State<AppStateType>,
 ) -> CommandResult<()> {
   let mut state = state.write().unwrap();

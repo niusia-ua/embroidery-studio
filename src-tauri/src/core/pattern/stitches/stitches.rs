@@ -12,7 +12,7 @@ mod tests;
 
 pub type Coord = ordered_float::NotNan<f32>;
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Stitch {
   Full(FullStitch),
@@ -94,7 +94,7 @@ impl StitchConflicts {
   }
 
   /// Returns an iterator over all the stitches.
-  pub fn chain<'a>(&'a self) -> impl Iterator<Item = Stitch> + 'a {
+  pub fn chain(&self) -> impl Iterator<Item = Stitch> + '_ {
     self
       .fullstitches
       .iter()

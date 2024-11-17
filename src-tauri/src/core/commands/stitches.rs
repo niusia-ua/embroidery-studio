@@ -7,6 +7,10 @@ use crate::core::pattern::{PatternProject, Stitch, StitchConflicts};
 
 use super::Command;
 
+#[cfg(test)]
+#[path = "stitches.test.rs"]
+mod tests;
+
 #[derive(Clone)]
 pub struct AddStitchCommand {
   stitch: Stitch,
@@ -22,8 +26,8 @@ impl AddStitchCommand {
   }
 }
 
-impl Command for AddStitchCommand {
-  fn execute(&self, window: &WebviewWindow, patproj: &mut PatternProject) -> Result<()> {
+impl<R: tauri::Runtime> Command<R> for AddStitchCommand {
+  fn execute(&self, window: &WebviewWindow<R>, patproj: &mut PatternProject) -> Result<()> {
     let conflicts = patproj.pattern.add_stitch(self.stitch);
     if self.conflicts.get().is_none() {
       self.conflicts.set(conflicts.clone()).unwrap();
@@ -33,7 +37,7 @@ impl Command for AddStitchCommand {
     Ok(())
   }
 
-  fn revoke(&self, window: &WebviewWindow, patproj: &mut PatternProject) -> Result<()> {
+  fn revoke(&self, window: &WebviewWindow<R>, patproj: &mut PatternProject) -> Result<()> {
     let conflicts = self.conflicts.get().unwrap();
     patproj.pattern.remove_stitch(self.stitch);
     for stitch in conflicts.chain() {

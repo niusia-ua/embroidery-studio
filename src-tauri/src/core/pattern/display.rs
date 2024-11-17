@@ -22,13 +22,13 @@ pub struct DisplaySettings {
   pub stitch_settings: StitchSettings,
 }
 
-impl DisplaySettings {
-  pub fn new(palette_size: usize) -> Self {
+impl Default for DisplaySettings {
+  fn default() -> Self {
     Self {
       default_stitch_font: String::from("CrossStitch3"),
-      symbols: vec![Symbols::default(); palette_size],
+      symbols: Vec::new(),
       symbol_settings: SymbolSettings::default(),
-      formats: vec![Formats::default(); palette_size],
+      formats: Vec::new(),
       grid: Grid::default(),
       view: View::Solid,
       zoom: 100,
@@ -40,6 +40,16 @@ impl DisplaySettings {
       outlined_stitches: true,
       stitch_outline: StitchOutline::default(),
       stitch_settings: StitchSettings::default(),
+    }
+  }
+}
+
+impl DisplaySettings {
+  pub fn new(palette_size: usize) -> Self {
+    Self {
+      symbols: vec![Symbols::default(); palette_size],
+      formats: vec![Formats::default(); palette_size],
+      ..DisplaySettings::default()
     }
   }
 }
