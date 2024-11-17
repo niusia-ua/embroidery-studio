@@ -13,11 +13,8 @@ pub fn load_pattern(file_path: std::path::PathBuf, state: tauri::State<AppStateT
   log::trace!("Loading pattern");
   let mut state = state.write().unwrap();
   let pattern_key = PatternKey::from(file_path.clone());
-  let patproj = match state.patterns.get(&pattern_key) {
-    Some(pattern) => {
-      log::trace!("Pattern has been already loaded");
-      pattern.to_owned()
-    }
+  let result = match state.patterns.get(&pattern_key) {
+    Some(pattern) => borsh::to_vec(&pattern)?,
     None => {
       let mut new_file_path = file_path.clone();
       new_file_path.set_extension(PatternFormat::default().to_string());
@@ -29,14 +26,12 @@ pub fn load_pattern(file_path: std::path::PathBuf, state: tauri::State<AppStateT
       };
       patproj.file_path = new_file_path;
 
-      patproj
+      let result = borsh::to_vec(&patproj)?;
+      state.insert_pattern(pattern_key, patproj);
+      result
     }
   };
-  let result = borsh::to_vec(&patproj)?;
-
-  state.insert_pattern(pattern_key, patproj);
   log::trace!("Pattern loaded");
-
   Ok(result)
 }
 
