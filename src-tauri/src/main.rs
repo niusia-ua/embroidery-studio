@@ -5,7 +5,7 @@ use std::{fs, sync::RwLock};
 
 use tauri::Manager;
 
-use embroidery_studio::{commands, events, logger, state, utils};
+use embroidery_studio::{commands, logger, state, utils};
 
 fn main() {
   tauri::Builder::default()
@@ -23,9 +23,6 @@ fn main() {
           fs::copy(pattern.clone(), app_document_dir.join(pattern.file_name().unwrap()))?;
         }
       }
-
-      events::pattern::setup_event_handlers(&app.get_webview_window("main").unwrap(), app.handle());
-
       Ok(())
     })
     .manage(RwLock::new(state::AppState::default()))
@@ -41,6 +38,7 @@ fn main() {
       commands::pattern::get_pattern_file_path,
       commands::palette::add_palette_item,
       commands::stitches::add_stitch,
+      commands::stitches::remove_stitch,
       commands::history::undo,
       commands::history::redo,
     ])

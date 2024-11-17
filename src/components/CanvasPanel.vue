@@ -127,7 +127,7 @@
     const ydp = point.y - y;
 
     // The current pattern is always available here.
-    // const patternKey = appStateStore.state.currentPattern!.key;
+    const patternKey = appStateStore.state.currentPattern!.key;
     const palindex = appStateStore.state.selectedPaletteItemIndex;
 
     const tool = appStateStore.state.selectedStitchTool;
@@ -141,8 +141,7 @@
           palindex,
           kind,
         };
-        // await emitStitchRemoved(patternKey, { full: fullstitch });
-        canvasService.removeFullStitch(fullstitch);
+        await stitchesApi.removeStitch(patternKey, { full: fullstitch });
         break;
       }
 
@@ -159,8 +158,7 @@
           kind,
           direction,
         };
-        // await emitStitchRemoved(patternKey, { part: partstitch });
-        canvasService.removePartStitch(partstitch);
+        await stitchesApi.removeStitch(patternKey, { part: partstitch });
         break;
       }
 
@@ -173,8 +171,7 @@
           kind,
           rotated: false,
         };
-        // await emitStitchRemoved(patternKey, { node });
-        canvasService.removeNode(node);
+        await stitchesApi.removeStitch(patternKey, { node });
         break;
       }
     }

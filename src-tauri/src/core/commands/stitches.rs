@@ -48,3 +48,28 @@ impl<R: tauri::Runtime> Command<R> for AddStitchCommand {
     Ok(())
   }
 }
+
+#[derive(Clone)]
+pub struct RemoveStitchCommand {
+  stitch: Stitch,
+}
+
+impl RemoveStitchCommand {
+  pub fn new(stitch: Stitch) -> Self {
+    Self { stitch }
+  }
+}
+
+impl<R: tauri::Runtime> Command<R> for RemoveStitchCommand {
+  fn execute(&self, window: &WebviewWindow<R>, patproj: &mut PatternProject) -> Result<()> {
+    patproj.pattern.remove_stitch(self.stitch);
+    window.emit("stitches:remove_one", self.stitch)?;
+    Ok(())
+  }
+
+  fn revoke(&self, window: &WebviewWindow<R>, patproj: &mut PatternProject) -> Result<()> {
+    patproj.pattern.add_stitch(self.stitch);
+    window.emit("stitches:add_one", self.stitch)?;
+    Ok(())
+  }
+}
