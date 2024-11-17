@@ -41,6 +41,8 @@ fn main() {
       commands::pattern::get_pattern_file_path,
       commands::palette::add_palette_item,
       commands::stitches::add_stitch,
+      commands::history::undo,
+      commands::history::redo,
     ])
     .run(tauri::generate_context!())
     .expect("Error while running Embroidery Studio");

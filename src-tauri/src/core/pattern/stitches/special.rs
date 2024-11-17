@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use super::{Line, Node};
 use crate::core::pattern::Coord;
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 pub struct SpecialStitch {
   pub x: Coord,
   pub y: Coord,

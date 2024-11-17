@@ -5,9 +5,11 @@
 <script lang="ts" setup>
   import { getCurrentWindow } from "@tauri-apps/api/window";
   import { onMounted, onUnmounted, ref, watch } from "vue";
+  import { useMagicKeys, whenever } from "@vueuse/core";
   import { CanvasService } from "#/services/canvas";
   import { useAppStateStore } from "#/stores/state";
   import * as stitchesApi from "#/api/stitches";
+  import * as historyApi from "#/api/history";
   import { PartStitchDirection, StitchKind } from "#/types/pattern/pattern";
   import type { FullStitch, Line, Node, PartStitch } from "#/types/pattern/pattern";
   import type { PatternProject } from "#/types/pattern/project";
@@ -23,14 +25,6 @@
   const canvasContainer = ref<HTMLDivElement>();
   const canvasService = new CanvasService();
   await canvasService.init();
-
-  onMounted(() => {
-    // Resizing the canvas to set its initial size.
-    canvasService.resize(canvasContainer.value!.getBoundingClientRect());
-    window.addEventListener("resize", () => canvasService.resize(canvasContainer.value!.getBoundingClientRect()));
-    canvasContainer.value!.appendChild(canvasService.view as HTMLCanvasElement);
-    canvasService.drawPattern(props.patproj);
-  });
 
   watch(
     () => props.patproj,
@@ -55,7 +49,6 @@
     // The current pattern is always available here.
     const patternKey = appStateStore.state.currentPattern!.key;
     const palindex = appStateStore.state.selectedPaletteItemIndex;
-    const palitem = props.patproj.pattern.palette[palindex]!;
 
     const tool = appStateStore.state.selectedStitchTool;
     const kind = tool % 2; // Get 0 or 1.
@@ -69,7 +62,6 @@
           kind,
         };
         await stitchesApi.addStitch(patternKey, { full: fullstitch });
-        canvasService.drawFullStitch(fullstitch, palitem.color);
         break;
       }
 
@@ -87,7 +79,6 @@
           direction,
         };
         await stitchesApi.addStitch(patternKey, { part: partstitch });
-        canvasService.drawPartStitch(partstitch, palitem.color);
         break;
       }
 
@@ -103,7 +94,6 @@
           kind,
         };
         await stitchesApi.addStitch(patternKey, { line });
-        canvasService.drawLine(line, palitem.color);
         break;
       }
 
@@ -117,7 +107,6 @@
           rotated: modifier,
         };
         await stitchesApi.addStitch(patternKey, { node });
-        canvasService.drawNode(node, palitem.color);
         break;
       }
     }
@@ -218,7 +207,7 @@
   }
 
   const appWindow = getCurrentWindow();
-  const unlistenRemoveStitches = await appWindow.listen<StitchesRemoveManyPayload>(
+  const unlistenRemoveManyStitches = await appWindow.listen<StitchesRemoveManyPayload>(
     "stitches:remove_many",
     ({ payload }) => {
       canvasService.removeFullStitches(payload.fullstitches);
@@ -227,9 +216,51 @@
       if (payload.node) canvasService.removeNode(payload.node);
     },
   );
+  const unlistenAddManyStitches = await appWindow.listen<StitchesRemoveManyPayload>(
+    "stitches:add_many",
+    ({ payload }) => {
+      const palette = props.patproj.pattern.palette;
+      for (const fullstitch of payload.fullstitches) {
+        canvasService.drawFullStitch(fullstitch, palette[fullstitch.palindex]!.color);
+      }
+      for (const partstitch of payload.partstitches) {
+        canvasService.drawPartStitch(partstitch, palette[partstitch.palindex]!.color);
+      }
+      if (payload.line) canvasService.drawLine(payload.line, palette[payload.line.palindex]!.color);
+      if (payload.node) canvasService.drawNode(payload.node, palette[payload.node.palindex]!.color);
+    },
+  );
+  const unlistenRemoveOneStitch = await appWindow.listen<stitchesApi.Stitch>("stitches:remove_one", ({ payload }) => {
+    if ("full" in payload) canvasService.removeFullStitch(payload.full);
+    if ("part" in payload) canvasService.removePartStitch(payload.part);
+    if ("line" in payload) canvasService.removeLine(payload.line);
+    if ("node" in payload) canvasService.removeNode(payload.node);
+  });
+  const unlistenAddOneStitch = await appWindow.listen<stitchesApi.Stitch>("stitches:add_one", ({ payload }) => {
+    const palette = props.patproj.pattern.palette;
+    if ("full" in payload) canvasService.drawFullStitch(payload.full, palette[payload.full.palindex]!.color);
+    if ("part" in payload) canvasService.drawPartStitch(payload.part, palette[payload.part.palindex]!.color);
+    if ("line" in payload) canvasService.drawLine(payload.line, palette[payload.line.palindex]!.color);
+    if ("node" in payload) canvasService.drawNode(payload.node, palette[payload.node.palindex]!.color);
+  });
+
+  const keys = useMagicKeys();
+  whenever(keys.ctrl_z!, () => historyApi.undo(appStateStore.state.currentPattern!.key));
+  whenever(keys.ctrl_y!, () => historyApi.redo(appStateStore.state.currentPattern!.key));
+
+  onMounted(() => {
+    // Resizing the canvas to set its initial size.
+    canvasService.resize(canvasContainer.value!.getBoundingClientRect());
+    window.addEventListener("resize", () => canvasService.resize(canvasContainer.value!.getBoundingClientRect()));
+    canvasContainer.value!.appendChild(canvasService.view as HTMLCanvasElement);
+    canvasService.drawPattern(props.patproj);
+  });
 
   onUnmounted(() => {
     canvasService.clearPattern();
-    unlistenRemoveStitches();
+    unlistenRemoveManyStitches();
+    unlistenAddManyStitches();
+    unlistenRemoveOneStitch();
+    unlistenAddOneStitch();
   });
 </script>

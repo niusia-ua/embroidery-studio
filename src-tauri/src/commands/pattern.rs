@@ -13,7 +13,7 @@ pub fn load_pattern(file_path: std::path::PathBuf, state: tauri::State<AppStateT
   log::trace!("Loading pattern");
   let mut state = state.write().unwrap();
   let pattern_key = PatternKey::from(file_path.clone());
-  let pattern = match state.patterns.get(&pattern_key) {
+  let patproj = match state.patterns.get(&pattern_key) {
     Some(pattern) => {
       log::trace!("Pattern has been already loaded");
       pattern.to_owned()
@@ -22,20 +22,19 @@ pub fn load_pattern(file_path: std::path::PathBuf, state: tauri::State<AppStateT
       let mut new_file_path = file_path.clone();
       new_file_path.set_extension(PatternFormat::default().to_string());
 
-      let mut pattern = match PatternFormat::try_from(file_path.extension())? {
+      let mut patproj = match PatternFormat::try_from(file_path.extension())? {
         PatternFormat::Xsd => parser::xsd::parse_pattern(file_path)?,
         PatternFormat::Oxs => parser::oxs::parse_pattern(file_path)?,
         PatternFormat::EmbProj => parser::embproj::parse_pattern(file_path)?,
       };
-      pattern.file_path = new_file_path;
+      patproj.file_path = new_file_path;
 
-      pattern
+      patproj
     }
   };
-  let result = borsh::to_vec(&pattern)?;
+  let result = borsh::to_vec(&patproj)?;
 
-  state.patterns.insert(pattern_key.clone(), pattern.clone());
-  state.history.insert(pattern_key, Vec::new());
+  state.insert_pattern(pattern_key, patproj);
   log::trace!("Pattern loaded");
 
   Ok(result)
@@ -61,8 +60,7 @@ pub fn create_pattern<R: tauri::Runtime>(
   // It is safe to unwrap here, because the pattern is always serializable.
   let result = (pattern_key.clone(), borsh::to_vec(&patproj).unwrap());
 
-  state.patterns.insert(pattern_key.clone(), patproj);
-  state.history.insert(pattern_key, Vec::new());
+  state.insert_pattern(pattern_key, patproj);
   log::trace!("Pattern has been created");
 
   Ok(result)
@@ -91,8 +89,7 @@ pub fn save_pattern(
 pub fn close_pattern(pattern_key: PatternKey, state: tauri::State<AppStateType>) {
   log::trace!("Closing pattern {:?}", pattern_key);
   let mut state = state.write().unwrap();
-  state.patterns.remove(&pattern_key);
-  state.history.remove(&pattern_key);
+  state.remove_pattern(&pattern_key);
   log::trace!("Pattern closed");
 }
 
