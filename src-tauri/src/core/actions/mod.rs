@@ -1,3 +1,13 @@
+//! This module contains the definition of actions that can be performed on a pattern project.
+//! These actions include operations like adding or removing stitches or palette items, updating pattern information, etc.
+//!
+//! Actually, the actions implements the `Command` pattern.
+//! Hovewer we named it `Action` to avoid confusion with the `commands` from Tauri.
+//!
+//! Each method of the `Action` accepts a reference to the `WebviewWindow` and a mutable reference to the `PatternProject`.
+//! The `WebviewWindow` is used to emit events to the frontend.
+//! The reason for this is that the `Action` can affects many aspects of the `PatternProject` so it is easier to emit an event for each change.
+
 use anyhow::Result;
 use tauri::WebviewWindow;
 

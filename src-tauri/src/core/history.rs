@@ -1,3 +1,6 @@
+//! This module contains the definition of a history of actions.
+//! The history is stored per pattern project.
+
 use super::actions::Action;
 
 /// A history of actions.
