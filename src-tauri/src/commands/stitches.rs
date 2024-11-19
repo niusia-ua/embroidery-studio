@@ -1,6 +1,6 @@
 use crate::{
   core::{
-    commands::{AddStitchCommand, Command, RemoveStitchCommand},
+    actions::{Action, AddStitchAction, RemoveStitchAction},
     pattern::Stitch,
   },
   error::CommandResult,
@@ -17,9 +17,9 @@ pub fn add_stitch<R: tauri::Runtime>(
 ) -> CommandResult<()> {
   let mut history = history.write().unwrap();
   let mut patterns = patterns.write().unwrap();
-  let command = AddStitchCommand::new(stitch);
-  command.execute(&window, patterns.get_mut(&pattern_key).unwrap())?;
-  history.get_mut(&pattern_key).push(Box::new(command));
+  let action = AddStitchAction::new(stitch);
+  action.perform(&window, patterns.get_mut(&pattern_key).unwrap())?;
+  history.get_mut(&pattern_key).push(Box::new(action));
   Ok(())
 }
 
@@ -33,8 +33,8 @@ pub fn remove_stitch<R: tauri::Runtime>(
 ) -> CommandResult<()> {
   let mut history = history.write().unwrap();
   let mut patterns = patterns.write().unwrap();
-  let command = RemoveStitchCommand::new(stitch);
-  command.execute(&window, patterns.get_mut(&pattern_key).unwrap())?;
-  history.get_mut(&pattern_key).push(Box::new(command));
+  let action = RemoveStitchAction::new(stitch);
+  action.perform(&window, patterns.get_mut(&pattern_key).unwrap())?;
+  history.get_mut(&pattern_key).push(Box::new(action));
   Ok(())
 }

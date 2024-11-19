@@ -3,7 +3,7 @@ use std::{collections::HashMap, path::PathBuf};
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 
-use crate::core::{commands::Command, pattern::PatternProject};
+use crate::core::{actions::Action, pattern::PatternProject};
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 #[repr(transparent)]
@@ -15,33 +15,33 @@ impl From<PathBuf> for PatternKey {
   }
 }
 
-/// A history of commands.
+/// A history of actions.
 pub struct History<R: tauri::Runtime> {
-  undo_stack: Vec<Box<dyn Command<R>>>,
-  redo_stack: Vec<Box<dyn Command<R>>>,
+  undo_stack: Vec<Box<dyn Action<R>>>,
+  redo_stack: Vec<Box<dyn Action<R>>>,
 }
 
 impl<R: tauri::Runtime> History<R> {
-  /// Add a command to the history.
-  /// This pushes the command to the undo stack and clears the redo stack.
-  pub fn push(&mut self, command: Box<dyn Command<R>>) {
-    self.undo_stack.push(command);
+  /// Add an action object to the history.
+  /// This pushes the action object to the undo stack and clears the redo stack.
+  pub fn push(&mut self, action: Box<dyn Action<R>>) {
+    self.undo_stack.push(action);
     self.redo_stack.clear();
   }
 
-  /// Get the last command from the undo stack.
-  /// This pops the command from the undo stack and pushes it to the redo stack, then returns it.
-  pub fn undo(&mut self) -> Option<Box<dyn Command<R>>> {
-    self.undo_stack.pop().inspect(|command| {
-      self.redo_stack.push(command.clone());
+  /// Get the last action object from the undo stack.
+  /// This pops the action object from the undo stack and pushes it to the redo stack, then returns it.
+  pub fn undo(&mut self) -> Option<Box<dyn Action<R>>> {
+    self.undo_stack.pop().inspect(|action| {
+      self.redo_stack.push(action.clone());
     })
   }
 
-  /// Get the last command from the redo stack.
-  /// This pops the command from the redo stack and pushes it to the undo stack, then returns it.
-  pub fn redo(&mut self) -> Option<Box<dyn Command<R>>> {
-    self.redo_stack.pop().inspect(|command| {
-      self.undo_stack.push(command.clone());
+  /// Get the last action object from the redo stack.
+  /// This pops the action object from the redo stack and pushes it to the undo stack, then returns it.
+  pub fn redo(&mut self) -> Option<Box<dyn Action<R>>> {
+    self.redo_stack.pop().inspect(|action| {
+      self.undo_stack.push(action.clone());
     })
   }
 }

@@ -14,8 +14,8 @@ pub fn undo<R: tauri::Runtime>(
 ) -> CommandResult<()> {
   let mut history = history.write().unwrap();
   let mut patterns = patterns.write().unwrap();
-  if let Some(command) = history.get_mut(&pattern_key).undo() {
-    command.revoke(&window, patterns.get_mut(&pattern_key).unwrap())?;
+  if let Some(action) = history.get_mut(&pattern_key).undo() {
+    action.perform(&window, patterns.get_mut(&pattern_key).unwrap())?;
   }
   Ok(())
 }
@@ -29,8 +29,8 @@ pub fn redo<R: tauri::Runtime>(
 ) -> CommandResult<()> {
   let mut history = history.write().unwrap();
   let mut patterns = patterns.write().unwrap();
-  if let Some(command) = history.get_mut(&pattern_key).redo() {
-    command.execute(&window, patterns.get_mut(&pattern_key).unwrap())?;
+  if let Some(action) = history.get_mut(&pattern_key).redo() {
+    action.perform(&window, patterns.get_mut(&pattern_key).unwrap())?;
   }
   Ok(())
 }

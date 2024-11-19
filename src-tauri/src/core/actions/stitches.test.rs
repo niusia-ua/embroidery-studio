@@ -5,9 +5,9 @@ use tauri::{
   App, Listener, WebviewUrl, WebviewWindowBuilder,
 };
 
-use crate::core::{commands::Command, pattern::*};
+use crate::core::pattern::*;
 
-use super::{AddStitchCommand, RemoveStitchCommand};
+use super::{Action, AddStitchAction, RemoveStitchAction};
 
 pub fn setup_app() -> App<MockRuntime> {
   mock_builder().build(generate_context!()).unwrap()
@@ -63,7 +63,7 @@ fn test_add_stitch() {
     palindex: 0,
     kind: FullStitchKind::Full,
   });
-  let cmd = AddStitchCommand::new(stitch);
+  let action = AddStitchAction::new(stitch);
 
   // Test executing the command.
   {
@@ -78,7 +78,7 @@ fn test_add_stitch() {
     });
 
     let mut patproj = patproj.clone();
-    cmd.execute(&window, &mut patproj).unwrap();
+    action.perform(&window, &mut patproj).unwrap();
 
     assert_eq!(patproj.pattern.fullstitches.len(), 1);
     assert_eq!(patproj.pattern.partstitches.len(), 0);
@@ -97,7 +97,7 @@ fn test_add_stitch() {
     });
 
     let mut patproj = patproj.clone();
-    cmd.revoke(&window, &mut patproj).unwrap();
+    action.revoke(&window, &mut patproj).unwrap();
 
     assert_eq!(patproj.pattern.fullstitches.len(), 2);
     assert_eq!(patproj.pattern.partstitches.len(), 2);
@@ -117,7 +117,7 @@ fn test_remove_stitch() {
     palindex: 0,
     kind: FullStitchKind::Petite,
   });
-  let cmd = RemoveStitchCommand::new(stitch);
+  let action = RemoveStitchAction::new(stitch);
 
   // Test executing the command.
   {
@@ -126,7 +126,7 @@ fn test_remove_stitch() {
     });
 
     let mut patproj = patproj.clone();
-    cmd.execute(&window, &mut patproj).unwrap();
+    action.perform(&window, &mut patproj).unwrap();
 
     assert_eq!(patproj.pattern.fullstitches.len(), 1);
     assert_eq!(patproj.pattern.partstitches.len(), 2);
@@ -139,7 +139,7 @@ fn test_remove_stitch() {
     });
 
     let mut patproj = patproj.clone();
-    cmd.revoke(&window, &mut patproj).unwrap();
+    action.revoke(&window, &mut patproj).unwrap();
 
     assert_eq!(patproj.pattern.fullstitches.len(), 2);
     assert_eq!(patproj.pattern.partstitches.len(), 2);

@@ -5,19 +5,19 @@ use tauri::{Emitter, WebviewWindow};
 
 use crate::core::pattern::{PatternProject, Stitch, StitchConflicts};
 
-use super::Command;
+use super::Action;
 
 #[cfg(test)]
 #[path = "stitches.test.rs"]
 mod tests;
 
 #[derive(Clone)]
-pub struct AddStitchCommand {
+pub struct AddStitchAction {
   stitch: Stitch,
   conflicts: OnceLock<StitchConflicts>,
 }
 
-impl AddStitchCommand {
+impl AddStitchAction {
   pub fn new(stitch: Stitch) -> Self {
     Self {
       stitch,
@@ -26,8 +26,8 @@ impl AddStitchCommand {
   }
 }
 
-impl<R: tauri::Runtime> Command<R> for AddStitchCommand {
-  fn execute(&self, window: &WebviewWindow<R>, patproj: &mut PatternProject) -> Result<()> {
+impl<R: tauri::Runtime> Action<R> for AddStitchAction {
+  fn perform(&self, window: &WebviewWindow<R>, patproj: &mut PatternProject) -> Result<()> {
     let conflicts = patproj.pattern.add_stitch(self.stitch);
     if self.conflicts.get().is_none() {
       self.conflicts.set(conflicts.clone()).unwrap();
@@ -50,18 +50,18 @@ impl<R: tauri::Runtime> Command<R> for AddStitchCommand {
 }
 
 #[derive(Clone)]
-pub struct RemoveStitchCommand {
+pub struct RemoveStitchAction {
   stitch: Stitch,
 }
 
-impl RemoveStitchCommand {
+impl RemoveStitchAction {
   pub fn new(stitch: Stitch) -> Self {
     Self { stitch }
   }
 }
 
-impl<R: tauri::Runtime> Command<R> for RemoveStitchCommand {
-  fn execute(&self, window: &WebviewWindow<R>, patproj: &mut PatternProject) -> Result<()> {
+impl<R: tauri::Runtime> Action<R> for RemoveStitchAction {
+  fn perform(&self, window: &WebviewWindow<R>, patproj: &mut PatternProject) -> Result<()> {
     patproj.pattern.remove_stitch(self.stitch);
     window.emit("stitches:remove_one", self.stitch)?;
     Ok(())
