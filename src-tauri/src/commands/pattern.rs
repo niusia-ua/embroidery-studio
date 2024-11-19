@@ -4,17 +4,17 @@ use crate::{
     pattern::{display::DisplaySettings, print::PrintSettings, Pattern, PatternProject},
   },
   error::CommandResult,
-  state::{AppStateType, PatternKey},
+  state::{PatternKey, PatternsState},
   utils::path::app_document_dir,
 };
 
 #[tauri::command]
-pub fn load_pattern(file_path: std::path::PathBuf, state: tauri::State<AppStateType>) -> CommandResult<Vec<u8>> {
+pub fn load_pattern(file_path: std::path::PathBuf, patterns: tauri::State<PatternsState>) -> CommandResult<Vec<u8>> {
   log::trace!("Loading pattern");
-  let mut state = state.write().unwrap();
+  let mut patterns = patterns.write().unwrap();
   let pattern_key = PatternKey::from(file_path.clone());
-  let result = match state.patterns.get(&pattern_key) {
-    Some(pattern) => borsh::to_vec(&pattern)?,
+  let result = match patterns.get(&pattern_key) {
+    Some(pattern) => borsh::to_vec(pattern)?,
     None => {
       let mut new_file_path = file_path.clone();
       new_file_path.set_extension(PatternFormat::default().to_string());
@@ -27,7 +27,7 @@ pub fn load_pattern(file_path: std::path::PathBuf, state: tauri::State<AppStateT
       patproj.file_path = new_file_path;
 
       let result = borsh::to_vec(&patproj)?;
-      state.insert_pattern(pattern_key, patproj);
+      patterns.insert(pattern_key, patproj);
       result
     }
   };
@@ -38,10 +38,10 @@ pub fn load_pattern(file_path: std::path::PathBuf, state: tauri::State<AppStateT
 #[tauri::command]
 pub fn create_pattern<R: tauri::Runtime>(
   app_handle: tauri::AppHandle<R>,
-  state: tauri::State<AppStateType>,
+  patterns: tauri::State<PatternsState>,
 ) -> CommandResult<(PatternKey, Vec<u8>)> {
   log::trace!("Creating new pattern");
-  let mut state = state.write().unwrap();
+  let mut patterns = patterns.write().unwrap();
 
   let pattern = Pattern::default();
   let patproj = PatternProject {
@@ -55,7 +55,7 @@ pub fn create_pattern<R: tauri::Runtime>(
   // It is safe to unwrap here, because the pattern is always serializable.
   let result = (pattern_key.clone(), borsh::to_vec(&patproj).unwrap());
 
-  state.insert_pattern(pattern_key, patproj);
+  patterns.insert(pattern_key, patproj);
   log::trace!("Pattern has been created");
 
   Ok(result)
@@ -65,11 +65,11 @@ pub fn create_pattern<R: tauri::Runtime>(
 pub fn save_pattern(
   pattern_key: PatternKey,
   file_path: std::path::PathBuf,
-  state: tauri::State<AppStateType>,
+  patterns: tauri::State<PatternsState>,
 ) -> CommandResult<()> {
   log::trace!("Saving pattern");
-  let mut state = state.write().unwrap();
-  let patproj = state.patterns.get_mut(&pattern_key).unwrap();
+  let mut patterns = patterns.write().unwrap();
+  let patproj = patterns.get_mut(&pattern_key).unwrap();
   patproj.file_path = file_path;
   match PatternFormat::try_from(patproj.file_path.extension())? {
     PatternFormat::Xsd => Err(anyhow::anyhow!("The XSD format is not supported for saving.")),
@@ -81,16 +81,15 @@ pub fn save_pattern(
 }
 
 #[tauri::command]
-pub fn close_pattern(pattern_key: PatternKey, state: tauri::State<AppStateType>) {
+pub fn close_pattern(pattern_key: PatternKey, patterns: tauri::State<PatternsState>) {
   log::trace!("Closing pattern {:?}", pattern_key);
-  let mut state = state.write().unwrap();
-  state.remove_pattern(&pattern_key);
+  patterns.write().unwrap().remove(&pattern_key);
   log::trace!("Pattern closed");
 }
 
 #[tauri::command]
-pub fn get_pattern_file_path(pattern_key: PatternKey, state: tauri::State<AppStateType>) -> String {
-  let state = state.read().unwrap();
-  let patproj = state.patterns.get(&pattern_key).unwrap();
+pub fn get_pattern_file_path(pattern_key: PatternKey, patterns: tauri::State<PatternsState>) -> String {
+  let patterns = patterns.read().unwrap();
+  let patproj = patterns.get(&pattern_key).unwrap();
   patproj.file_path.to_string_lossy().to_string()
 }

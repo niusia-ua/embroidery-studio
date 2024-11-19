@@ -7,7 +7,7 @@ mod stitches;
 pub use stitches::*;
 
 /// A command that can be executed and revoked.
-pub trait Command<R: tauri::Runtime = tauri::Wry>: Send + Sync + dyn_clone::DynClone {
+pub trait Command<R: tauri::Runtime>: Send + Sync + dyn_clone::DynClone {
   /// Execute the command.
   ///
   /// The `window` parameter is the webview window that the command should use to emit events.
@@ -21,4 +21,4 @@ pub trait Command<R: tauri::Runtime = tauri::Wry>: Send + Sync + dyn_clone::DynC
   fn revoke(&self, window: &WebviewWindow<R>, patproj: &mut PatternProject) -> Result<()>;
 }
 
-dyn_clone::clone_trait_object!(Command);
+dyn_clone::clone_trait_object!(<R: tauri::Runtime> Command<R>);
