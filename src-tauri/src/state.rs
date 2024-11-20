@@ -25,7 +25,7 @@ impl<R: tauri::Runtime> HistoryStateInner<R> {
   }
 
   pub fn get_mut(&mut self, key: &PatternKey) -> &mut History<R> {
-    self.inner.entry(key.clone()).or_insert_with(History::default)
+    self.inner.entry(key.clone()).or_default()
   }
 }
 

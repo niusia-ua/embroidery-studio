@@ -26,3 +26,17 @@ pub trait Action<R: tauri::Runtime>: Send + Sync + dyn_clone::DynClone {
 }
 
 dyn_clone::clone_trait_object!(<R: tauri::Runtime> Action<R>);
+
+#[cfg(debug_assertions)]
+#[derive(Clone)]
+pub struct MockAction;
+
+impl<R: tauri::Runtime> Action<R> for MockAction {
+  fn perform(&self, _window: &WebviewWindow<R>, _patproj: &mut PatternProject) -> Result<()> {
+    Ok(())
+  }
+
+  fn revoke(&self, _window: &WebviewWindow<R>, _patproj: &mut PatternProject) -> Result<()> {
+    Ok(())
+  }
+}

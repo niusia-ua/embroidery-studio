@@ -3,6 +3,10 @@
 
 use super::actions::Action;
 
+#[cfg(test)]
+#[path = "history.test.rs"]
+mod tests;
+
 /// A history of actions.
 pub struct History<R: tauri::Runtime> {
   undo_stack: Vec<Box<dyn Action<R>>>,
