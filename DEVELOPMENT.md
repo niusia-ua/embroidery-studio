@@ -14,7 +14,7 @@ src/ # Everything related to the frontend.
 ├── schemas/ # Schemas and types for parsing borsh-serialized data.
 ├── services/ # Modules that encapsulate complex logic.
 ├── stores/ # Pinia stores to share some application state through components.
-├── types/ # Types definition.
+├── types/ # Type definitions.
 ├── utils/ # A set of utility functions.
 ├── App.vue # The main application component.
 └── main.ts # An entry point for the entire application.
@@ -23,17 +23,19 @@ src-tauri/ # Everything related to the backend.
 ├── icons/ # Desktop icons.
 ├── resources/ # Sample patterns, stitch fonts, colour palettes, etc.
 ├── src/ # Application source code.
-│   ├── commands/ # A set of commands exposed to the frontend.
-│   ├── events/ # Event handles.
-│   ├── parser/ # Cross-stitch pattern files parsers.
-│   │   ├── oxs/ # OXS parser.
-│   │   └── xsd.rs # XSD parser.
-│   ├── pattern/ # Pattern structure definition that is used internally.
-│   │   └── stitches/ # Definitions of the various stitch kinds and their methods.
+│   ├── commands/ # A set of Tauri commands exposed to the frontend.
+│   ├── core/ # The core functionality.
+│   │   ├── actions/ # A set of actions for performing changes to patterns.
+│   │   ├── parser/ # Cross-stitch pattern files parsers.
+│   │   │   ├── oxs/ # OXS parser.
+│   │   │   └── xsd.rs # XSD parser.
+│   │   ├── pattern/ # Pattern structure definition that is used internally.
+│   │   │   └── stitches/ # Definitions of the various stitch kinds and their methods.
+│   │   └── history.rs # Defines a structure to save performed action objects.
 │   ├── utils/ # A set of utility functions.
 │   ├── error.rs # Defines custom error type for the command result.
 │   ├── logger.rs # Configures the Tauri logger plugin.
-│   ├── state.rs # Defines the application state.
+│   ├── state.rs # Defines the application states.
 │   ├── lib.rs # Composes all modules into the library used in `main.rs` and `tests/`.
 │   └── main.rs # Bundles everything together and runs the application.
 └── tests/ # End-to-end backend tests.

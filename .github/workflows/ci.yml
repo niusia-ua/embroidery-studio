@@ -43,9 +43,10 @@ jobs:
       - uses: swatinem/rust-cache@v2
         with:
           workspaces: "./src-tauri -> target"
+      - uses: taiki-e/install-action@nextest
       - name: Check formatting
         run: cargo fmt --check
       - name: Lint
         run: cargo clippy -- -D warnings
       - name: Test
-        run: cargo test
+        run: cargo nextest run

@@ -3,7 +3,7 @@ use std::{collections::HashMap, path::PathBuf};
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 
-use crate::core::pattern::PatternProject;
+use crate::core::{history::History, pattern::PatternProject};
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 #[repr(transparent)]
@@ -15,15 +15,25 @@ impl From<PathBuf> for PatternKey {
   }
 }
 
-pub struct AppState {
-  pub patterns: HashMap<PatternKey, PatternProject>,
+pub struct HistoryStateInner<R: tauri::Runtime> {
+  inner: HashMap<PatternKey, History<R>>,
 }
 
-impl AppState {
-  #[allow(clippy::new_without_default)]
-  pub fn new() -> Self {
-    Self { patterns: HashMap::new() }
+impl<R: tauri::Runtime> HistoryStateInner<R> {
+  pub fn get(&self, key: &PatternKey) -> Option<&History<R>> {
+    self.inner.get(key)
+  }
+
+  pub fn get_mut(&mut self, key: &PatternKey) -> &mut History<R> {
+    self.inner.entry(key.clone()).or_default()
   }
 }
 
-pub type AppStateType = std::sync::RwLock<AppState>;
+impl<R: tauri::Runtime> Default for HistoryStateInner<R> {
+  fn default() -> Self {
+    Self { inner: HashMap::new() }
+  }
+}
+
+pub type PatternsState = std::sync::RwLock<HashMap<PatternKey, PatternProject>>;
+pub type HistoryState<R> = std::sync::RwLock<HistoryStateInner<R>>;

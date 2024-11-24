@@ -5,11 +5,12 @@
 <script lang="ts" setup>
   import { getCurrentWindow } from "@tauri-apps/api/window";
   import { onMounted, onUnmounted, ref, watch } from "vue";
+  import { useMagicKeys, whenever } from "@vueuse/core";
   import { CanvasService } from "#/services/canvas";
   import { useAppStateStore } from "#/stores/state";
-  import { emitStitchCreated, emitStitchRemoved } from "#/services/events/pattern";
+  import * as stitchesApi from "#/api/stitches";
+  import * as historyApi from "#/api/history";
   import { PartStitchDirection, StitchKind } from "#/types/pattern/pattern";
-  import type { RemovedStitchPayload, StitchEventPayload } from "#/types/events/pattern";
   import type { FullStitch, Line, Node, PartStitch } from "#/types/pattern/pattern";
   import type { PatternProject } from "#/types/pattern/project";
 
@@ -25,14 +26,6 @@
   const canvasService = new CanvasService();
   await canvasService.init();
 
-  onMounted(() => {
-    // Resizing the canvas to set its initial size.
-    canvasService.resize(canvasContainer.value!.getBoundingClientRect());
-    window.addEventListener("resize", () => canvasService.resize(canvasContainer.value!.getBoundingClientRect()));
-    canvasContainer.value!.appendChild(canvasService.view as HTMLCanvasElement);
-    canvasService.drawPattern(props.patproj);
-  });
-
   watch(
     () => props.patproj,
     (patproj) => canvasService.drawPattern(patproj),
@@ -41,7 +34,7 @@
   // A start point is needed to draw the lines.
   // An end point is needed to draw all the other kinds of stitches (in addition to lines).
   canvasService.addEventListener("draw", async (e) => {
-    if (!appStateStore.state.selectedPaletteItemIndex) return;
+    if (appStateStore.state.selectedPaletteItemIndex === undefined) return;
 
     // @ts-expect-error ...
     const { start, end, modifier } = e.detail;
@@ -56,7 +49,6 @@
     // The current pattern is always available here.
     const patternKey = appStateStore.state.currentPattern!.key;
     const palindex = appStateStore.state.selectedPaletteItemIndex;
-    const palitem = props.patproj.pattern.palette[palindex]!;
 
     const tool = appStateStore.state.selectedStitchTool;
     const kind = tool % 2; // Get 0 or 1.
@@ -69,8 +61,7 @@
           palindex,
           kind,
         };
-        await emitStitchCreated(patternKey, { full: fullstitch });
-        canvasService.drawFullStitch(fullstitch, palitem.color);
+        await stitchesApi.addStitch(patternKey, { full: fullstitch });
         break;
       }
 
@@ -87,8 +78,7 @@
           kind,
           direction,
         };
-        await emitStitchCreated(patternKey, { part: partstitch });
-        canvasService.drawPartStitch(partstitch, palitem.color);
+        await stitchesApi.addStitch(patternKey, { part: partstitch });
         break;
       }
 
@@ -103,8 +93,7 @@
           palindex,
           kind,
         };
-        await emitStitchCreated(patternKey, { line });
-        canvasService.drawLine(line, palitem.color);
+        await stitchesApi.addStitch(patternKey, { line });
         break;
       }
 
@@ -117,8 +106,7 @@
           kind,
           rotated: modifier,
         };
-        await emitStitchCreated(patternKey, { node });
-        canvasService.drawNode(node, palitem.color);
+        await stitchesApi.addStitch(patternKey, { node });
         break;
       }
     }
@@ -126,7 +114,7 @@
 
   // TODO: Don't duplicate this code.
   canvasService.addEventListener("remove", async (e) => {
-    if (!appStateStore.state.selectedPaletteItemIndex) return;
+    if (appStateStore.state.selectedPaletteItemIndex === undefined) return;
 
     // @ts-expect-error ...
     const { point } = e.detail;
@@ -153,8 +141,7 @@
           palindex,
           kind,
         };
-        await emitStitchRemoved(patternKey, { full: fullstitch });
-        canvasService.removeFullStitch(fullstitch);
+        await stitchesApi.removeStitch(patternKey, { full: fullstitch });
         break;
       }
 
@@ -171,8 +158,7 @@
           kind,
           direction,
         };
-        await emitStitchRemoved(patternKey, { part: partstitch });
-        canvasService.removePartStitch(partstitch);
+        await stitchesApi.removeStitch(patternKey, { part: partstitch });
         break;
       }
 
@@ -185,8 +171,7 @@
           kind,
           rotated: false,
         };
-        await emitStitchRemoved(patternKey, { node });
-        canvasService.removeNode(node);
+        await stitchesApi.removeStitch(patternKey, { node });
         break;
       }
     }
@@ -211,20 +196,68 @@
     }
   }
 
+  export interface StitchesRemoveManyPayload {
+    fullstitches: FullStitch[];
+    partstitches: PartStitch[];
+    line?: Line;
+    node?: Node;
+  }
+
   const appWindow = getCurrentWindow();
-  const unlistenRemoveStitches = await appWindow.listen<StitchEventPayload<RemovedStitchPayload>>(
-    "pattern:stitches:remove",
-    (e) => {
-      const { payload } = e.payload;
-      if (payload.fullstitches) canvasService.removeFullStitches(payload.fullstitches);
-      if (payload.partstitches) canvasService.removePartStitches(payload.partstitches);
+  const unlistenRemoveManyStitches = await appWindow.listen<StitchesRemoveManyPayload>(
+    "stitches:remove_many",
+    ({ payload }) => {
+      canvasService.removeFullStitches(payload.fullstitches);
+      canvasService.removePartStitches(payload.partstitches);
       if (payload.line) canvasService.removeLine(payload.line);
       if (payload.node) canvasService.removeNode(payload.node);
     },
   );
+  const unlistenAddManyStitches = await appWindow.listen<StitchesRemoveManyPayload>(
+    "stitches:add_many",
+    ({ payload }) => {
+      const palette = props.patproj.pattern.palette;
+      for (const fullstitch of payload.fullstitches) {
+        canvasService.drawFullStitch(fullstitch, palette[fullstitch.palindex]!.color);
+      }
+      for (const partstitch of payload.partstitches) {
+        canvasService.drawPartStitch(partstitch, palette[partstitch.palindex]!.color);
+      }
+      if (payload.line) canvasService.drawLine(payload.line, palette[payload.line.palindex]!.color);
+      if (payload.node) canvasService.drawNode(payload.node, palette[payload.node.palindex]!.color);
+    },
+  );
+  const unlistenRemoveOneStitch = await appWindow.listen<stitchesApi.Stitch>("stitches:remove_one", ({ payload }) => {
+    if ("full" in payload) canvasService.removeFullStitch(payload.full);
+    if ("part" in payload) canvasService.removePartStitch(payload.part);
+    if ("line" in payload) canvasService.removeLine(payload.line);
+    if ("node" in payload) canvasService.removeNode(payload.node);
+  });
+  const unlistenAddOneStitch = await appWindow.listen<stitchesApi.Stitch>("stitches:add_one", ({ payload }) => {
+    const palette = props.patproj.pattern.palette;
+    if ("full" in payload) canvasService.drawFullStitch(payload.full, palette[payload.full.palindex]!.color);
+    if ("part" in payload) canvasService.drawPartStitch(payload.part, palette[payload.part.palindex]!.color);
+    if ("line" in payload) canvasService.drawLine(payload.line, palette[payload.line.palindex]!.color);
+    if ("node" in payload) canvasService.drawNode(payload.node, palette[payload.node.palindex]!.color);
+  });
+
+  const keys = useMagicKeys();
+  whenever(keys.ctrl_z!, () => historyApi.undo(appStateStore.state.currentPattern!.key));
+  whenever(keys.ctrl_y!, () => historyApi.redo(appStateStore.state.currentPattern!.key));
+
+  onMounted(() => {
+    // Resizing the canvas to set its initial size.
+    canvasService.resize(canvasContainer.value!.getBoundingClientRect());
+    window.addEventListener("resize", () => canvasService.resize(canvasContainer.value!.getBoundingClientRect()));
+    canvasContainer.value!.appendChild(canvasService.view as HTMLCanvasElement);
+    canvasService.drawPattern(props.patproj);
+  });
 
   onUnmounted(() => {
     canvasService.clearPattern();
-    unlistenRemoveStitches();
+    unlistenRemoveManyStitches();
+    unlistenAddManyStitches();
+    unlistenRemoveOneStitch();
+    unlistenAddOneStitch();
   });
 </script>
