@@ -1004,6 +1004,7 @@ dependencies = [
  "anyhow",
  "borsh",
  "byteorder",
+ "dyn-clone",
  "encoding_rs",
  "hex",
  "log",

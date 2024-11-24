@@ -2,7 +2,7 @@ use borsh::{BorshDeserialize, BorshSerialize};
 
 use super::{display::DisplaySettings, print::PrintSettings, Pattern};
 
-#[derive(Debug, Clone, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Default, Clone, BorshSerialize, BorshDeserialize)]
 pub struct PatternProject {
   #[borsh(skip)]
   pub file_path: std::path::PathBuf,

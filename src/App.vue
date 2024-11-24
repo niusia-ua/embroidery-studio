@@ -4,7 +4,7 @@
   <div class="flex h-full flex-col">
     <Toolbar data-tauri-drag-region class="rounded-none border-0 border-b p-0">
       <template #start>
-        <DropdownTieredMenu id="general_menu" :button="{ icon: 'pi pi-bars' }" :tiered-menu="{ model: menuOptions }" />
+        <MainMenu />
         <StitchToolSelector />
       </template>
 
@@ -12,7 +12,7 @@
         <PatternSelector
           @switch="
             (patternPath) => {
-              loadPattern(patternPath);
+              patternProjectStore.loadPattern(patternPath);
               // TODO: Store the selected palette item per opened pattern.
               appStateStore.state.selectedPaletteItemIndex = undefined;
             }
@@ -30,7 +30,7 @@
     <Splitter :gutter-size="2" class="grow overflow-y-auto rounded-none border-0">
       <SplitterPanel :min-size="6" :size="15" pt:root:class="overflow-y-clip overflow-x-visible">
         <Suspense>
-          <PalettePanel :palette="patproj?.pattern?.palette" @add-palette-item="addPaletteItem" />
+          <PalettePanel :palette="patproj?.pattern?.palette" @add-palette-item="patternProjectStore.addPaletteItem" />
         </Suspense>
       </SplitterPanel>
 
@@ -55,185 +55,27 @@
 </template>
 
 <script lang="ts" setup>
-  import { onMounted, ref } from "vue";
-  import {
-    BlockUI,
-    Panel,
-    ConfirmDialog,
-    ProgressSpinner,
-    Splitter,
-    SplitterPanel,
-    Toolbar,
-    useConfirm,
-  } from "primevue";
-  import type { MenuItem } from "primevue/menuitem";
-  import { open, save } from "@tauri-apps/plugin-dialog";
+  import { onMounted } from "vue";
+  import { BlockUI, Panel, ConfirmDialog, ProgressSpinner, Splitter, SplitterPanel, Toolbar } from "primevue";
+  import MainMenu from "./components/toolbar/MainMenu.vue";
   import CanvasPanel from "./components/CanvasPanel.vue";
   import PalettePanel from "./components/palette/PalettePanel.vue";
-  import DropdownTieredMenu from "./components/toolbar/DropdownTieredMenu.vue";
   import PatternSelector from "./components/toolbar/PatternSelector.vue";
   import StitchToolSelector from "./components/toolbar/StitchToolSelector.vue";
   import WindowControls from "./components/toolbar/WindowControls.vue";
   import { useAppStateStore } from "./stores/state";
   import { usePreferencesStore } from "./stores/preferences";
-  import * as patternApi from "./api/pattern";
-  import * as pathApi from "./api/path";
-  import type { PatternProject } from "./types/pattern/project";
-  import type { PaletteItem } from "./types/pattern/pattern";
+  import { usePatternProjectStore } from "./stores/patproj";
+  import { storeToRefs } from "pinia";
 
   const appStateStore = useAppStateStore();
   const preferencesStore = usePreferencesStore();
-
-  const loading = ref(false);
-  const patproj = ref<PatternProject>();
-
-  const confirm = useConfirm();
-
-  const fileOptions: MenuItem = {
-    label: "File",
-    icon: "pi pi-file",
-    items: [
-      {
-        label: "Open",
-        icon: "pi pi-file",
-        command: async () => {
-          const path = await open({
-            defaultPath: await pathApi.getAppDocumentDir(),
-            multiple: false,
-            filters: [
-              {
-                name: "Cross-Stitch Pattern",
-                extensions: ["xsd", "oxs", "xml", "embproj"],
-              },
-            ],
-          });
-          if (path === null || Array.isArray(path)) return;
-          await loadPattern(path);
-        },
-      },
-      {
-        label: "Create",
-        icon: "pi pi-file-plus",
-        command: createPattern,
-      },
-      {
-        label: "Save As",
-        icon: "pi pi-copy",
-        command: async () => {
-          const currentPattern = appStateStore.state.currentPattern;
-          if (!currentPattern) return;
-          const path = await save({
-            defaultPath: await patternApi.getPatternFilePath(currentPattern.key),
-            filters: [
-              {
-                name: "Cross-Stitch Pattern",
-                extensions: ["oxs", "embproj"],
-              },
-            ],
-          });
-          if (path === null) return;
-          await savePattern(currentPattern.key, path);
-        },
-      },
-      {
-        label: "Close",
-        icon: "pi pi-times",
-        command: async () => {
-          // TODO: Implement a confirmation dialog.
-          if (!appStateStore.state.currentPattern) return;
-          await patternApi.closePattern(appStateStore.state.currentPattern.key);
-          appStateStore.removeCurrentPattern();
-          if (!appStateStore.state.currentPattern) patproj.value = undefined;
-          else await loadPattern(appStateStore.state.currentPattern.key);
-        },
-      },
-    ],
-  };
-  const preferencesOptions: MenuItem = {
-    label: "Preferences",
-    icon: "pi pi-cog",
-    items: [
-      {
-        label: "Theme",
-        icon: "pi pi-palette",
-        items: [
-          {
-            label: "Light",
-            icon: "pi pi-sun",
-            command: () => preferencesStore.setTheme("light"),
-          },
-          {
-            label: "Dark",
-            icon: "pi pi-moon",
-            command: () => preferencesStore.setTheme("dark"),
-          },
-          {
-            label: "System",
-            icon: "pi pi-desktop",
-            command: () => preferencesStore.setTheme("system"),
-          },
-        ],
-      },
-    ],
-  };
-  const menuOptions = ref<MenuItem[]>([fileOptions, preferencesOptions]);
-
-  async function loadPattern(path: string) {
-    try {
-      loading.value = true;
-      patproj.value = await patternApi.loadPattern(path);
-      appStateStore.addOpenedPattern(patproj.value!.pattern.info.title, path);
-    } catch (err) {
-      confirm.require({
-        header: "Error",
-        message: err as string,
-        icon: "pi pi-info-circle",
-        acceptLabel: "OK",
-        acceptProps: { outlined: true },
-        rejectLabel: "Cancel",
-        rejectProps: { severity: "secondary", outlined: true },
-      });
-    } finally {
-      loading.value = false;
-    }
-  }
-
-  // TODO: Create a new pattern with a user defined data (properties, info, fabric, etc.).
-  async function createPattern() {
-    loading.value = true;
-    const { key, pattern: pat } = await patternApi.createPattern();
-    patproj.value = pat;
-    appStateStore.addOpenedPattern(patproj.value!.pattern.info.title, key);
-    loading.value = false;
-  }
-
-  async function savePattern(key: string, path: string) {
-    try {
-      loading.value = true;
-      await patternApi.savePattern(key, path);
-    } catch (err) {
-      confirm.require({
-        header: "Error",
-        message: err as string,
-        icon: "pi pi-info-circle",
-        acceptLabel: "OK",
-        acceptProps: { outlined: true },
-        rejectLabel: "Cancel",
-        rejectProps: { severity: "secondary", outlined: true },
-      });
-    } finally {
-      loading.value = false;
-    }
-  }
-
-  async function addPaletteItem(pi: PaletteItem) {
-    await patternApi.addPaletteItem(appStateStore.state.currentPattern!.key, pi);
-    patproj.value!.pattern.palette.push(pi);
-  }
+  const patternProjectStore = usePatternProjectStore();
+  const { patproj, loading } = storeToRefs(patternProjectStore);
 
   onMounted(async () => {
     await preferencesStore.setTheme(preferencesStore.theme);
     const currentPattern = appStateStore.state.currentPattern;
-    if (currentPattern) await loadPattern(currentPattern.key);
+    if (currentPattern) await patternProjectStore.loadPattern(currentPattern.key);
   });
 </script>

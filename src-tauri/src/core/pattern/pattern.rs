@@ -18,6 +18,7 @@ pub struct Pattern {
 }
 
 impl Pattern {
+  /// Adds a stitch to the pattern and returns any conflicts that may have arisen.
   pub fn add_stitch(&mut self, stitch: Stitch) -> StitchConflicts {
     log::trace!("Adding stitch");
     match stitch {
@@ -48,13 +49,14 @@ impl Pattern {
     }
   }
 
-  pub fn remove_stitch(&mut self, stitch: Stitch) -> bool {
+  /// Removes and returns a stitch from the pattern.
+  pub fn remove_stitch(&mut self, stitch: Stitch) -> Option<Stitch> {
     log::trace!("Removing stitch");
     match stitch {
-      Stitch::Full(fullstitch) => self.fullstitches.remove(&fullstitch),
-      Stitch::Part(partstitch) => self.partstitches.remove(&partstitch),
-      Stitch::Node(node) => self.nodes.remove(&node),
-      Stitch::Line(line) => self.lines.remove(&line),
+      Stitch::Full(fullstitch) => self.fullstitches.remove(&fullstitch).map(|fs| fs.into()),
+      Stitch::Part(partstitch) => self.partstitches.remove(&partstitch).map(|ps| ps.into()),
+      Stitch::Node(node) => self.nodes.remove(&node).map(|node| node.into()),
+      Stitch::Line(line) => self.lines.remove(&line).map(|line| line.into()),
     }
   }
 }

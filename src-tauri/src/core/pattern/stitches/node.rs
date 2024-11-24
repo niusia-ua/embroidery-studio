@@ -4,7 +4,7 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 
 use crate::core::pattern::Coord;
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 pub struct Node {
   pub x: Coord,
   pub y: Coord,

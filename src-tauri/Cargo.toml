@@ -41,3 +41,4 @@ log = "0.4.22"
 
 # Other
 ordered-float = { version = "4.5.0", features = ["borsh", "serde"] }
+dyn-clone = "1.0.17"
