@@ -21,7 +21,7 @@
     "pinia-plugin-persistedstate": "^4.1.1",
     "pixi-cull": "github:niusia-ua/pixi-cull#custom",
     "pixi-viewport": "github:niusia-ua/pixi-viewport#custom",
-    "pixi.js": "^8.5.2",
+    "pixi.js": "^8.6.0",
     "primeicons": "^7.0.0",
     "primevue": "^4.2.1",
     "tailwindcss-primeui": "^0.3.4",

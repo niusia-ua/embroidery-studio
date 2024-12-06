@@ -1,5 +1,5 @@
 import { Application, Container, Graphics, GraphicsContext, Point } from "pixi.js";
-import type { FederatedMouseEvent, ColorSource } from "pixi.js";
+import type { FederatedMouseEvent, ColorSource, ApplicationOptions, StrokeInput } from "pixi.js";
 import { Viewport } from "pixi-viewport";
 import { SpatialHash as Culler } from "pixi-cull";
 import type { PatternProject } from "#/types/pattern/project";
@@ -14,53 +14,46 @@ import type {
   SpecialStitchModel,
 } from "#/types/pattern/pattern";
 import { FullStitchKind, NodeKind, PartStitchDirection, PartStitchKind } from "#/types/pattern/pattern";
+import { EventType, type AddStitchData, type RemoveStitchData } from "./events.types";
 
-export interface CanvasSize {
-  width: number;
-  height: number;
-}
-
+const STITCH_STROKE: StrokeInput = { pixelLine: true, alignment: 1, color: 0x000000 };
 const FULL_STITCH_CONTEXT = {
-  [FullStitchKind.Full]: new GraphicsContext().rect(0, 0, 1, 1).fill("FFFFFF"),
-  [FullStitchKind.Petite]: new GraphicsContext()
-    .rect(0, 0, 0.5, 0.5)
-    .stroke({ width: 0.01, alignment: 0, color: "000000" })
-    .fill("FFFFFF"),
+  [FullStitchKind.Full]: new GraphicsContext().rect(0, 0, 1, 1).fill(0xffffff),
+  [FullStitchKind.Petite]: new GraphicsContext().rect(0, 0, 0.5, 0.5).stroke(STITCH_STROKE).fill(0xffffff),
 };
-
 const PART_STITCH_CONTEXT = {
   [PartStitchKind.Half]: {
     [PartStitchDirection.Forward]: new GraphicsContext()
       .poly([1, 0, 1, 0.25, 0.25, 1, 0, 1, 0, 0.75, 0.75, 0])
-      .stroke({ width: 0.01, alignment: 0, color: "000000" })
-      .fill("FFFFFF"),
+      .stroke(STITCH_STROKE)
+      .fill(0xffffff),
     [PartStitchDirection.Backward]: new GraphicsContext()
       .poly([0, 0, 0.25, 0, 1, 0.75, 1, 1, 0.75, 1, 0, 0.25])
-      .stroke({ width: 0.01, alignment: 0, color: "000000" })
-      .fill("FFFFFF"),
+      .stroke(STITCH_STROKE)
+      .fill(0xffffff),
   },
   [PartStitchKind.Quarter]: {
     [PartStitchDirection.Forward]: new GraphicsContext()
       .poly([0.5, 0, 0.5, 0.25, 0.25, 0.5, 0, 0.5, 0, 0.25, 0.25, 0])
-      .stroke({ width: 0.01, alignment: 0, color: "000000" })
-      .fill("FFFFFF"),
+      .stroke(STITCH_STROKE)
+      .fill(0xffffff),
     [PartStitchDirection.Backward]: new GraphicsContext()
       .poly([0, 0, 0.25, 0, 0.5, 0.25, 0.5, 0.5, 0.25, 0.5, 0, 0.25])
-      .stroke({ width: 0.01, alignment: 0, color: "000000" })
-      .fill("FFFFFF"),
+      .stroke(STITCH_STROKE)
+      .fill(0xffffff),
   },
 };
-
 const NODE_CONTEXT = {
-  [NodeKind.FrenchKnot]: new GraphicsContext()
-    .circle(0, 0, 5)
-    .stroke({ width: 0.1, alignment: 0, color: "000000" })
-    .fill("FFFFFF"),
-  [NodeKind.Bead]: new GraphicsContext()
-    // Set negative coordinates to rotate elements around their center.
-    .roundRect(-3.75, -5, 7.5, 10, 10)
-    .stroke({ width: 0.1, alignment: 0, color: "000000" })
-    .fill("FFFFFF"),
+  [NodeKind.FrenchKnot]: new GraphicsContext().circle(0, 0, 5).stroke(STITCH_STROKE).fill(0xffffff),
+  // Set negative coordinates to rotate elements around their center.
+  [NodeKind.Bead]: new GraphicsContext().roundRect(-3.75, -5, 7.5, 10, 10).stroke(STITCH_STROKE).fill(0xffffff),
+};
+
+const DEFAULT_INIT_OPTIONS: Partial<ApplicationOptions> = {
+  eventMode: "static",
+  eventFeatures: { globalMove: false },
+  antialias: true,
+  backgroundAlpha: 0,
 };
 
 export class CanvasService extends EventTarget {
@@ -75,6 +68,7 @@ export class CanvasService extends EventTarget {
     grid: new Graphics(),
     specialstitches: new Container(),
     lines: new Container(),
+    lineHint: new Graphics(),
     nodes: new Container(),
   };
 
@@ -86,8 +80,8 @@ export class CanvasService extends EventTarget {
     super();
   }
 
-  async init() {
-    await this.#pixi.init({ antialias: true, backgroundAlpha: 0 });
+  async init(options?: Partial<ApplicationOptions>) {
+    await this.#pixi.init(Object.assign({}, DEFAULT_INIT_OPTIONS, options));
     this.#viewport = new Viewport({ events: this.#pixi.renderer.events });
 
     // Configure the viewport.
@@ -102,8 +96,6 @@ export class CanvasService extends EventTarget {
 
     // Add stages to the viewport.
     for (const stage of Object.values(this.#stages)) {
-      stage.interactiveChildren = false;
-      stage.eventMode = "none";
       this.#viewport.addChild(stage);
       if (stage instanceof Container) this.#culler.addContainer(stage, true);
     }
@@ -120,11 +112,6 @@ export class CanvasService extends EventTarget {
     // Set up event listeners.
     this.#viewport.on("mousedown", this.#onMouseDown, this);
     this.#viewport.on("mouseup", this.#onMouseUp, this);
-    this.#viewport.on("rightup", this.#onRightUp, this);
-  }
-
-  get view() {
-    return this.#pixi.canvas;
   }
 
   resize({ width, height }: CanvasSize) {
@@ -135,8 +122,8 @@ export class CanvasService extends EventTarget {
   clearPattern() {
     this.#specialStitchModelContext = [];
     for (const elem of Object.values(this.#stages)) {
+      if (elem instanceof Container) elem.removeChildren();
       if (elem instanceof Graphics) elem.clear();
-      else elem.removeChildren();
     }
   }
 
@@ -160,10 +147,12 @@ export class CanvasService extends EventTarget {
 
   drawFabric({ width, height }: PatternProperties, color: ColorSource) {
     this.#stages.fabric.rect(0, 0, width, height).fill(color);
+    this.#stages.fabric.eventMode = "none";
   }
 
   drawGrid({ width, height }: PatternProperties, grid: Grid) {
     const graphics = this.#stages.grid;
+    graphics.eventMode = "none";
     {
       // Draw horizontal lines.
       for (let i = 1; i < width; i++) {
@@ -208,6 +197,10 @@ export class CanvasService extends EventTarget {
     graphics.label = this.#fullStitchKey(fullstitch);
     graphics.tint = color;
     graphics.position.set(x, y);
+    graphics.on("rightup", () => {
+      const detail: RemoveStitchData = { full: fullstitch };
+      this.dispatchEvent(new CustomEvent(EventType.RemoveStitch, { detail }));
+    });
     this.#stages.fullstitches.addChild(graphics);
   }
 
@@ -232,6 +225,10 @@ export class CanvasService extends EventTarget {
     graphics.label = this.#partStitchKey(partstitch);
     graphics.position.set(x, y);
     graphics.tint = color;
+    graphics.on("rightup", () => {
+      const detail: RemoveStitchData = { part: partstitch };
+      this.dispatchEvent(new CustomEvent(EventType.RemoveStitch, { detail }));
+    });
     this.#stages.partstitches.addChild(graphics);
   }
 
@@ -259,12 +256,16 @@ export class CanvasService extends EventTarget {
       // Draw a line with a larger width to make it look like a border.
       .moveTo(start.x, start.y)
       .lineTo(end.x, end.y)
-      .stroke({ width: 0.225, color: "000000", cap: "round" })
+      .stroke({ width: 0.225, color: 0x000000, cap: "round" })
       // Draw a line with a smaller width to make it look like a fill.
       .moveTo(start.x, start.y)
       .lineTo(end.x, end.y)
       .stroke({ width: 0.2, color, cap: "round" });
     graphics.label = this.#lineKey(line);
+    graphics.on("rightup", () => {
+      const detail: RemoveStitchData = { line };
+      this.dispatchEvent(new CustomEvent(EventType.RemoveStitch, { detail }));
+    });
     this.#stages.lines.addChild(graphics);
   }
 
@@ -290,6 +291,10 @@ export class CanvasService extends EventTarget {
     graphics.tint = color;
     graphics.position.set(x, y);
     if (rotated) graphics.angle = 90;
+    graphics.on("rightup", () => {
+      const detail: RemoveStitchData = { node };
+      this.dispatchEvent(new CustomEvent(EventType.RemoveStitch, { detail }));
+    });
     this.#stages.nodes.addChild(graphics);
   }
 
@@ -308,7 +313,7 @@ export class CanvasService extends EventTarget {
 
     for (const { points } of specialStitchModel.curves) {
       // Draw a polyline with a larger width to make it look like a border.
-      context.poly(points.flat(), false).stroke({ width: 0.225, color: "000000", cap: "round", join: "round" });
+      context.poly(points.flat(), false).stroke({ width: 0.225, color: 0x000000, cap: "round", join: "round" });
       // Draw a polyline with a smaller width to make it look like a fill.
       context.poly(points.flat(), false).stroke({ width: 0.2, cap: "round", join: "round" });
     }
@@ -320,7 +325,7 @@ export class CanvasService extends EventTarget {
         // Draw a line with a larger width to make it look like a border.
         .moveTo(start.x, start.y)
         .lineTo(end.x, end.y)
-        .stroke({ width: 0.225, color: "000000", cap: "round" })
+        .stroke({ width: 0.225, color: 0x000000, cap: "round" })
         // Draw a line with a smaller width to make it look like a fill.
         .moveTo(start.x, start.y)
         .lineTo(end.x, end.y)
@@ -333,8 +338,8 @@ export class CanvasService extends EventTarget {
       // All nodes are french knotes.
       context
         .circle(x * 10, y * 10, 5)
-        .stroke({ width: 0.01, alignment: 0, color: "000000" })
-        .fill("FFFFFF");
+        .stroke({ pixelLine: true, alignment: 0, color: 0x000000 })
+        .fill(0xffffff);
     }
 
     this.#specialStitchModelContext.push(context);
@@ -360,36 +365,31 @@ export class CanvasService extends EventTarget {
     // If the start point is not set or the shift key is pressed, do nothing.
     // Shift key is used to pan the viewport.
     if (!this.#startPoint || e.shiftKey) return;
-
     const point = this.#viewport.toWorld(e.global);
     if (this.#pointIsOutside(point)) return;
-
-    const [start, end] = this.#orderPoints(this.#startPoint, point);
-
-    this.dispatchEvent(new CustomEvent("draw", { detail: { start, end, modifier: e.ctrlKey } }));
+    const [start, end] = orderPoints(this.#startPoint, point);
+    const detail: AddStitchData = { start, end, alt: e.ctrlKey };
+    this.dispatchEvent(new CustomEvent(EventType.AddStitch, { detail }));
     this.#startPoint = undefined;
-  }
-
-  #onRightUp(e: FederatedMouseEvent) {
-    const point = this.#viewport.toWorld(e.global);
-    if (this.#pointIsOutside(point)) return;
-
-    this.dispatchEvent(new CustomEvent("remove", { detail: { point } }));
   }
 
   #pointIsOutside({ x, y }: Point) {
     const { width, height } = this.#stages.fabric.getLocalBounds();
     return x <= 0 || y <= 0 || x >= width || y >= height;
   }
+}
 
-  // Order points so that is no way to draw two lines with the same coordinates.
-  #orderPoints(start: Point, end: Point): [Point, Point] {
-    const x1 = Math.trunc(start.x);
-    const y1 = Math.trunc(start.y);
-    const x2 = Math.trunc(end.x);
-    const y2 = Math.trunc(end.y);
+/** Orders points so that is no way to draw two lines with the same coordinates. */
+function orderPoints(start: Point, end: Point): [Point, Point] {
+  const x1 = Math.trunc(start.x);
+  const y1 = Math.trunc(start.y);
+  const x2 = Math.trunc(end.x);
+  const y2 = Math.trunc(end.y);
+  if (y1 === y2) return x1 < x2 ? [start, end] : [end, start];
+  else return y1 < y2 ? [start, end] : [end, start];
+}
 
-    if (y1 === y2) return x1 < x2 ? [start, end] : [end, start];
-    else return y1 < y2 ? [start, end] : [end, start];
-  }
+export interface CanvasSize {
+  width: number;
+  height: number;
 }

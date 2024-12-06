@@ -1,23 +1,24 @@
 <template>
-  <div
-    ref="canvasContainer"
+  <canvas
+    ref="canvas"
     v-element-size="useThrottleFn((size: CanvasSize) => canvasService.resize(size), 500)"
-    class="h-full"
-  ></div>
+    class="size-full"
+  ></canvas>
 </template>
 
 <script lang="ts" setup>
   import { getCurrentWindow } from "@tauri-apps/api/window";
-  import { onMounted, onUnmounted, ref, watch } from "vue";
+  import { onMounted, onUnmounted, useTemplateRef, watch } from "vue";
   import { useMagicKeys, whenever, useThrottleFn } from "@vueuse/core";
   import { vElementSize } from "@vueuse/components";
-  import { CanvasService, type CanvasSize } from "#/services/canvas";
+  import { CanvasService, type CanvasSize } from "#/services/canvas/canvas.service";
   import { useAppStateStore } from "#/stores/state";
   import * as stitchesApi from "#/api/stitches";
   import * as historyApi from "#/api/history";
   import { PartStitchDirection, StitchKind } from "#/types/pattern/pattern";
-  import type { FullStitch, Line, Node, PartStitch } from "#/types/pattern/pattern";
+  import type { FullStitch, Line, Node, PartStitch, Stitch } from "#/types/pattern/pattern";
   import type { PatternProject } from "#/types/pattern/project";
+  import { EventType, type AddStitchData, type RemoveStitchData } from "#/services/canvas/events.types";
 
   interface CanvasPanelProps {
     patproj: PatternProject;
@@ -27,9 +28,8 @@
 
   const appStateStore = useAppStateStore();
 
-  const canvasContainer = ref<HTMLDivElement>();
+  const canvas = useTemplateRef("canvas");
   const canvasService = new CanvasService();
-  await canvasService.init();
 
   watch(
     () => props.patproj,
@@ -38,11 +38,10 @@
 
   // A start point is needed to draw the lines.
   // An end point is needed to draw all the other kinds of stitches (in addition to lines).
-  canvasService.addEventListener("draw", async (e) => {
+  canvasService.addEventListener(EventType.AddStitch, async (e) => {
     if (appStateStore.state.selectedPaletteItemIndex === undefined) return;
 
-    // @ts-expect-error ...
-    const { start, end, modifier } = e.detail;
+    const { start, end, alt }: AddStitchData = (e as CustomEvent).detail;
 
     const x = Math.trunc(end.x);
     const y = Math.trunc(end.y);
@@ -109,7 +108,7 @@
           y: adjustStitchCoordinate(y, ydp, kind),
           palindex,
           kind,
-          rotated: modifier,
+          rotated: alt,
         };
         await stitchesApi.addStitch(patternKey, { node });
         break;
@@ -117,69 +116,10 @@
     }
   });
 
-  // TODO: Don't duplicate this code.
-  canvasService.addEventListener("remove", async (e) => {
-    if (appStateStore.state.selectedPaletteItemIndex === undefined) return;
-
-    // @ts-expect-error ...
-    const { point } = e.detail;
-
-    const x = Math.trunc(point.x);
-    const y = Math.trunc(point.y);
-
-    // Decimal portion of the end coordinates.
-    const xdp = point.x - x;
-    const ydp = point.y - y;
-
-    // The current pattern is always available here.
+  canvasService.addEventListener(EventType.RemoveStitch, async (e) => {
+    const data: RemoveStitchData = (e as CustomEvent).detail;
     const patternKey = appStateStore.state.currentPattern!.key;
-    const palindex = appStateStore.state.selectedPaletteItemIndex;
-
-    const tool = appStateStore.state.selectedStitchTool;
-    const kind = tool % 2; // Get 0 or 1.
-    switch (tool) {
-      case StitchKind.Full:
-      case StitchKind.Petite: {
-        const fullstitch: FullStitch = {
-          x: adjustStitchCoordinate(x, xdp, kind),
-          y: adjustStitchCoordinate(y, ydp, kind),
-          palindex,
-          kind,
-        };
-        await stitchesApi.removeStitch(patternKey, { full: fullstitch });
-        break;
-      }
-
-      case StitchKind.Half:
-      case StitchKind.Quarter: {
-        const direction =
-          (xdp < 0.5 && ydp > 0.5) || (xdp > 0.5 && ydp < 0.5)
-            ? PartStitchDirection.Forward
-            : PartStitchDirection.Backward;
-        const partstitch: PartStitch = {
-          x: adjustStitchCoordinate(x, xdp, kind),
-          y: adjustStitchCoordinate(y, ydp, kind),
-          palindex,
-          kind,
-          direction,
-        };
-        await stitchesApi.removeStitch(patternKey, { part: partstitch });
-        break;
-      }
-
-      case StitchKind.FrenchKnot:
-      case StitchKind.Bead: {
-        const node: Node = {
-          x: adjustStitchCoordinate(x, xdp, kind),
-          y: adjustStitchCoordinate(y, ydp, kind),
-          palindex,
-          kind,
-          rotated: false,
-        };
-        await stitchesApi.removeStitch(patternKey, { node });
-        break;
-      }
-    }
+    await stitchesApi.removeStitch(patternKey, data);
   });
 
   function adjustStitchCoordinate(value: number, decimalPortion: number, tool: StitchKind): number {
@@ -232,13 +172,13 @@
       if (payload.node) canvasService.drawNode(payload.node, palette[payload.node.palindex]!.color);
     },
   );
-  const unlistenRemoveOneStitch = await appWindow.listen<stitchesApi.Stitch>("stitches:remove_one", ({ payload }) => {
+  const unlistenRemoveOneStitch = await appWindow.listen<Stitch>("stitches:remove_one", ({ payload }) => {
     if ("full" in payload) canvasService.removeFullStitch(payload.full);
     if ("part" in payload) canvasService.removePartStitch(payload.part);
     if ("line" in payload) canvasService.removeLine(payload.line);
     if ("node" in payload) canvasService.removeNode(payload.node);
   });
-  const unlistenAddOneStitch = await appWindow.listen<stitchesApi.Stitch>("stitches:add_one", ({ payload }) => {
+  const unlistenAddOneStitch = await appWindow.listen<Stitch>("stitches:add_one", ({ payload }) => {
     const palette = props.patproj.pattern.palette;
     if ("full" in payload) canvasService.drawFullStitch(payload.full, palette[payload.full.palindex]!.color);
     if ("part" in payload) canvasService.drawPartStitch(payload.part, palette[payload.part.palindex]!.color);
@@ -247,18 +187,18 @@
   });
 
   const keys = useMagicKeys();
-  whenever(keys.ctrl_z!, () => historyApi.undo(appStateStore.state.currentPattern!.key));
-  whenever(keys.ctrl_y!, () => historyApi.redo(appStateStore.state.currentPattern!.key));
+  whenever(keys.ctrl_z!, async () => await historyApi.undo(appStateStore.state.currentPattern!.key));
+  whenever(keys.ctrl_y!, async () => await historyApi.redo(appStateStore.state.currentPattern!.key));
 
-  onMounted(() => {
-    // Resizing the canvas to set its initial size.
-    canvasService.resize(canvasContainer.value!.getBoundingClientRect());
+  onMounted(async () => {
+    const { width, height } = canvas.value!.getBoundingClientRect();
+    await canvasService.init({ width, height, canvas: canvas.value! });
+    canvasService.drawPattern(props.patproj);
+
     window.addEventListener(
       "resize",
-      useThrottleFn(() => canvasService.resize(canvasContainer.value!.getBoundingClientRect()), 500),
+      useThrottleFn(() => canvasService.resize(canvas.value!.getBoundingClientRect()), 500),
     );
-    canvasContainer.value!.appendChild(canvasService.view as HTMLCanvasElement);
-    canvasService.drawPattern(props.patproj);
   });
 
   onUnmounted(() => {
