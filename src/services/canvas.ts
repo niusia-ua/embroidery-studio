@@ -15,6 +15,11 @@ import type {
 } from "#/types/pattern/pattern";
 import { FullStitchKind, NodeKind, PartStitchDirection, PartStitchKind } from "#/types/pattern/pattern";
 
+export interface CanvasSize {
+  width: number;
+  height: number;
+}
+
 const FULL_STITCH_CONTEXT = {
   [FullStitchKind.Full]: new GraphicsContext().rect(0, 0, 1, 1).fill("FFFFFF"),
   [FullStitchKind.Petite]: new GraphicsContext()
@@ -122,7 +127,7 @@ export class CanvasService extends EventTarget {
     return this.#pixi.canvas;
   }
 
-  resize({ width, height }: DOMRect) {
+  resize({ width, height }: CanvasSize) {
     this.#pixi.renderer.resize(width, height);
     this.#viewport.resize(width, height);
   }

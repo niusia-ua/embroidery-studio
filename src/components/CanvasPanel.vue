@@ -1,12 +1,17 @@
 <template>
-  <div ref="canvasContainer" class="h-full"></div>
+  <div
+    ref="canvasContainer"
+    v-element-size="useThrottleFn((size: CanvasSize) => canvasService.resize(size), 500)"
+    class="h-full"
+  ></div>
 </template>
 
 <script lang="ts" setup>
   import { getCurrentWindow } from "@tauri-apps/api/window";
   import { onMounted, onUnmounted, ref, watch } from "vue";
-  import { useMagicKeys, whenever } from "@vueuse/core";
-  import { CanvasService } from "#/services/canvas";
+  import { useMagicKeys, whenever, useThrottleFn } from "@vueuse/core";
+  import { vElementSize } from "@vueuse/components";
+  import { CanvasService, type CanvasSize } from "#/services/canvas";
   import { useAppStateStore } from "#/stores/state";
   import * as stitchesApi from "#/api/stitches";
   import * as historyApi from "#/api/history";
@@ -248,7 +253,10 @@
   onMounted(() => {
     // Resizing the canvas to set its initial size.
     canvasService.resize(canvasContainer.value!.getBoundingClientRect());
-    window.addEventListener("resize", () => canvasService.resize(canvasContainer.value!.getBoundingClientRect()));
+    window.addEventListener(
+      "resize",
+      useThrottleFn(() => canvasService.resize(canvasContainer.value!.getBoundingClientRect()), 500),
+    );
     canvasContainer.value!.appendChild(canvasService.view as HTMLCanvasElement);
     canvasService.drawPattern(props.patproj);
   });
