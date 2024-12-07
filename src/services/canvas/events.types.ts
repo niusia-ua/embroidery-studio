@@ -14,6 +14,9 @@ export const enum EventType {
  * If the stitch is "double-point" (i.e. back and straight stitch) then these points will be different.
  */
 export interface AddStitchData {
+  /** The stage of the event. */
+  stage: AddStitchEventStage;
+
   /** The point where the event started. */
   start: Point;
 
@@ -22,6 +25,15 @@ export interface AddStitchData {
 
   /** Whether the stitch should be drawn in its "alternative" view. */
   alt: boolean;
+
+  /** Whether the stitch should be drawn in its previous view (i.e. in the same direction). */
+  fixed: boolean;
+}
+
+export const enum AddStitchEventStage {
+  Start = "start",
+  Continue = "continue",
+  End = "end",
 }
 
 export type RemoveStitchData = Stitch;

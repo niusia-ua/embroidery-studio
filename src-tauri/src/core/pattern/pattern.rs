@@ -18,6 +18,15 @@ pub struct Pattern {
 }
 
 impl Pattern {
+  pub fn contains_stitch(&self, stitch: &Stitch) -> bool {
+    match stitch {
+      Stitch::Full(fullstitch) => self.fullstitches.contains(fullstitch),
+      Stitch::Part(partstitch) => self.partstitches.contains(partstitch),
+      Stitch::Node(node) => self.nodes.contains(node),
+      Stitch::Line(line) => self.lines.contains(line),
+    }
+  }
+
   /// Adds a stitch to the pattern and returns any conflicts that may have arisen.
   pub fn add_stitch(&mut self, stitch: Stitch) -> StitchConflicts {
     log::trace!("Adding stitch");

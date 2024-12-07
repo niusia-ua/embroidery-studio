@@ -2,20 +2,23 @@ import { Application, Container, Graphics, GraphicsContext, Point } from "pixi.j
 import type { FederatedMouseEvent, ColorSource, ApplicationOptions, StrokeInput } from "pixi.js";
 import { Viewport } from "pixi-viewport";
 import { SpatialHash as Culler } from "pixi-cull";
+import { AddStitchEventStage, EventType } from "./events.types";
+import type { AddStitchData, RemoveStitchData } from "./events.types";
 import type { PatternProject } from "#/types/pattern/project";
 import type { Grid } from "#/types/pattern/display";
 import type {
   FullStitch,
   Line,
   Node,
+  PaletteItem,
   PartStitch,
   PatternProperties,
   SpecialStitch,
   SpecialStitchModel,
 } from "#/types/pattern/pattern";
 import { FullStitchKind, NodeKind, PartStitchDirection, PartStitchKind } from "#/types/pattern/pattern";
-import { EventType, type AddStitchData, type RemoveStitchData } from "./events.types";
 
+const SCALE_FACTOR = 10;
 const STITCH_STROKE: StrokeInput = { pixelLine: true, alignment: 1, color: 0x000000 };
 const FULL_STITCH_CONTEXT = {
   [FullStitchKind.Full]: new GraphicsContext().rect(0, 0, 1, 1).fill(0xffffff),
@@ -43,11 +46,6 @@ const PART_STITCH_CONTEXT = {
       .fill(0xffffff),
   },
 };
-const NODE_CONTEXT = {
-  [NodeKind.FrenchKnot]: new GraphicsContext().circle(0, 0, 5).stroke(STITCH_STROKE).fill(0xffffff),
-  // Set negative coordinates to rotate elements around their center.
-  [NodeKind.Bead]: new GraphicsContext().roundRect(-3.75, -5, 7.5, 10, 10).stroke(STITCH_STROKE).fill(0xffffff),
-};
 
 const DEFAULT_INIT_OPTIONS: Partial<ApplicationOptions> = {
   eventMode: "static",
@@ -62,14 +60,16 @@ export class CanvasService extends EventTarget {
   #viewport: Viewport;
   #culler = new Culler();
   #stages = {
+    // lowest
     fabric: new Graphics(),
     fullstitches: new Container(),
     partstitches: new Container(),
     grid: new Graphics(),
     specialstitches: new Container(),
     lines: new Container(),
-    lineHint: new Graphics(),
     nodes: new Container(),
+    hint: new Graphics(),
+    // highest
   };
 
   #specialStitchModelContext: GraphicsContext[] = [];
@@ -78,6 +78,12 @@ export class CanvasService extends EventTarget {
 
   constructor() {
     super();
+
+    // Configure the stages.
+    this.#stages.fabric.eventMode = "none";
+    this.#stages.grid.eventMode = "none";
+    this.#stages.hint.eventMode = "none";
+    this.#stages.hint.alpha = 0.5;
   }
 
   async init(options?: Partial<ApplicationOptions>) {
@@ -85,14 +91,11 @@ export class CanvasService extends EventTarget {
     this.#viewport = new Viewport({ events: this.#pixi.renderer.events });
 
     // Configure the viewport.
-    this.#viewport.scale.set(10);
+    this.#viewport.scale.set(SCALE_FACTOR);
     this.#viewport
       .drag({ keyToPress: ["ShiftLeft"], factor: 2 })
       .wheel()
-      .clampZoom({
-        minScale: 1,
-        maxScale: 100,
-      });
+      .clampZoom({ minScale: 1, maxScale: 100 });
 
     // Add stages to the viewport.
     for (const stage of Object.values(this.#stages)) {
@@ -112,6 +115,7 @@ export class CanvasService extends EventTarget {
     // Set up event listeners.
     this.#viewport.on("mousedown", this.#onMouseDown, this);
     this.#viewport.on("mouseup", this.#onMouseUp, this);
+    this.#viewport.on("mousemove", this.#onMouseMove, this);
   }
 
   resize({ width, height }: CanvasSize) {
@@ -134,12 +138,10 @@ export class CanvasService extends EventTarget {
     this.drawFabric(pattern.properties, pattern.fabric.color);
     this.drawGrid(pattern.properties, displaySettings.grid);
 
-    // prettier-ignore
-    for (const fullstitch of pattern.fullstitches) this.drawFullStitch(fullstitch, pattern.palette[fullstitch.palindex]!.color);
-    // prettier-ignore
-    for (const partstitch of pattern.partstitches) this.drawPartStitch(partstitch, pattern.palette[partstitch.palindex]!.color);
-    for (const line of pattern.lines) this.drawLine(line, pattern.palette[line.palindex]!.color);
-    for (const node of pattern.nodes) this.drawNode(node, pattern.palette[node.palindex]!.color);
+    for (const full of pattern.fullstitches) this.drawFullStitch(full, pattern.palette[full.palindex]!);
+    for (const part of pattern.partstitches) this.drawPartStitch(part, pattern.palette[part.palindex]!);
+    for (const line of pattern.lines) this.drawLine(line, pattern.palette[line.palindex]!);
+    for (const node of pattern.nodes) this.drawNode(node, pattern.palette[node.palindex]!);
 
     for (const spsModel of pattern.specialStitchModels) this.#prepareSpecialStitchModel(spsModel);
     for (const sps of pattern.specialstitches) this.drawSpecialStitch(sps, pattern.palette[sps.palindex]!.color);
@@ -191,11 +193,11 @@ export class CanvasService extends EventTarget {
     }
   }
 
-  drawFullStitch(fullstitch: FullStitch, color: ColorSource) {
+  drawFullStitch(fullstitch: FullStitch, palitem: PaletteItem) {
     const { x, y, kind } = fullstitch;
     const graphics = new Graphics(FULL_STITCH_CONTEXT[kind]);
     graphics.label = this.#fullStitchKey(fullstitch);
-    graphics.tint = color;
+    graphics.tint = palitem.color;
     graphics.position.set(x, y);
     graphics.on("rightup", () => {
       const detail: RemoveStitchData = { full: fullstitch };
@@ -219,12 +221,12 @@ export class CanvasService extends EventTarget {
     return [x, y, k].toString();
   }
 
-  drawPartStitch(partstitch: PartStitch, color: ColorSource) {
+  drawPartStitch(partstitch: PartStitch, palitem: PaletteItem) {
     const { x, y, direction, kind } = partstitch;
     const graphics = new Graphics(PART_STITCH_CONTEXT[kind][direction]);
     graphics.label = this.#partStitchKey(partstitch);
     graphics.position.set(x, y);
-    graphics.tint = color;
+    graphics.tint = palitem.color;
     graphics.on("rightup", () => {
       const detail: RemoveStitchData = { part: partstitch };
       this.dispatchEvent(new CustomEvent(EventType.RemoveStitch, { detail }));
@@ -248,25 +250,28 @@ export class CanvasService extends EventTarget {
     return [x, y, d, k].toString();
   }
 
-  drawLine(line: Line, color: ColorSource) {
+  drawLine(line: Line, palitem: PaletteItem, hint = false) {
     const { x, y } = line;
     const start = { x: x[0], y: y[0] };
     const end = { x: x[1], y: y[1] };
-    const graphics = new Graphics()
+    const graphics = hint ? this.#clearHint() : new Graphics();
+    graphics
+      .moveTo(start.x, start.y)
+      .lineTo(end.x, end.y)
       // Draw a line with a larger width to make it look like a border.
-      .moveTo(start.x, start.y)
-      .lineTo(end.x, end.y)
       .stroke({ width: 0.225, color: 0x000000, cap: "round" })
-      // Draw a line with a smaller width to make it look like a fill.
       .moveTo(start.x, start.y)
       .lineTo(end.x, end.y)
-      .stroke({ width: 0.2, color, cap: "round" });
-    graphics.label = this.#lineKey(line);
-    graphics.on("rightup", () => {
-      const detail: RemoveStitchData = { line };
-      this.dispatchEvent(new CustomEvent(EventType.RemoveStitch, { detail }));
-    });
-    this.#stages.lines.addChild(graphics);
+      // Draw a line with a smaller width to make it look like a fill.
+      .stroke({ width: 0.2, color: palitem.color, cap: "round" });
+    if (!hint) {
+      graphics.label = this.#lineKey(line);
+      graphics.on("rightup", () => {
+        const detail: RemoveStitchData = { line };
+        this.dispatchEvent(new CustomEvent(EventType.RemoveStitch, { detail }));
+      });
+      this.#stages.lines.addChild(graphics);
+    }
   }
 
   removeLine(line: Line) {
@@ -279,23 +284,31 @@ export class CanvasService extends EventTarget {
     return [x, y].toString();
   }
 
-  drawNode(node: Node, color: ColorSource) {
+  drawNode(node: Node, palitem: PaletteItem, hint = false) {
     const { x, y, kind, rotated } = node;
-    const graphics = new Graphics(NODE_CONTEXT[kind]);
-    graphics.label = this.#nodeKey(node);
+    const graphics = hint ? this.#clearHint() : new Graphics();
+    if (kind === NodeKind.FrenchKnot) graphics.circle(0, 0, 3);
+    else {
+      const width = mm2px(palitem.bead?.length ?? 1.5);
+      const height = mm2px(palitem.bead?.diameter ?? 2.5);
+      graphics.roundRect(0, 0, width, height, 2);
+      graphics.pivot.set(width / 2, height / 2);
+    }
+    graphics.stroke(STITCH_STROKE).fill(palitem.color);
     // Actually, we create node graphics in a larger size so that they have more points.
-    // We need to divide the size by 10 to display them in the correct size.
+    // We need to divide the size by the `SCALE_FACTOR` to display them in the correct size.
     // This is a workaround to display the graphics in the good quality.
-    graphics.height /= 10;
-    graphics.width /= 10;
-    graphics.tint = color;
+    graphics.scale.set(1 / SCALE_FACTOR);
     graphics.position.set(x, y);
     if (rotated) graphics.angle = 90;
-    graphics.on("rightup", () => {
-      const detail: RemoveStitchData = { node };
-      this.dispatchEvent(new CustomEvent(EventType.RemoveStitch, { detail }));
-    });
-    this.#stages.nodes.addChild(graphics);
+    if (!hint) {
+      graphics.label = this.#nodeKey(node);
+      graphics.on("rightup", () => {
+        const detail: RemoveStitchData = { node };
+        this.dispatchEvent(new CustomEvent(EventType.RemoveStitch, { detail }));
+      });
+      this.#stages.nodes.addChild(graphics);
+    }
   }
 
   removeNode(node: Node) {
@@ -335,10 +348,10 @@ export class CanvasService extends EventTarget {
     // Decrease the scale factor to draw the nodes with more points.
     context.scale(0.1);
     for (const { x, y } of specialStitchModel.nodes) {
-      // All nodes are french knotes.
+      // All nodes are french knotes there.
       context
         .circle(x * 10, y * 10, 5)
-        .stroke({ pixelLine: true, alignment: 0, color: 0x000000 })
+        .stroke(STITCH_STROKE)
         .fill(0xffffff);
     }
 
@@ -356,21 +369,57 @@ export class CanvasService extends EventTarget {
     this.#stages.specialstitches.addChild(graphics);
   }
 
+  #clearHint() {
+    const hint = this.#stages.hint.clear().restore();
+    hint.angle = 0;
+    hint.pivot.set(0, 0);
+    hint.scale.set(1, 1);
+    hint.position.set(0, 0);
+    return hint;
+  }
+
+  #fireAddStitchEvent(e: FederatedMouseEvent, stage: AddStitchEventStage) {
+    const point = this.#viewport.toWorld(e.global);
+    if (this.#pointIsOutside(point)) return;
+    const detail: AddStitchData = {
+      stage,
+      start: this.#startPoint!,
+      end: point,
+      alt: e.ctrlKey,
+      fixed: e.ctrlKey,
+    };
+    this.dispatchEvent(new CustomEvent(EventType.AddStitch, { detail }));
+  }
+
   #onMouseDown(e: FederatedMouseEvent) {
+    if (e.shiftKey) return;
     const point = this.#viewport.toWorld(e.global);
     this.#startPoint = this.#pointIsOutside(point) ? undefined : point;
+    if (this.#startPoint === undefined) {
+      this.#clearHint();
+      return;
+    }
+    this.#fireAddStitchEvent(e, AddStitchEventStage.Start);
   }
 
   #onMouseUp(e: FederatedMouseEvent) {
     // If the start point is not set or the shift key is pressed, do nothing.
     // Shift key is used to pan the viewport.
-    if (!this.#startPoint || e.shiftKey) return;
-    const point = this.#viewport.toWorld(e.global);
-    if (this.#pointIsOutside(point)) return;
-    const [start, end] = orderPoints(this.#startPoint, point);
-    const detail: AddStitchData = { start, end, alt: e.ctrlKey };
-    this.dispatchEvent(new CustomEvent(EventType.AddStitch, { detail }));
+    if (e.shiftKey || this.#startPoint === undefined) {
+      this.#clearHint();
+      return;
+    }
+    this.#fireAddStitchEvent(e, AddStitchEventStage.End);
     this.#startPoint = undefined;
+    this.#clearHint();
+  }
+
+  #onMouseMove(e: FederatedMouseEvent) {
+    if (e.shiftKey || this.#startPoint === undefined) {
+      this.#clearHint();
+      return;
+    }
+    this.#fireAddStitchEvent(e, AddStitchEventStage.Continue);
   }
 
   #pointIsOutside({ x, y }: Point) {
@@ -379,14 +428,8 @@ export class CanvasService extends EventTarget {
   }
 }
 
-/** Orders points so that is no way to draw two lines with the same coordinates. */
-function orderPoints(start: Point, end: Point): [Point, Point] {
-  const x1 = Math.trunc(start.x);
-  const y1 = Math.trunc(start.y);
-  const x2 = Math.trunc(end.x);
-  const y2 = Math.trunc(end.y);
-  if (y1 === y2) return x1 < x2 ? [start, end] : [end, start];
-  else return y1 < y2 ? [start, end] : [end, start];
+function mm2px(mm: number) {
+  return mm * 3.7795275591;
 }
 
 export interface CanvasSize {

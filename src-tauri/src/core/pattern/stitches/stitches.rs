@@ -126,6 +126,19 @@ impl<T: Ord> Stitches<T> {
     self.inner.len()
   }
 
+  /// Returns `true` if the set contains a stitch.
+  pub fn contains(&self, stitch: &T) -> bool {
+    // We need to use the `get` method to get the actual stitch.
+    // Then we need to compare the actual stitch with the passed stitch.
+    // This is because the indexing is done only by the fields that are used for ordering (coordinates, kind, etc.).
+    // But we need to compare all the other values (mainly, palindex).
+    if let Some(contained) = self.inner.get(stitch) {
+      contained == stitch
+    } else {
+      false
+    }
+  }
+
   /// Inserts a stitch into the set, replacing the existing one.
   /// Returns the replaced stitch if any.
   pub fn insert(&mut self, stitch: T) -> Option<T> {

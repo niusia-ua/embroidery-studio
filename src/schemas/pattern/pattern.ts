@@ -31,7 +31,7 @@ const BlendSchema = BorshSchema.Struct({
 });
 
 const BeadSchema = BorshSchema.Struct({
-  lenght: BorshSchema.f32,
+  length: BorshSchema.f32,
   diameter: BorshSchema.f32,
 });
 
