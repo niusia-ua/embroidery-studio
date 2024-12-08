@@ -1,6 +1,6 @@
 import { reactive } from "vue";
 import { defineStore } from "pinia";
-import { StitchKind } from "#/types/pattern/pattern";
+import { StitchKind } from "#/schemas/pattern/pattern";
 
 interface OpenedPattern {
   title: string;

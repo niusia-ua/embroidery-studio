@@ -18,6 +18,7 @@ pub struct Pattern {
 }
 
 impl Pattern {
+  /// Check if the pattern contains a stitch.
   pub fn contains_stitch(&self, stitch: &Stitch) -> bool {
     match stitch {
       Stitch::Full(fullstitch) => self.fullstitches.contains(fullstitch),

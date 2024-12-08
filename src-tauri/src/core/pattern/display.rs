@@ -331,6 +331,7 @@ pub struct DefaultStitchStrands {
   pub quarter: u16,
   pub back: u16,
   pub straight: u16,
+  pub french_knot: u16,
   pub special: u16,
 }
 
@@ -343,6 +344,7 @@ impl Default for DefaultStitchStrands {
       quarter: 2,
       back: 1,
       straight: 1,
+      french_knot: 2,
       special: 2,
     }
   }

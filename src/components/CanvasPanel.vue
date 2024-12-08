@@ -17,9 +17,17 @@
   import { useAppStateStore } from "#/stores/state";
   import * as stitchesApi from "#/api/stitches";
   import * as historyApi from "#/api/history";
-  import { PartStitchDirection, StitchKind } from "#/types/pattern/pattern";
-  import type { FullStitch, Line, Node, PartStitch, Stitch } from "#/types/pattern/pattern";
-  import type { PatternProject } from "#/types/pattern/project";
+  import {
+    PartStitchDirection,
+    StitchKind,
+    FullStitch,
+    LineStitch,
+    NodeStitch,
+    PartStitch,
+    type Stitch,
+  } from "#/schemas/pattern/pattern";
+  import { PatternProject } from "#/schemas/pattern/project";
+  import type {} from "#/types/pattern/pattern";
   import type { Point } from "pixi.js";
 
   interface CanvasPanelProps {
@@ -91,7 +99,7 @@
       case StitchKind.Back:
       case StitchKind.Straight: {
         const [_start, _end] = orderPoints(start, end);
-        const line: Line = {
+        const line: LineStitch = {
           x: [adjustStitchCoordinate(_start.x, tool), adjustStitchCoordinate(_end.x, tool)],
           y: [adjustStitchCoordinate(_start.y, tool), adjustStitchCoordinate(_end.y, tool)],
           palindex,
@@ -104,7 +112,7 @@
 
       case StitchKind.FrenchKnot:
       case StitchKind.Bead: {
-        const node: Node = {
+        const node: NodeStitch = {
           x,
           y,
           palindex,
@@ -158,8 +166,8 @@
   export interface StitchesRemoveManyPayload {
     fullstitches: FullStitch[];
     partstitches: PartStitch[];
-    line?: Line;
-    node?: Node;
+    line?: LineStitch;
+    node?: NodeStitch;
   }
 
   const appWindow = getCurrentWindow();

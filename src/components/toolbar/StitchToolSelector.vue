@@ -12,7 +12,7 @@
   import { ref } from "vue";
   import Select from "primevue/select";
   import { useAppStateStore } from "#/stores/state";
-  import { StitchKind } from "#/types/pattern/pattern";
+  import { StitchKind } from "#/schemas/pattern/pattern";
 
   const appState = useAppStateStore();
   const tools = ref([

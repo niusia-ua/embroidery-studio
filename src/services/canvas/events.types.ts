@@ -1,5 +1,5 @@
 import type { Point } from "pixi.js";
-import type { Stitch } from "#/types/pattern/pattern";
+import type { Stitch } from "#/schemas/pattern/pattern";
 
 export const enum EventType {
   AddStitch = "add_stitch",

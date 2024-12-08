@@ -1,113 +1,382 @@
-import { BorshSchema } from "borsher";
+import { field, fixedArray, option, vec } from "@dao-xyz/borsh";
 
-const SymbolsSchema = BorshSchema.Struct({
-  full: BorshSchema.Option(BorshSchema.u16),
-  petite: BorshSchema.Option(BorshSchema.u16),
-  half: BorshSchema.Option(BorshSchema.u16),
-  quarter: BorshSchema.Option(BorshSchema.u16),
-  french_knot: BorshSchema.Option(BorshSchema.u16),
-  bead: BorshSchema.Option(BorshSchema.u16),
-});
+export class Symbols {
+  @field({ type: option("u16") })
+  full?: number;
 
-const SymbolSettingsSchema = BorshSchema.Struct({
-  screenSpacing: BorshSchema.Array(BorshSchema.u16, 2),
-  printerSpacing: BorshSchema.Array(BorshSchema.u16, 2),
-  scaleUsingMaximumFontWidth: BorshSchema.bool,
-  scaleUsingFontHeight: BorshSchema.bool,
-  stitchSize: BorshSchema.u16,
-  smallStitchSize: BorshSchema.u16,
-  drawSymbolsOverBackstitches: BorshSchema.bool,
-  showStitchColor: BorshSchema.bool,
-  useLargeHalfStitchSymbol: BorshSchema.bool,
-  useTrianglesBehindQuarterStitches: BorshSchema.bool,
-});
+  @field({ type: option("u16") })
+  petite?: number;
 
-const SymbolFormatSchema = BorshSchema.Struct({
-  useAltBgColor: BorshSchema.bool,
-  bgColor: BorshSchema.String,
-  fgColor: BorshSchema.String,
-});
+  @field({ type: option("u16") })
+  half?: number;
 
-const LineFormatSchema = BorshSchema.Struct({
-  useAltColor: BorshSchema.bool,
-  color: BorshSchema.String,
-  style: BorshSchema.u8,
-  thickness: BorshSchema.f32,
-});
+  @field({ type: option("u16") })
+  quarter?: number;
 
-const NodeFormatSchema = BorshSchema.Struct({
-  useDotStyle: BorshSchema.bool,
-  useAltColor: BorshSchema.bool,
-  color: BorshSchema.String,
-  diameter: BorshSchema.f32,
-});
+  @field({ type: option("u16") })
+  frenchKnot?: number;
 
-const FontFormatSchema = BorshSchema.Struct({
-  fontName: BorshSchema.Option(BorshSchema.String),
-  bold: BorshSchema.bool,
-  italic: BorshSchema.bool,
-  stitchSize: BorshSchema.u16,
-  smallStitchSize: BorshSchema.u16,
-});
+  @field({ type: option("u16") })
+  bead?: number;
 
-const FormatsSchema = BorshSchema.Struct({
-  symbol: SymbolFormatSchema,
-  back: LineFormatSchema,
-  straight: LineFormatSchema,
-  french: NodeFormatSchema,
-  bead: NodeFormatSchema,
-  special: LineFormatSchema,
-  font: FontFormatSchema,
-});
+  constructor(data: Symbols) {
+    this.full = data.full;
+    this.petite = data.petite;
+    this.half = data.half;
+    this.quarter = data.quarter;
+    this.frenchKnot = data.frenchKnot;
+    this.bead = data.bead;
+  }
+}
 
-const GridLineStyleSchema = BorshSchema.Struct({
-  color: BorshSchema.String,
-  thickness: BorshSchema.f32,
-});
+export class SymbolSettings {
+  @field({ type: fixedArray("u16", 2) })
+  screenSpacing: [number, number];
 
-const GridSchema = BorshSchema.Struct({
-  majorLineEveryStitches: BorshSchema.u16,
-  minorScreenLines: GridLineStyleSchema,
-  majorScreenLines: GridLineStyleSchema,
-  minorPrinterLines: GridLineStyleSchema,
-  majorPrinterLines: GridLineStyleSchema,
-});
+  @field({ type: fixedArray("u16", 2) })
+  printerSpacing: [number, number];
 
-const StitchOutlineSchema = BorshSchema.Struct({
-  color: BorshSchema.Option(BorshSchema.String),
-  colorPercentage: BorshSchema.u16,
-  thickness: BorshSchema.f32,
-});
+  @field({ type: "bool" })
+  scaleUsingMaximumFontWidth: boolean;
 
-const DefaultStitchStrandsSchema = BorshSchema.Struct({
-  full: BorshSchema.u16,
-  petite: BorshSchema.u16,
-  half: BorshSchema.u16,
-  quarter: BorshSchema.u16,
-  back: BorshSchema.u16,
-  straight: BorshSchema.u16,
-  special: BorshSchema.u16,
-});
+  @field({ type: "bool" })
+  scaleUsingFontHeight: boolean;
 
-const StitchSettingsSchema = BorshSchema.Struct({
-  defaultStrands: DefaultStitchStrandsSchema,
-  displayThickness: BorshSchema.Array(BorshSchema.f32, 13),
-});
+  @field({ type: "u16" })
+  stitchSize: number;
 
-export const DisplaySettingsSchema = BorshSchema.Struct({
-  defaultStitchFont: BorshSchema.String,
-  symbols: BorshSchema.Vec(SymbolsSchema),
-  symbolSettings: SymbolSettingsSchema,
-  formats: BorshSchema.Vec(FormatsSchema),
-  grid: GridSchema,
-  view: BorshSchema.u8,
-  zoom: BorshSchema.u16,
-  showGrid: BorshSchema.bool,
-  showRulers: BorshSchema.bool,
-  showCenteringMarks: BorshSchema.bool,
-  showFabricColorsWithSymbols: BorshSchema.bool,
-  gapsBetweenStitches: BorshSchema.bool,
-  outlinedStitches: BorshSchema.bool,
-  stitchOutline: StitchOutlineSchema,
-  stitchSettings: StitchSettingsSchema,
-});
+  @field({ type: "u16" })
+  smallStitchSize: number;
+
+  @field({ type: "bool" })
+  drawSymbolsOverBackstitches: boolean;
+
+  @field({ type: "bool" })
+  showStitchColor: boolean;
+
+  @field({ type: "bool" })
+  useLargeHalfStitchSymbol: boolean;
+
+  @field({ type: "bool" })
+  useTrianglesBehindQuarterStitches: boolean;
+
+  constructor(data: SymbolSettings) {
+    this.screenSpacing = data.screenSpacing;
+    this.printerSpacing = data.printerSpacing;
+    this.scaleUsingMaximumFontWidth = data.scaleUsingMaximumFontWidth;
+    this.scaleUsingFontHeight = data.scaleUsingFontHeight;
+    this.stitchSize = data.stitchSize;
+    this.smallStitchSize = data.smallStitchSize;
+    this.drawSymbolsOverBackstitches = data.drawSymbolsOverBackstitches;
+    this.showStitchColor = data.showStitchColor;
+    this.useLargeHalfStitchSymbol = data.useLargeHalfStitchSymbol;
+    this.useTrianglesBehindQuarterStitches = data.useTrianglesBehindQuarterStitches;
+  }
+}
+
+export class SymbolFormat {
+  @field({ type: "bool" })
+  useAltBgColor: boolean;
+
+  @field({ type: "string" })
+  bgColor: string;
+
+  @field({ type: "string" })
+  fgColor: string;
+
+  constructor(data: SymbolFormat) {
+    this.useAltBgColor = data.useAltBgColor;
+    this.bgColor = data.bgColor;
+    this.fgColor = data.fgColor;
+  }
+}
+
+export class LineStitchFormat {
+  @field({ type: "bool" })
+  useAltColor: boolean;
+
+  @field({ type: "string" })
+  color: string;
+
+  @field({ type: "u8" })
+  style: LineStitchStyle;
+
+  @field({ type: "f32" })
+  thickness: number;
+
+  constructor(data: LineStitchFormat) {
+    this.useAltColor = data.useAltColor;
+    this.color = data.color;
+    this.style = data.style;
+    this.thickness = data.thickness;
+  }
+}
+
+export class NodeStitchFormat {
+  @field({ type: "bool" })
+  useDotStyle: boolean;
+
+  @field({ type: "bool" })
+  useAltColor: boolean;
+
+  @field({ type: "string" })
+  color: string;
+
+  @field({ type: "f32" })
+  diameter: number;
+
+  constructor(data: NodeStitchFormat) {
+    this.useDotStyle = data.useDotStyle;
+    this.useAltColor = data.useAltColor;
+    this.color = data.color;
+    this.diameter = data.diameter;
+  }
+}
+
+export class FontFormat {
+  @field({ type: option("string") })
+  fontName?: string;
+
+  @field({ type: "bool" })
+  bold: boolean;
+
+  @field({ type: "bool" })
+  italic: boolean;
+
+  @field({ type: "u16" })
+  stitchSize: number;
+
+  @field({ type: "u16" })
+  smallStitchSize: number;
+
+  constructor(data: FontFormat) {
+    this.fontName = data.fontName;
+    this.bold = data.bold;
+    this.italic = data.italic;
+    this.stitchSize = data.stitchSize;
+    this.smallStitchSize = data.smallStitchSize;
+  }
+}
+
+export class Formats {
+  @field({ type: SymbolFormat })
+  symbol: SymbolFormat;
+
+  @field({ type: LineStitchFormat })
+  backstitch: LineStitchFormat;
+
+  @field({ type: LineStitchFormat })
+  straightstitch: LineStitchFormat;
+
+  @field({ type: NodeStitchFormat })
+  frenchKnot: NodeStitchFormat;
+
+  @field({ type: NodeStitchFormat })
+  bead: NodeStitchFormat;
+
+  @field({ type: LineStitchFormat })
+  specialstitch: LineStitchFormat;
+
+  @field({ type: FontFormat })
+  font: FontFormat;
+
+  constructor(data: Formats) {
+    this.symbol = data.symbol;
+    this.backstitch = data.backstitch;
+    this.straightstitch = data.straightstitch;
+    this.frenchKnot = data.frenchKnot;
+    this.bead = data.bead;
+    this.specialstitch = data.specialstitch;
+    this.font = data.font;
+  }
+}
+
+export class GridLineStyle {
+  @field({ type: "string" })
+  color: string;
+
+  @field({ type: "f32" })
+  thickness: number;
+
+  constructor(data: GridLineStyle) {
+    this.color = data.color;
+    this.thickness = data.thickness;
+  }
+}
+
+export class Grid {
+  @field({ type: "u16" })
+  majorLineEveryStitches: number;
+
+  @field({ type: GridLineStyle })
+  minorScreenLines: GridLineStyle;
+
+  @field({ type: GridLineStyle })
+  majorScreenLines: GridLineStyle;
+
+  @field({ type: GridLineStyle })
+  minorPrinterLines: GridLineStyle;
+
+  @field({ type: GridLineStyle })
+  majorPrinterLines: GridLineStyle;
+
+  constructor(data: Grid) {
+    this.majorLineEveryStitches = data.majorLineEveryStitches;
+    this.minorScreenLines = data.minorScreenLines;
+    this.majorScreenLines = data.majorScreenLines;
+    this.minorPrinterLines = data.minorPrinterLines;
+    this.majorPrinterLines = data.majorPrinterLines;
+  }
+}
+
+export class StitchOutline {
+  @field({ type: option("string") })
+  color?: string;
+
+  @field({ type: "u16" })
+  colorPercentage: number;
+
+  @field({ type: "f32" })
+  thickness: number;
+
+  constructor(data: StitchOutline) {
+    this.color = data.color;
+    this.colorPercentage = data.colorPercentage;
+    this.thickness = data.thickness;
+  }
+}
+
+export class DefaultStitchStrands {
+  @field({ type: "u16" })
+  full: number;
+
+  @field({ type: "u16" })
+  petite: number;
+
+  @field({ type: "u16" })
+  half: number;
+
+  @field({ type: "u16" })
+  quarter: number;
+
+  @field({ type: "u16" })
+  back: number;
+
+  @field({ type: "u16" })
+  straight: number;
+
+  @field({ type: "u16" })
+  frenchKnot: number;
+
+  @field({ type: "u16" })
+  special: number;
+
+  constructor(data: DefaultStitchStrands) {
+    this.full = data.full;
+    this.petite = data.petite;
+    this.half = data.half;
+    this.quarter = data.quarter;
+    this.back = data.back;
+    this.straight = data.straight;
+    this.frenchKnot = data.frenchKnot;
+    this.special = data.special;
+  }
+}
+
+export class StitchSettings {
+  @field({ type: DefaultStitchStrands })
+  defaultStrands: DefaultStitchStrands;
+
+  @field({ type: fixedArray("f32", 13) })
+  displayThickness: number[];
+
+  constructor(data: StitchSettings) {
+    this.defaultStrands = data.defaultStrands;
+    this.displayThickness = data.displayThickness;
+  }
+}
+
+export class DisplaySettings {
+  @field({ type: "string" })
+  defaultStitchFont: string;
+
+  @field({ type: vec(Symbols) })
+  symbols: Symbols[];
+
+  @field({ type: SymbolSettings })
+  symbolSettings: SymbolSettings;
+
+  @field({ type: vec(Formats) })
+  formats: Formats[];
+
+  @field({ type: Grid })
+  grid: Grid;
+
+  @field({ type: "u8" })
+  view: number;
+
+  @field({ type: "u16" })
+  zoom: number;
+
+  @field({ type: "bool" })
+  showGrid: boolean;
+
+  @field({ type: "bool" })
+  showRulers: boolean;
+
+  @field({ type: "bool" })
+  showCenteringMarks: boolean;
+
+  @field({ type: "bool" })
+  showFabricColorsWithSymbols: boolean;
+
+  @field({ type: "bool" })
+  gapsBetweenStitches: boolean;
+
+  @field({ type: "bool" })
+  outlinedStitches: boolean;
+
+  @field({ type: StitchOutline })
+  stitchOutline: StitchOutline;
+
+  @field({ type: StitchSettings })
+  stitchSettings: StitchSettings;
+
+  constructor(data: DisplaySettings) {
+    this.defaultStitchFont = data.defaultStitchFont;
+    this.symbols = data.symbols;
+    this.symbolSettings = data.symbolSettings;
+    this.formats = data.formats;
+    this.grid = data.grid;
+    this.view = data.view;
+    this.zoom = data.zoom;
+    this.showGrid = data.showGrid;
+    this.showRulers = data.showRulers;
+    this.showCenteringMarks = data.showCenteringMarks;
+    this.showFabricColorsWithSymbols = data.showFabricColorsWithSymbols;
+    this.gapsBetweenStitches = data.gapsBetweenStitches;
+    this.outlinedStitches = data.outlinedStitches;
+    this.stitchOutline = data.stitchOutline;
+    this.stitchSettings = data.stitchSettings;
+  }
+}
+
+export const enum LineStitchStyle {
+  Solid = 0,
+  Barred = 1,
+  Dotted = 2,
+  ChainDotted = 3,
+  Dashed = 4,
+  Outlined = 5,
+  Zebra = 6,
+  ZigZag = 7,
+  Morse = 8,
+}
+
+export const enum View {
+  Stitches = 0,
+  Symbols = 1,
+  Solid = 2,
+  Information = 3,
+  MachineEmbInfo = 4,
+}

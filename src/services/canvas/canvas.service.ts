@@ -4,19 +4,19 @@ import { Viewport } from "pixi-viewport";
 import { SpatialHash as Culler } from "pixi-cull";
 import { AddStitchEventStage, EventType } from "./events.types";
 import type { AddStitchData, RemoveStitchData } from "./events.types";
-import type { PatternProject } from "#/types/pattern/project";
-import type { Grid } from "#/types/pattern/display";
+import type { PatternProject } from "#/schemas/pattern/project";
+import type { Grid } from "#/schemas/pattern/display";
 import type {
   FullStitch,
-  Line,
-  Node,
+  LineStitch,
+  NodeStitch,
   PaletteItem,
   PartStitch,
   PatternProperties,
   SpecialStitch,
   SpecialStitchModel,
-} from "#/types/pattern/pattern";
-import { FullStitchKind, NodeKind, PartStitchDirection, PartStitchKind } from "#/types/pattern/pattern";
+} from "#/schemas/pattern/pattern";
+import { FullStitchKind, NodeStitchKind, PartStitchDirection, PartStitchKind } from "#/schemas/pattern/pattern";
 
 const SCALE_FACTOR = 10;
 const STITCH_STROKE: StrokeInput = { pixelLine: true, alignment: 1, color: 0x000000 };
@@ -250,7 +250,7 @@ export class CanvasService extends EventTarget {
     return [x, y, d, k].toString();
   }
 
-  drawLine(line: Line, palitem: PaletteItem, hint = false) {
+  drawLine(line: LineStitch, palitem: PaletteItem, hint = false) {
     const { x, y } = line;
     const start = { x: x[0], y: y[0] };
     const end = { x: x[1], y: y[1] };
@@ -274,20 +274,20 @@ export class CanvasService extends EventTarget {
     }
   }
 
-  removeLine(line: Line) {
+  removeLine(line: LineStitch) {
     const key = this.#lineKey(line);
     const graphics = this.#stages.lines.getChildByName(key);
     if (graphics) this.#stages.lines.removeChild(graphics);
   }
 
-  #lineKey({ x, y }: Line) {
+  #lineKey({ x, y }: LineStitch) {
     return [x, y].toString();
   }
 
-  drawNode(node: Node, palitem: PaletteItem, hint = false) {
+  drawNode(node: NodeStitch, palitem: PaletteItem, hint = false) {
     const { x, y, kind, rotated } = node;
     const graphics = hint ? this.#clearHint() : new Graphics();
-    if (kind === NodeKind.FrenchKnot) graphics.circle(0, 0, 3);
+    if (kind === NodeStitchKind.FrenchKnot) graphics.circle(0, 0, 3);
     else {
       const width = mm2px(palitem.bead?.length ?? 1.5);
       const height = mm2px(palitem.bead?.diameter ?? 2.5);
@@ -311,13 +311,13 @@ export class CanvasService extends EventTarget {
     }
   }
 
-  removeNode(node: Node) {
+  removeNode(node: NodeStitch) {
     const key = this.#nodeKey(node);
     const graphics = this.#stages.nodes.getChildByName(key);
     if (graphics) this.#stages.nodes.removeChild(graphics);
   }
 
-  #nodeKey({ x, y }: Node) {
+  #nodeKey({ x, y }: NodeStitch) {
     return [x, y].toString();
   }
 
