@@ -163,3 +163,5 @@ export const enum StitchKind {
   FrenchKnot = 6,
   Bead = 7,
 }
+
+export type Stitch = { full: FullStitch } | { part: PartStitch } | { node: Node } | { line: Line };
