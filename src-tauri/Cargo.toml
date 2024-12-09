@@ -14,9 +14,9 @@ tauri-build = { version = "2.0.3", features = [] }
 [dependencies]
 # Tauri
 tauri = { version = "2.1.1", features = ["test"] }
-tauri-plugin-dialog = "2.0.3"
+tauri-plugin-dialog = "2.0.5"
 tauri-plugin-fs = "2.0.3"
-tauri-plugin-log = "2.0.2"
+tauri-plugin-log = "2.0.4"
 
 
 # Parsing
@@ -34,7 +34,7 @@ serde_repr = "0.1.19"
 borsh = { version = "1.5.3", features = ["derive"] }
 
 # Error handling
-anyhow = "1.0.93"
+anyhow = "1.0.94"
 
 # Logging
 log = "0.4.22"
