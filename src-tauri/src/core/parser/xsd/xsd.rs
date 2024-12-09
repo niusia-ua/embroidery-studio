@@ -547,6 +547,7 @@ fn read_stitch_settings<R: Read + Seek>(reader: &mut R) -> Result<(StitchSetting
       back: reader.read_u16::<LittleEndian>()?,
       petite: reader.read_u16::<LittleEndian>()?,
       special: reader.read_u16::<LittleEndian>()?,
+      french_knot: DefaultStitchStrands::default().french_knot,
       straight: reader.read_u16::<LittleEndian>()?,
     },
     display_thickness: {

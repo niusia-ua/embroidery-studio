@@ -1,7 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { FullStitch, Line, Node, PartStitch } from "#/types/pattern/pattern";
-
-export type Stitch = { full: FullStitch } | { part: PartStitch } | { node: Node } | { line: Line };
+import type { Stitch } from "#/schemas/pattern/pattern";
 
 export const addStitch = (patternKey: string, stitch: Stitch) => invoke<void>("add_stitch", { patternKey, stitch });
 export const removeStitch = (patternKey: string, stitch: Stitch) =>
