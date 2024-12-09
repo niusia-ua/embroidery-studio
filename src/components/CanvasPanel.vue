@@ -11,6 +11,7 @@
   import { onMounted, onUnmounted, useTemplateRef, watch } from "vue";
   import { useMagicKeys, whenever, useThrottleFn } from "@vueuse/core";
   import { vElementSize } from "@vueuse/components";
+  import { Point } from "pixi.js";
   import { CanvasService, type CanvasSize } from "#/services/canvas/canvas.service";
   import { AddStitchEventStage, EventType } from "#/services/canvas/events.types";
   import type { AddStitchData, RemoveStitchData } from "#/services/canvas/events.types";
@@ -28,7 +29,6 @@
   } from "#/schemas/pattern/pattern";
   import { PatternProject } from "#/schemas/pattern/project";
   import type {} from "#/types/pattern/pattern";
-  import type { Point } from "pixi.js";
 
   interface CanvasPanelProps {
     patproj: PatternProject;
@@ -58,19 +58,17 @@
     // A start point is needed to draw the lines.
     // An end point is needed to draw all the other kinds of stitches (in addition to lines).
     const { stage, start, end, alt, fixed }: AddStitchData = (e as CustomEvent).detail;
-    const x = adjustStitchCoordinate(end.x, tool);
-    const y = adjustStitchCoordinate(end.y, tool);
+    const { x, y } = adjustStitchCoordinate(end, tool);
 
     switch (tool) {
       case StitchKind.Full:
       case StitchKind.Petite: {
         const full: FullStitch = { x, y, palindex, kind };
-        if (fixed && prevStitchState && "full" in prevStitchState) {
+        prevStitchState ??= { full };
+        if (fixed && "full" in prevStitchState) {
           full.x = Math.trunc(x) + (prevStitchState.full.x - Math.trunc(prevStitchState.full.x));
           full.y = Math.trunc(y) + (prevStitchState.full.y - Math.trunc(prevStitchState.full.y));
         }
-        if (prevStitchState && stage !== AddStitchEventStage.Continue) prevStitchState = undefined;
-        else prevStitchState ??= { full };
         await stitchesApi.addStitch(patternKey, { full });
         break;
       }
@@ -83,28 +81,37 @@
             ? PartStitchDirection.Forward
             : PartStitchDirection.Backward;
         const part: PartStitch = { x, y, palindex, kind, direction };
-        if (fixed && prevStitchState && "part" in prevStitchState) {
+        prevStitchState ??= { part };
+        if (fixed && "part" in prevStitchState) {
           part.direction = prevStitchState.part.direction;
           if (tool === StitchKind.Quarter) {
             part.x = Math.trunc(x) + (prevStitchState.part.x - Math.trunc(prevStitchState.part.x));
             part.y = Math.trunc(y) + (prevStitchState.part.y - Math.trunc(prevStitchState.part.y));
           }
         }
-        if (prevStitchState && stage !== AddStitchEventStage.Continue) prevStitchState = undefined;
-        else prevStitchState ??= { part };
         await stitchesApi.addStitch(patternKey, { part });
         break;
       }
 
-      case StitchKind.Back:
+      case StitchKind.Back: {
+        const [_start, _end] = [adjustStitchCoordinate(start, tool), adjustStitchCoordinate(end, tool)];
+        if (_start.equals(new Point()) || _end.equals(new Point())) return;
+        const line: LineStitch = { x: [_start.x, _end.x], y: [_start.y, _end.y], palindex, kind };
+        if (stage === AddStitchEventStage.Continue && prevStitchState && "line" in prevStitchState) {
+          line.x[0] = prevStitchState.line.x[1];
+          line.y[0] = prevStitchState.line.y[1];
+        }
+        if (line.x[0] === line.x[1] && line.y[0] === line.y[1]) return;
+        prevStitchState = { line };
+        if (stage === AddStitchEventStage.Continue) await stitchesApi.addStitch(patternKey, { line });
+        break;
+      }
+
       case StitchKind.Straight: {
         const [_start, _end] = orderPoints(start, end);
-        const line: LineStitch = {
-          x: [adjustStitchCoordinate(_start.x, tool), adjustStitchCoordinate(_end.x, tool)],
-          y: [adjustStitchCoordinate(_start.y, tool), adjustStitchCoordinate(_end.y, tool)],
-          palindex,
-          kind,
-        };
+        const { x: x1, y: y1 } = adjustStitchCoordinate(_start, tool);
+        const { x: x2, y: y2 } = adjustStitchCoordinate(_end, tool);
+        const line: LineStitch = { x: [x1, x2], y: [y1, y2], palindex, kind };
         if (stage === AddStitchEventStage.End) await stitchesApi.addStitch(patternKey, { line });
         else canvasService.drawLine(line, props.patproj.pattern.palette[palindex]!, true);
         break;
@@ -124,6 +131,8 @@
         break;
       }
     }
+
+    if (stage === AddStitchEventStage.End) prevStitchState = undefined;
   });
 
   canvasService.addEventListener(EventType.RemoveStitch, async (e) => {
@@ -132,35 +141,40 @@
     await stitchesApi.removeStitch(patternKey, data);
   });
 
-  function adjustStitchCoordinate(value: number, tool: StitchKind): number {
-    const int = Math.trunc(value);
-    const frac = value - int;
+  function adjustStitchCoordinate({ x, y }: Point, tool: StitchKind): Point {
+    const [intX, intY] = [Math.trunc(x), Math.trunc(y)];
+    const [fracX, fracY] = [x - intX, y - intY];
     switch (tool) {
       case StitchKind.Full:
       case StitchKind.Half: {
-        return int;
+        return new Point(intX, intY);
       }
       case StitchKind.Petite:
       case StitchKind.Quarter: {
-        return frac > 0.5 ? int + 0.5 : int;
+        return new Point(fracX > 0.5 ? intX + 0.5 : intX, fracY > 0.5 ? intY + 0.5 : intY);
       }
-      case StitchKind.Back:
+      case StitchKind.Back: {
+        if (fracX <= 0.25 && fracY <= 0.25) return new Point(intX, intY); // top-left
+        if (fracX >= 0.75 && fracY <= 0.25) return new Point(intX + 1, intY); // top-right
+        if (fracX <= 0.25 && fracY >= 0.75) return new Point(intX, intY + 1); // bottom-left
+        if (fracX >= 0.75 && fracY >= 0.75) return new Point(intX + 1, intY + 1); // bottom-right
+        return new Point(); // to not handle it
+      }
       case StitchKind.Straight:
       case StitchKind.FrenchKnot:
       case StitchKind.Bead: {
-        return frac > 0.5 ? int + 1 : frac > 0.25 ? int + 0.5 : int;
+        return new Point(
+          fracX > 0.5 ? intX + 1 : fracX > 0.25 ? intX + 0.5 : intX,
+          fracY > 0.5 ? intY + 1 : fracY > 0.25 ? intY + 0.5 : intY,
+        );
       }
     }
   }
 
   /** Orders points so that is no way to draw two lines with the same coordinates. */
   function orderPoints(start: Point, end: Point): [Point, Point] {
-    const x1 = Math.trunc(start.x);
-    const y1 = Math.trunc(start.y);
-    const x2 = Math.trunc(end.x);
-    const y2 = Math.trunc(end.y);
-    if (y1 === y2) return x1 < x2 ? [start, end] : [end, start];
-    else return y1 < y2 ? [start, end] : [end, start];
+    if (start.y < end.y || (start.y === end.y && start.x < end.x)) return [start, end];
+    else return [end, start];
   }
 
   export interface StitchesRemoveManyPayload {
