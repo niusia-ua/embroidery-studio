@@ -1,27 +1,83 @@
-import { BorshSchema } from "borsher";
+import { field } from "@dao-xyz/borsh";
+export class Font {
+  @field({ type: "string" })
+  name: string;
 
-const FontSchema = BorshSchema.Struct({
-  name: BorshSchema.String,
-  size: BorshSchema.u16,
-  weight: BorshSchema.u16,
-  italic: BorshSchema.bool,
-});
+  @field({ type: "u16" })
+  size: number;
 
-const PageMarginsSchema = BorshSchema.Struct({
-  left: BorshSchema.f32,
-  right: BorshSchema.f32,
-  top: BorshSchema.f32,
-  bottom: BorshSchema.f32,
-  header: BorshSchema.f32,
-  footer: BorshSchema.f32,
-});
+  @field({ type: "u16" })
+  weight: number;
 
-export const PrintSettingsSchema = BorshSchema.Struct({
-  font: FontSchema,
-  header: BorshSchema.String,
-  footer: BorshSchema.String,
-  margins: PageMarginsSchema,
-  show_page_numbers: BorshSchema.bool,
-  show_adjacent_page_numbers: BorshSchema.bool,
-  center_chart_on_pages: BorshSchema.bool,
-});
+  @field({ type: "bool" })
+  italic: boolean;
+
+  constructor(data: Font) {
+    this.name = data.name;
+    this.size = data.size;
+    this.weight = data.weight;
+    this.italic = data.italic;
+  }
+}
+
+export class PageMargins {
+  @field({ type: "f32" })
+  left: number;
+
+  @field({ type: "f32" })
+  right: number;
+
+  @field({ type: "f32" })
+  top: number;
+
+  @field({ type: "f32" })
+  bottom: number;
+
+  @field({ type: "f32" })
+  header: number;
+
+  @field({ type: "f32" })
+  footer: number;
+
+  constructor(data: PageMargins) {
+    this.left = data.left;
+    this.right = data.right;
+    this.top = data.top;
+    this.bottom = data.bottom;
+    this.header = data.header;
+    this.footer = data.footer;
+  }
+}
+
+export class PrintSettings {
+  @field({ type: Font })
+  font: Font;
+
+  @field({ type: "string" })
+  header: string;
+
+  @field({ type: "string" })
+  footer: string;
+
+  @field({ type: PageMargins })
+  margins: PageMargins;
+
+  @field({ type: "bool" })
+  showPageNumbers: boolean;
+
+  @field({ type: "bool" })
+  showAdjacentPageNumbers: boolean;
+
+  @field({ type: "bool" })
+  centerChartOnPages: boolean;
+
+  constructor(data: PrintSettings) {
+    this.font = data.font;
+    this.header = data.header;
+    this.footer = data.footer;
+    this.margins = data.margins;
+    this.showPageNumbers = data.showPageNumbers;
+    this.showAdjacentPageNumbers = data.showAdjacentPageNumbers;
+    this.centerChartOnPages = data.centerChartOnPages;
+  }
+}

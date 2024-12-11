@@ -15,7 +15,7 @@ pub fn undo<R: tauri::Runtime>(
   let mut history = history.write().unwrap();
   let mut patterns = patterns.write().unwrap();
   if let Some(action) = history.get_mut(&pattern_key).undo() {
-    action.perform(&window, patterns.get_mut(&pattern_key).unwrap())?;
+    action.revoke(&window, patterns.get_mut(&pattern_key).unwrap())?;
   }
   Ok(())
 }

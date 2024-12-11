@@ -3,7 +3,7 @@ import { defineStore } from "pinia";
 import { useConfirm } from "primevue";
 import { useAppStateStore } from "./state";
 import * as patternApi from "#/api/pattern";
-import type { PatternProject } from "#/types/pattern/project";
+import type { PatternProject } from "#/schemas/pattern/project";
 import type { PaletteItem } from "#/types/pattern/pattern";
 
 export const usePatternProjectStore = defineStore("pattern-project", () => {
