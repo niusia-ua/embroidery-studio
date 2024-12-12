@@ -1,4 +1,4 @@
-import type { Bead, Blend, StitchStrands } from "#/schemas/pattern/pattern";
+import type { Bead, Blend, PaletteItemStitchStrands } from "#/schemas/pattern/pattern";
 
 // TODO: remove these types
 /** These are properties that uniquely indentify the palette item. */
@@ -22,6 +22,6 @@ export interface PaletteItemBase extends PaletteItemUnique {
 export interface PaletteItem extends PaletteItemBase {
   blends?: Blend[];
   bead?: Bead;
-  strands?: StitchStrands;
+  strands?: PaletteItemStitchStrands;
 }
 // TODO:

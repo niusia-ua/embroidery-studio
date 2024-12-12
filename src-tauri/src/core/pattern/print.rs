@@ -1,5 +1,4 @@
 use borsh::{BorshDeserialize, BorshSerialize};
-use ordered_float::NotNan;
 
 #[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize)]
 pub struct PrintSettings {
@@ -30,7 +29,7 @@ impl Default for PrintSettings {
 pub struct Font {
   pub name: String,
   pub size: u16,
-  pub weight: u16,
+  pub weight: FontWeight,
   pub italic: bool,
 }
 
@@ -39,33 +38,37 @@ impl Default for Font {
     Self {
       name: String::from("Arial"),
       size: 12,
-      weight: 400,
+      weight: FontWeight::new(400),
       italic: false,
     }
   }
 }
 
-pub type Inches = NotNan<f32>;
+#[nutype::nutype(
+  sanitize(with = |raw| raw.clamp(100, 900)),
+  derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize)
+)]
+pub struct FontWeight(u16);
 
 #[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize)]
 pub struct PageMargins {
-  pub left: Inches,
-  pub right: Inches,
-  pub top: Inches,
-  pub bottom: Inches,
-  pub header: Inches,
-  pub footer: Inches,
+  pub left: f32,
+  pub right: f32,
+  pub top: f32,
+  pub bottom: f32,
+  pub header: f32,
+  pub footer: f32,
 }
 
 impl Default for PageMargins {
   fn default() -> Self {
     Self {
-      left: NotNan::new(0.5).unwrap(),
-      right: NotNan::new(0.5).unwrap(),
-      top: NotNan::new(0.5).unwrap(),
-      bottom: NotNan::new(0.5).unwrap(),
-      header: NotNan::new(0.5).unwrap(),
-      footer: NotNan::new(0.5).unwrap(),
+      left: 0.5,
+      right: 0.5,
+      top: 0.5,
+      bottom: 0.5,
+      header: 0.5,
+      footer: 0.5,
     }
   }
 }

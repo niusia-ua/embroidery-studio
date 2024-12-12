@@ -112,37 +112,63 @@ pub struct PaletteItem {
   pub color: String,
   pub blends: Option<Vec<Blend>>,
   pub bead: Option<Bead>,
-  pub strands: Option<StitchStrands>,
+  pub strands: Option<PaletteItemStitchStrands>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 pub struct Blend {
   pub brand: String,
   pub number: String,
-  pub strands: u8,
+  pub strands: BlendStrands,
 }
 
-pub type Millimetres = ordered_float::NotNan<f32>;
+#[nutype::nutype(
+  sanitize(with = |raw| raw.clamp(1, 6)),
+  derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)
+)]
+pub struct BlendStrands(u8);
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 pub struct Bead {
-  pub length: Millimetres,
-  pub diameter: Millimetres,
+  pub length: f32,
+  pub diameter: f32,
 }
 
 #[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
-pub struct StitchStrands {
-  pub full: Option<u16>,
-  pub petite: Option<u16>,
-  pub half: Option<u16>,
-  pub quarter: Option<u16>,
-  pub back: Option<u16>,
-  pub straight: Option<u16>,
-  pub french_knot: Option<u16>,
-  pub special: Option<u16>,
+pub struct StitchStrandsStruct<T> {
+  pub full: T,
+  pub petite: T,
+  pub half: T,
+  pub quarter: T,
+  pub back: T,
+  pub straight: T,
+  pub french_knot: T,
+  pub special: T,
 }
 
-pub type StitchesPerInch = (u16, u16);
+#[nutype::nutype(
+  sanitize(with = |raw| raw.clamp(1, 12)),
+  derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)
+)]
+pub struct StitchStrands(u8);
+
+pub type PaletteItemStitchStrands = StitchStrandsStruct<Option<StitchStrands>>;
+pub type DefaultStitchStrands = StitchStrandsStruct<StitchStrands>;
+
+impl Default for DefaultStitchStrands {
+  fn default() -> Self {
+    Self {
+      full: StitchStrands::new(2),
+      petite: StitchStrands::new(2),
+      half: StitchStrands::new(2),
+      quarter: StitchStrands::new(2),
+      back: StitchStrands::new(1),
+      straight: StitchStrands::new(1),
+      french_knot: StitchStrands::new(2),
+      special: StitchStrands::new(2),
+    }
+  }
+}
 
 #[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize)]
 pub struct Fabric {
@@ -162,3 +188,5 @@ impl Default for Fabric {
     }
   }
 }
+
+pub type StitchesPerInch = (u16, u16);

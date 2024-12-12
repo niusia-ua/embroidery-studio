@@ -1,7 +1,6 @@
 use borsh::{BorshDeserialize, BorshSerialize};
-use ordered_float::NotNan;
 
-pub type Points = NotNan<f32>;
+use super::DefaultStitchStrands;
 
 #[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize)]
 pub struct DisplaySettings {
@@ -70,8 +69,8 @@ pub struct SymbolSettings {
   pub printer_spacing: (u16, u16),
   pub scale_using_maximum_font_width: bool,
   pub scale_using_font_height: bool,
-  pub stitch_size: u16,
-  pub small_stitch_size: u16,
+  pub stitch_size: Percentage,
+  pub small_stitch_size: Percentage,
   pub draw_symbols_over_backstitches: bool,
   pub show_stitch_color: bool,
   pub use_large_half_stitch_symbol: bool,
@@ -85,8 +84,8 @@ impl Default for SymbolSettings {
       printer_spacing: (1, 1),
       scale_using_maximum_font_width: true,
       scale_using_font_height: true,
-      stitch_size: 100,
-      small_stitch_size: 60,
+      stitch_size: Percentage::new(100),
+      small_stitch_size: Percentage::new(60),
       draw_symbols_over_backstitches: false,
       show_stitch_color: false,
       use_large_half_stitch_symbol: false,
@@ -128,7 +127,7 @@ pub struct LineFormat {
   pub use_alt_color: bool,
   pub color: String,
   pub style: LineStyle,
-  pub thickness: Points,
+  pub thickness: StitchThickness,
 }
 
 impl Default for LineFormat {
@@ -137,7 +136,7 @@ impl Default for LineFormat {
       use_alt_color: false,
       color: String::from("000000"),
       style: LineStyle::Solid,
-      thickness: NotNan::new(1.0).unwrap(),
+      thickness: StitchThickness::new(1.0),
     }
   }
 }
@@ -179,7 +178,7 @@ pub struct NodeFormat {
   pub use_dot_style: bool,
   pub use_alt_color: bool,
   pub color: String,
-  pub diameter: Points,
+  pub thickness: StitchThickness, // actually, diameter.
 }
 
 impl Default for NodeFormat {
@@ -188,7 +187,7 @@ impl Default for NodeFormat {
       use_dot_style: true,
       use_alt_color: false,
       color: String::from("000000"),
-      diameter: NotNan::new(1.0).unwrap(),
+      thickness: StitchThickness::new(1.0),
     }
   }
 }
@@ -198,8 +197,8 @@ pub struct FontFormat {
   pub font_name: Option<String>,
   pub bold: bool,
   pub italic: bool,
-  pub stitch_size: u16,
-  pub small_stitch_size: u16,
+  pub stitch_size: Percentage,
+  pub small_stitch_size: Percentage,
 }
 
 impl Default for FontFormat {
@@ -208,8 +207,8 @@ impl Default for FontFormat {
       font_name: None,
       bold: false,
       italic: false,
-      stitch_size: 100,
-      small_stitch_size: 60,
+      stitch_size: Percentage::new(100),
+      small_stitch_size: Percentage::new(60),
     }
   }
 }
@@ -229,19 +228,19 @@ impl Default for Grid {
       major_line_every_stitches: 10,
       minor_screen_lines: GridLineStyle {
         color: String::from("C8C8C8"),
-        thickness: NotNan::new(0.072).unwrap(),
+        thickness: 0.072,
       },
       major_screen_lines: GridLineStyle {
         color: String::from("646464"),
-        thickness: NotNan::new(0.072).unwrap(),
+        thickness: 0.072,
       },
       minor_printer_lines: GridLineStyle {
         color: String::from("000000"),
-        thickness: NotNan::new(0.144).unwrap(),
+        thickness: 0.144,
       },
       major_printer_lines: GridLineStyle {
         color: String::from("000000"),
-        thickness: NotNan::new(0.504).unwrap(),
+        thickness: 0.504,
       },
     }
   }
@@ -250,7 +249,9 @@ impl Default for Grid {
 #[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize)]
 pub struct GridLineStyle {
   pub color: String,
-  pub thickness: Points,
+
+  /// Counts in points.
+  pub thickness: f32,
 }
 
 #[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize)]
@@ -279,25 +280,31 @@ impl From<u16> for View {
 #[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize)]
 pub struct StitchOutline {
   pub color: Option<String>,
-  pub color_percentage: u16,
-  pub thickness: Points,
+  pub color_percentage: Percentage,
+  pub thickness: StitchOutlineThickness,
 }
 
 impl Default for StitchOutline {
   fn default() -> Self {
     Self {
       color: None,
-      color_percentage: 80,
-      thickness: NotNan::new(0.2).unwrap(),
+      color_percentage: Percentage::new(80),
+      thickness: StitchOutlineThickness::new(0.2),
     }
   }
 }
+
+#[nutype::nutype(
+  sanitize(with = |raw| raw.clamp(0.1, 1.0)),
+  derive(Debug, Clone, Copy, PartialEq, BorshSerialize, BorshDeserialize)
+)]
+pub struct StitchOutlineThickness(f32);
 
 #[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize)]
 pub struct StitchSettings {
   pub default_strands: DefaultStitchStrands,
   /// 1..=12 - strands, 13 - french knot.
-  pub display_thickness: [Points; 13],
+  pub display_thickness: [StitchThickness; 13],
 }
 
 impl Default for StitchSettings {
@@ -305,47 +312,32 @@ impl Default for StitchSettings {
     Self {
       default_strands: DefaultStitchStrands::default(),
       display_thickness: [
-        NotNan::new(1.0).unwrap(), // 1 strand
-        NotNan::new(1.5).unwrap(), // 2 strands
-        NotNan::new(2.5).unwrap(), // 3 strands
-        NotNan::new(3.0).unwrap(), // 4 strands
-        NotNan::new(3.5).unwrap(), // 5 strands
-        NotNan::new(4.0).unwrap(), // 6 strands
-        NotNan::new(4.5).unwrap(), // 7 strands
-        NotNan::new(5.0).unwrap(), // 8 strands
-        NotNan::new(5.5).unwrap(), // 9 strands
-        NotNan::new(6.0).unwrap(), // 10 strands
-        NotNan::new(6.5).unwrap(), // 11 strands
-        NotNan::new(7.0).unwrap(), // 12 strands
-        NotNan::new(4.0).unwrap(), // French knot
+        StitchThickness::new(1.0), // 1 strand
+        StitchThickness::new(1.5), // 2 strands
+        StitchThickness::new(2.5), // 3 strands
+        StitchThickness::new(3.0), // 4 strands
+        StitchThickness::new(3.5), // 5 strands
+        StitchThickness::new(4.0), // 6 strands
+        StitchThickness::new(4.5), // 7 strands
+        StitchThickness::new(5.0), // 8 strands
+        StitchThickness::new(5.5), // 9 strands
+        StitchThickness::new(6.0), // 10 strands
+        StitchThickness::new(6.5), // 11 strands
+        StitchThickness::new(7.0), // 12 strands
+        StitchThickness::new(4.0), // French knot
       ],
     }
   }
 }
 
-#[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize)]
-pub struct DefaultStitchStrands {
-  pub full: u16,
-  pub petite: u16,
-  pub half: u16,
-  pub quarter: u16,
-  pub back: u16,
-  pub straight: u16,
-  pub french_knot: u16,
-  pub special: u16,
-}
+#[nutype::nutype(
+  sanitize(with = |raw| raw.clamp(0.1, 10.0)),
+  derive(Debug, Clone, Copy, PartialEq, BorshSerialize, BorshDeserialize)
+)]
+pub struct StitchThickness(f32);
 
-impl Default for DefaultStitchStrands {
-  fn default() -> Self {
-    Self {
-      full: 2,
-      petite: 2,
-      half: 2,
-      quarter: 2,
-      back: 1,
-      straight: 1,
-      french_knot: 2,
-      special: 2,
-    }
-  }
-}
+#[nutype::nutype(
+  sanitize(with = |raw| raw.clamp(1, 100)),
+  derive(Debug, Clone, Copy, PartialEq, BorshSerialize, BorshDeserialize)
+)]
+pub struct Percentage(u8);

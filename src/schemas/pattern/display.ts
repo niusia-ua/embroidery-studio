@@ -42,10 +42,10 @@ export class SymbolSettings {
   @field({ type: "bool" })
   scaleUsingFontHeight: boolean;
 
-  @field({ type: "u16" })
+  @field({ type: "u8" })
   stitchSize: number;
 
-  @field({ type: "u16" })
+  @field({ type: "u8" })
   smallStitchSize: number;
 
   @field({ type: "bool" })
@@ -123,13 +123,13 @@ export class NodeStitchFormat {
   color: string;
 
   @field({ type: "f32" })
-  diameter: number;
+  thickness: number;
 
   constructor(data: NodeStitchFormat) {
     this.useDotStyle = data.useDotStyle;
     this.useAltColor = data.useAltColor;
     this.color = data.color;
-    this.diameter = data.diameter;
+    this.thickness = data.thickness;
   }
 }
 
@@ -143,10 +143,10 @@ export class FontFormat {
   @field({ type: "bool" })
   italic: boolean;
 
-  @field({ type: "u16" })
+  @field({ type: "u8" })
   stitchSize: number;
 
-  @field({ type: "u16" })
+  @field({ type: "u8" })
   smallStitchSize: number;
 
   constructor(data: FontFormat) {
@@ -233,7 +233,7 @@ export class StitchOutline {
   @field({ type: option("string") })
   color?: string;
 
-  @field({ type: "u16" })
+  @field({ type: "u8" })
   colorPercentage: number;
 
   @field({ type: "f32" })
@@ -247,28 +247,28 @@ export class StitchOutline {
 }
 
 export class DefaultStitchStrands {
-  @field({ type: "u16" })
+  @field({ type: "u8" })
   full: number;
 
-  @field({ type: "u16" })
+  @field({ type: "u8" })
   petite: number;
 
-  @field({ type: "u16" })
+  @field({ type: "u8" })
   half: number;
 
-  @field({ type: "u16" })
+  @field({ type: "u8" })
   quarter: number;
 
-  @field({ type: "u16" })
+  @field({ type: "u8" })
   back: number;
 
-  @field({ type: "u16" })
+  @field({ type: "u8" })
   straight: number;
 
-  @field({ type: "u16" })
+  @field({ type: "u8" })
   frenchKnot: number;
 
-  @field({ type: "u16" })
+  @field({ type: "u8" })
   special: number;
 
   constructor(data: DefaultStitchStrands) {

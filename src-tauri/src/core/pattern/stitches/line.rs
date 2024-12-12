@@ -1,6 +1,5 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
-use serde_repr::{Deserialize_repr, Serialize_repr};
 
 use crate::core::pattern::Coord;
 
@@ -25,10 +24,9 @@ impl Ord for Line {
 }
 
 #[derive(
-  Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize_repr, Deserialize_repr, BorshSerialize, BorshDeserialize,
+  Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, BorshSerialize, BorshDeserialize,
 )]
 #[borsh(use_discriminant = true)]
-#[repr(u8)]
 pub enum LineKind {
   Back = 0,
   Straight = 1,

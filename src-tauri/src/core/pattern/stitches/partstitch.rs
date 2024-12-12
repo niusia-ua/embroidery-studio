@@ -1,6 +1,5 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
-use serde_repr::{Deserialize_repr, Serialize_repr};
 
 use super::fullstitch::*;
 use crate::core::pattern::Coord;
@@ -62,10 +61,9 @@ impl From<FullStitch> for PartStitch {
 }
 
 #[derive(
-  Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize_repr, Deserialize_repr, BorshSerialize, BorshDeserialize,
+  Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, BorshSerialize, BorshDeserialize,
 )]
 #[borsh(use_discriminant = true)]
-#[repr(u8)]
 pub enum PartStitchDirection {
   Forward = 1,
   Backward = 2,
@@ -82,10 +80,9 @@ impl From<(Coord, Coord)> for PartStitchDirection {
 }
 
 #[derive(
-  Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize_repr, Deserialize_repr, BorshSerialize, BorshDeserialize,
+  Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, BorshSerialize, BorshDeserialize,
 )]
 #[borsh(use_discriminant = true)]
-#[repr(u8)]
 pub enum PartStitchKind {
   Half = 0,
   Quarter = 1,

@@ -38,32 +38,32 @@ export class PatternInfo {
   }
 }
 
-export class StitchStrands {
-  @field({ type: option("u16") })
+export class PaletteItemStitchStrands {
+  @field({ type: option("u8") })
   full?: number;
 
-  @field({ type: option("u16") })
+  @field({ type: option("u8") })
   petite?: number;
 
-  @field({ type: option("u16") })
+  @field({ type: option("u8") })
   half?: number;
 
-  @field({ type: option("u16") })
+  @field({ type: option("u8") })
   quarter?: number;
 
-  @field({ type: option("u16") })
+  @field({ type: option("u8") })
   back?: number;
 
-  @field({ type: option("u16") })
+  @field({ type: option("u8") })
   straight?: number;
 
-  @field({ type: option("u16") })
+  @field({ type: option("u8") })
   frenchKnot?: number;
 
-  @field({ type: option("u16") })
+  @field({ type: option("u8") })
   special?: number;
 
-  constructor(data: StitchStrands) {
+  constructor(data: PaletteItemStitchStrands) {
     this.full = data.full;
     this.petite = data.petite;
     this.half = data.half;
@@ -124,8 +124,8 @@ export class PaletteItem {
   @field({ type: option(Bead) })
   bead?: Bead;
 
-  @field({ type: option(StitchStrands) })
-  strands?: StitchStrands;
+  @field({ type: option(PaletteItemStitchStrands) })
+  strands?: PaletteItemStitchStrands;
 
   constructor(data: PaletteItem) {
     this.brand = data.brand;
@@ -169,7 +169,10 @@ export class FullStitch {
   @field({ type: "u8" })
   palindex: number;
 
-  @field({ type: "u8" })
+  @field({
+    serialize: (kind, writer) => (kind === FullStitchKind.Full ? writer.u8(0) : writer.u8(1)),
+    deserialize: (reader) => (reader.u8() === 0 ? FullStitchKind.Full : FullStitchKind.Petite),
+  })
   kind: FullStitchKind;
 
   constructor(data: FullStitch) {
@@ -181,8 +184,8 @@ export class FullStitch {
 }
 
 export const enum FullStitchKind {
-  Full = 0,
-  Petite = 1,
+  Full = "Full",
+  Petite = "Petite",
 }
 
 export class PartStitch {
@@ -195,10 +198,16 @@ export class PartStitch {
   @field({ type: "u8" })
   palindex: number;
 
-  @field({ type: "u8" })
+  @field({
+    serialize: (direction, writer) => (direction === PartStitchDirection.Forward ? writer.u8(1) : writer.u8(2)),
+    deserialize: (reader) => (reader.u8() === 1 ? PartStitchDirection.Forward : PartStitchDirection.Backward),
+  })
   direction: PartStitchDirection;
 
-  @field({ type: "u8" })
+  @field({
+    serialize: (kind, writer) => (kind === PartStitchKind.Half ? writer.u8(0) : writer.u8(1)),
+    deserialize: (reader) => (reader.u8() === 0 ? PartStitchKind.Half : PartStitchKind.Quarter),
+  })
   kind: PartStitchKind;
 
   constructor(data: PartStitch) {
@@ -211,13 +220,13 @@ export class PartStitch {
 }
 
 export const enum PartStitchDirection {
-  Forward = 1,
-  Backward = 2,
+  Forward = "Forward",
+  Backward = "Backward",
 }
 
 export const enum PartStitchKind {
-  Half = 0,
-  Quarter = 1,
+  Half = "Half",
+  Quarter = "Quarter",
 }
 
 export class LineStitch {
@@ -230,7 +239,10 @@ export class LineStitch {
   @field({ type: "u8" })
   palindex: number;
 
-  @field({ type: "u8" })
+  @field({
+    serialize: (kind, writer) => (kind === LineStitchKind.Back ? writer.u8(0) : writer.u8(1)),
+    deserialize: (reader) => (reader.u8() === 0 ? LineStitchKind.Straight : PartStitchKind.Quarter),
+  })
   kind: LineStitchKind;
 
   constructor(data: LineStitch) {
@@ -242,8 +254,8 @@ export class LineStitch {
 }
 
 export const enum LineStitchKind {
-  Back = 0,
-  Straight = 1,
+  Back = "Back",
+  Straight = "Straight",
 }
 
 export class NodeStitch {
@@ -259,7 +271,10 @@ export class NodeStitch {
   @field({ type: "u8" })
   palindex: number;
 
-  @field({ type: "u8" })
+  @field({
+    serialize: (kind, writer) => (kind === NodeStitchKind.FrenchKnot ? writer.u8(0) : writer.u8(1)),
+    deserialize: (reader) => (reader.u8() === 0 ? NodeStitchKind.FrenchKnot : NodeStitchKind.Bead),
+  })
   kind: NodeStitchKind;
 
   constructor(data: NodeStitch) {
@@ -272,8 +287,8 @@ export class NodeStitch {
 }
 
 export const enum NodeStitchKind {
-  FrenchKnot = 0,
-  Bead = 1,
+  FrenchKnot = "FrenchKnot",
+  Bead = "Bead",
 }
 
 export class CurvedStitch {
@@ -301,7 +316,7 @@ export class SpecialStitch {
   @field({ type: "u8" })
   palindex: number;
 
-  @field({ type: "u16" })
+  @field({ type: "u8" })
   modindex: number;
 
   constructor(data: SpecialStitch) {
@@ -384,15 +399,5 @@ export class Pattern {
   }
 }
 
-export const enum StitchKind {
-  Full = 0,
-  Petite = 1,
-  Half = 2,
-  Quarter = 3,
-  Back = 4,
-  Straight = 5,
-  FrenchKnot = 6,
-  Bead = 7,
-}
-
 export type Stitch = { full: FullStitch } | { part: PartStitch } | { node: NodeStitch } | { line: LineStitch };
+export type StitchKind = FullStitchKind | PartStitchKind | NodeStitchKind | LineStitchKind;

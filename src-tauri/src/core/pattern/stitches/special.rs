@@ -8,10 +8,10 @@ use crate::core::pattern::Coord;
 pub struct SpecialStitch {
   pub x: Coord,
   pub y: Coord,
-  pub rotation: u16,
+  pub rotation: Degree,
   pub flip: (bool, bool),
   pub palindex: u8,
-  pub modindex: u16,
+  pub modindex: u8,
 }
 
 impl PartialOrd for SpecialStitch {
@@ -25,6 +25,12 @@ impl Ord for SpecialStitch {
     self.y.cmp(&other.y).then(self.x.cmp(&other.x))
   }
 }
+
+#[nutype::nutype(
+  sanitize(with = |raw| raw.clamp(0, 360)),
+  derive(Debug, Clone, Copy, PartialEq, Eq, FromStr, Display, Serialize, Deserialize, BorshSerialize, BorshDeserialize)
+)]
+pub struct Degree(u16);
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 pub struct SpecialStitchModel {

@@ -195,14 +195,14 @@ fn read_palette_item<R: Read + Seek>(reader: &mut R) -> Result<PaletteItem> {
       blends.push(Blend {
         brand: PM_FLOSS_BRANDS.get(&brand_id).unwrap().to_owned(),
         number: reader.read_cstring(COLOR_NUMBER_LENGTH)?,
-        strands: 0, // The actual value will be set when calling `read_blend_strands`.
+        strands: BlendStrands::new(1), // The actual value will be set when calling `read_blend_strands`.
       });
     }
     reader.seek_relative(((BLEND_COLORS_NUMBER - blends_count) * 12) as i64)?; // Skip empty blends.
 
     // Read blend's strands.
     for blend in blends.iter_mut() {
-      blend.strands = reader.read_u8()?;
+      blend.strands = BlendStrands::new(reader.read_u8()?);
     }
     reader.seek_relative((BLEND_COLORS_NUMBER - blends_count) as i64)?; // Skip empty blend's strands.
 
@@ -220,8 +220,8 @@ fn read_palette_item<R: Read + Seek>(reader: &mut R) -> Result<PaletteItem> {
   let is_bead = reader.read_u32::<LittleEndian>()? == 1;
   let bead = if is_bead {
     Some(Bead {
-      diameter: NotNan::new(reader.read_u16::<LittleEndian>()? as f32)? / 10.0,
-      length: NotNan::new(reader.read_u16::<LittleEndian>()? as f32)? / 10.0,
+      diameter: reader.read_u16::<LittleEndian>()? as f32 / 10.0,
+      length: reader.read_u16::<LittleEndian>()? as f32 / 10.0,
     })
   } else {
     // Prevent reading a trash data.
@@ -252,17 +252,17 @@ fn skip_palette_items_notes<R: Read + Seek>(reader: &mut R, palette_size: usize)
   Ok(())
 }
 
-fn read_palette_item_strands<R: Read>(reader: &mut R) -> Result<StitchStrands> {
-  fn map_strands(value: u16) -> Option<u16> {
+fn read_palette_item_strands<R: Read>(reader: &mut R) -> Result<PaletteItemStitchStrands> {
+  fn map_strands(value: u16) -> Option<StitchStrands> {
     if value == 0 {
       None
     } else {
-      Some(value)
+      Some(StitchStrands::new(value as u8))
     }
   }
 
   // Order is important!
-  Ok(StitchStrands {
+  Ok(PaletteItemStitchStrands {
     full: map_strands(reader.read_u16::<LittleEndian>()?),
     half: map_strands(reader.read_u16::<LittleEndian>()?),
     quarter: map_strands(reader.read_u16::<LittleEndian>()?),
@@ -325,7 +325,7 @@ fn read_line_formats<R: Read + Seek>(reader: &mut R, palette_size: usize) -> io:
     let color = reader.read_hex_color()?;
     reader.seek_relative(1)?;
     let style: LineStyle = reader.read_u16::<LittleEndian>()?.into();
-    let thickness = NotNan::new(reader.read_u16::<LittleEndian>()? as f32)? / 10.0;
+    let thickness = StitchThickness::new(reader.read_u16::<LittleEndian>()? as f32 / 10.0);
     formats.push(LineFormat {
       use_alt_color,
       color,
@@ -344,12 +344,12 @@ fn read_node_formats<R: Read + Seek>(reader: &mut R, palette_size: usize) -> io:
     let color = reader.read_hex_color()?;
     reader.seek_relative(1)?;
     let use_alt_color = reader.read_u16::<LittleEndian>()? == 1;
-    let diameter = NotNan::new(reader.read_u16::<LittleEndian>()? as f32)? / 10.0;
+    let thickness = StitchThickness::new(reader.read_u16::<LittleEndian>()? as f32 / 10.0);
     formats.push(NodeFormat {
       use_dot_style,
       color,
       use_alt_color,
-      diameter,
+      thickness,
     });
   }
   reader.seek_relative(((FORMAT_LENGTH - palette_size) * 10) as i64)?;
@@ -365,8 +365,8 @@ fn read_font_formats<R: Read + Seek>(reader: &mut R, palette_size: usize) -> io:
     let bold = reader.read_u16::<LittleEndian>()? == 700;
     let italic = reader.read_u8()? == 1;
     reader.seek_relative(11)?;
-    let stitch_size = reader.read_u16::<LittleEndian>()?;
-    let small_stitch_size = reader.read_u16::<LittleEndian>()?;
+    let stitch_size = Percentage::new(reader.read_u16::<LittleEndian>()? as u8);
+    let small_stitch_size = Percentage::new(reader.read_u16::<LittleEndian>()? as u8);
     formats.push(FontFormat {
       font_name,
       bold,
@@ -431,7 +431,7 @@ fn read_pattern_settings<R: Read + Seek>(reader: &mut R) -> Result<XsdPatternSet
   let font = Font {
     name: reader.read_cstring(FONT_NAME_LENGTH)?,
     size: reader.read_u16::<LittleEndian>()?,
-    weight: reader.read_u16::<LittleEndian>()?,
+    weight: FontWeight::new(reader.read_u16::<LittleEndian>()?),
     italic: reader.read_u16::<LittleEndian>()? == 1,
   };
   reader.seek_relative(10)?;
@@ -466,12 +466,12 @@ fn read_pattern_settings<R: Read + Seek>(reader: &mut R) -> Result<XsdPatternSet
   let page_header = reader.read_cstring(PAGE_HEADER_AND_FOOTER_LENGTH)?;
   let page_footer = reader.read_cstring(PAGE_HEADER_AND_FOOTER_LENGTH)?;
   let page_margins = PageMargins {
-    left: NotNan::new(reader.read_u16::<LittleEndian>()? as f32)? / 100.0,
-    right: NotNan::new(reader.read_u16::<LittleEndian>()? as f32)? / 100.0,
-    top: NotNan::new(reader.read_u16::<LittleEndian>()? as f32)? / 100.0,
-    bottom: NotNan::new(reader.read_u16::<LittleEndian>()? as f32)? / 100.0,
-    header: NotNan::new(reader.read_u16::<LittleEndian>()? as f32)? / 100.0,
-    footer: NotNan::new(reader.read_u16::<LittleEndian>()? as f32)? / 100.0,
+    left: reader.read_u16::<LittleEndian>()? as f32 / 100.0,
+    right: reader.read_u16::<LittleEndian>()? as f32 / 100.0,
+    top: reader.read_u16::<LittleEndian>()? as f32 / 100.0,
+    bottom: reader.read_u16::<LittleEndian>()? as f32 / 100.0,
+    header: reader.read_u16::<LittleEndian>()? as f32 / 100.0,
+    footer: reader.read_u16::<LittleEndian>()? as f32 / 100.0,
   };
   let show_page_numbers = reader.read_u16::<LittleEndian>()? == 1;
   let show_adjacent_page_numbers = reader.read_u16::<LittleEndian>()? == 1;
@@ -499,8 +499,7 @@ fn read_pattern_settings<R: Read + Seek>(reader: &mut R) -> Result<XsdPatternSet
 
 fn read_grid_settings<R: Read + Seek>(reader: &mut R) -> Result<Grid> {
   fn read_grid_line_style<R: Read + Seek>(reader: &mut R) -> Result<GridLineStyle> {
-    let thickness = reader.read_u16::<LittleEndian>()?;
-    let thickness = NotNan::new((thickness * 72) as f32)? / 1000.0; // Convert to points.
+    let thickness = (reader.read_u16::<LittleEndian>()? * 72) as f32 / 1000.0; // Convert to points.
     reader.seek_relative(2)?;
     let color = reader.read_hex_color()?;
     reader.seek_relative(3)?;
@@ -541,28 +540,28 @@ fn read_stitch_settings<R: Read + Seek>(reader: &mut R) -> Result<(StitchSetting
 
   let stitch_settings = StitchSettings {
     default_strands: DefaultStitchStrands {
-      full: reader.read_u16::<LittleEndian>()?,
-      half: reader.read_u16::<LittleEndian>()?,
-      quarter: reader.read_u16::<LittleEndian>()?,
-      back: reader.read_u16::<LittleEndian>()?,
-      petite: reader.read_u16::<LittleEndian>()?,
-      special: reader.read_u16::<LittleEndian>()?,
+      full: StitchStrands::new(reader.read_u16::<LittleEndian>()? as u8),
+      half: StitchStrands::new(reader.read_u16::<LittleEndian>()? as u8),
+      quarter: StitchStrands::new(reader.read_u16::<LittleEndian>()? as u8),
+      back: StitchStrands::new(reader.read_u16::<LittleEndian>()? as u8),
+      petite: StitchStrands::new(reader.read_u16::<LittleEndian>()? as u8),
+      special: StitchStrands::new(reader.read_u16::<LittleEndian>()? as u8),
       french_knot: DefaultStitchStrands::default().french_knot,
-      straight: reader.read_u16::<LittleEndian>()?,
+      straight: StitchStrands::new(reader.read_u16::<LittleEndian>()? as u8),
     },
     display_thickness: {
-      let mut buf = [NotNan::default(); 13];
-      for thickness in buf.iter_mut() {
-        *thickness = NotNan::new(reader.read_u16::<LittleEndian>()? as f32)? / 10.0;
+      let mut arr = [StitchThickness::new(0.1); 13];
+      for thickness in arr.iter_mut() {
+        *thickness = StitchThickness::new(reader.read_u16::<LittleEndian>()? as f32 / 10.0);
       }
-      buf
+      arr
     },
   };
 
   let outlined_stitches = reader.read_u16::<LittleEndian>()? == 1;
   let use_specified_color = reader.read_u16::<LittleEndian>()? == 1;
   let stitch_outline = StitchOutline {
-    color_percentage: reader.read_u16::<LittleEndian>()?,
+    color_percentage: Percentage::new(reader.read_u16::<LittleEndian>()? as u8),
     color: if use_specified_color {
       let color = reader.read_hex_color()?;
       reader.seek_relative(1)?;
@@ -571,7 +570,7 @@ fn read_stitch_settings<R: Read + Seek>(reader: &mut R) -> Result<(StitchSetting
       reader.seek_relative(4)?;
       None
     },
-    thickness: NotNan::new(reader.read_u16::<LittleEndian>()? as f32)? / 10.0,
+    thickness: StitchOutlineThickness::new(reader.read_u16::<LittleEndian>()? as f32 / 10.0),
   };
 
   Ok((stitch_settings, outlined_stitches, stitch_outline))
@@ -584,14 +583,14 @@ fn read_symbol_settings<R: Read + Seek>(reader: &mut R) -> Result<SymbolSettings
     printer_spacing: (reader.read_u16::<LittleEndian>()?, reader.read_u16::<LittleEndian>()?),
     scale_using_maximum_font_width: reader.read_u16::<LittleEndian>()? == 1,
     scale_using_font_height: reader.read_u16::<LittleEndian>()? == 1,
-    small_stitch_size: reader.read_u16::<LittleEndian>()?,
+    small_stitch_size: Percentage::new(reader.read_u16::<LittleEndian>()? as u8),
     show_stitch_color: reader.read_u16::<LittleEndian>()? == 1,
     use_large_half_stitch_symbol: {
       let use_large_half_stitch_symbol = reader.read_u16::<LittleEndian>()? == 1;
       reader.seek_relative(6)?;
       use_large_half_stitch_symbol
     },
-    stitch_size: reader.read_u16::<LittleEndian>()?,
+    stitch_size: Percentage::new(reader.read_u16::<LittleEndian>()? as u8),
     use_triangles_behind_quarter_stitches: reader.read_u16::<LittleEndian>()? == 1,
     draw_symbols_over_backstitches: {
       let draw_symbols_over_backstitches = reader.read_u16::<LittleEndian>()? == 1;
@@ -1031,13 +1030,13 @@ fn read_joints<R: Read + Seek>(reader: &mut R, joints_count: u16) -> io::Result<
           (rotation, flip)
         };
         reader.seek_relative(2)?;
-        let modindex = reader.read_u16::<LittleEndian>()?;
+        let modindex = reader.read_u16::<LittleEndian>()? as u8;
         specials.push(SpecialStitch {
           x,
           y,
           palindex,
           modindex,
-          rotation,
+          rotation: Degree::new(rotation),
           flip,
         });
       }

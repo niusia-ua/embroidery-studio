@@ -224,7 +224,11 @@ fn read_palette<R: io::BufRead>(
             palette_item
               .blends
               .get_or_insert(Vec::with_capacity(blendscount))
-              .push(Blend { brand, number, strands: 1 });
+              .push(Blend {
+                brand,
+                number,
+                strands: BlendStrands::new(1),
+              });
             reader.read_event_into(&mut buf)?; // end of the blend tag
           }
           buf.clear();
