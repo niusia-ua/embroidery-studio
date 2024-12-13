@@ -1,7 +1,7 @@
 use tauri::test::MockRuntime;
 
 use super::History;
-use crate::core::actions::MockAction;
+use crate::core::actions::mock::MockAction;
 
 #[test]
 fn test_push() {
