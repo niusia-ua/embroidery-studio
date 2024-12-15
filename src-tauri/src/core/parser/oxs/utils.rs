@@ -1,4 +1,5 @@
-use std::{collections::HashMap, str::FromStr};
+use std::collections::HashMap;
+use std::str::FromStr;
 
 use anyhow::Result;
 use quick_xml::events::attributes::Attributes;

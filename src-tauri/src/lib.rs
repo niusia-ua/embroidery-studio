@@ -1,4 +1,5 @@
-use std::{collections::HashMap, sync::RwLock};
+use std::collections::HashMap;
+use std::sync::RwLock;
 
 use state::HistoryStateInner;
 use tauri::Manager;

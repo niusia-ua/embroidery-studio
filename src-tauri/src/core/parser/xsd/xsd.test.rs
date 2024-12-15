@@ -1,4 +1,5 @@
-use std::{fs::File, io::Cursor};
+use std::fs::File;
+use std::io::Cursor;
 
 use super::*;
 

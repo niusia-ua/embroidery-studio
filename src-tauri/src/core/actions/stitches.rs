@@ -3,9 +3,8 @@ use std::sync::OnceLock;
 use anyhow::Result;
 use tauri::{Emitter, WebviewWindow};
 
-use crate::core::pattern::{PatternProject, Stitch, StitchConflicts};
-
 use super::Action;
+use crate::core::pattern::{PatternProject, Stitch, StitchConflicts};
 
 #[cfg(test)]
 #[path = "stitches.test.rs"]

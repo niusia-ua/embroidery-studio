@@ -3,17 +3,17 @@
 //! The specification of this format was obtained by reverse engineering several applications, including Pattern Maker.
 //! Therefore, it is rather incomplete, but it contains all the knowledge to be able to extract enough data to display the pattern.
 
-use std::{
-  io::{self, Read, Seek, SeekFrom},
-  sync::LazyLock,
-};
+use std::io::{self, Read, Seek, SeekFrom};
+use std::sync::LazyLock;
 
 use anyhow::Result;
 use byteorder::{LittleEndian, ReadBytesExt};
 use ordered_float::NotNan;
 
 use super::read::ReadXsdExt;
-use crate::core::pattern::{display::*, print::*, *};
+use crate::core::pattern::display::*;
+use crate::core::pattern::print::*;
+use crate::core::pattern::*;
 
 #[cfg(test)]
 #[path = "xsd.test.rs"]

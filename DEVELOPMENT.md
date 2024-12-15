@@ -50,6 +50,7 @@ To get started working on Embroidery Studio, you will first need to install a fe
 2. [Rust](https://rust-lang.org/tools/install) and [Node.js](https://nodejs.org/en/download).
 
    We are using the latest stable Rust version and the latest LTS Node.js version.
+   Also, we are using the nightly Rust edition for running its tooling with unstable features.
 
 3. [Cargo Tauri CLI](https://tauri.app/reference/cli).
 
@@ -115,6 +116,8 @@ Here is a recommended setup:
      },
      // Exclude build artefacts and frontend sources from being tracked by RustAnalyzer.
      "rust-analyzer.files.excludeDirs": ["node_modules", "src", "dist"],
+     // Force Rustfmt to use the nightly Rust version.
+     "rust-analyzer.rustfmt.extraArgs": ["+nightly"],
 
      // Exclude build artefacts from being tracked by VS Code.
      "files.watcherExclude": {

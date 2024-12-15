@@ -1,14 +1,15 @@
-use std::{io, str::FromStr};
+use std::io;
+use std::str::FromStr;
 
 use anyhow::Result;
 use ordered_float::NotNan;
-use quick_xml::{
-  events::{BytesDecl, Event},
-  Reader, Writer,
-};
+use quick_xml::events::{BytesDecl, Event};
+use quick_xml::{Reader, Writer};
 
 use super::utils::*;
-use crate::core::pattern::{display::DisplaySettings, print::PrintSettings, *};
+use crate::core::pattern::display::DisplaySettings;
+use crate::core::pattern::print::PrintSettings;
+use crate::core::pattern::*;
 
 pub fn parse_pattern(file_path: std::path::PathBuf, software: Software) -> Result<PatternProject> {
   log::trace!("OXS version is 1.0 in the {software:?} edition");

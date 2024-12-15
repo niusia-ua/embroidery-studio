@@ -1,11 +1,7 @@
-use crate::{
-  core::{
-    actions::{Action, AddStitchAction, RemoveStitchAction},
-    pattern::Stitch,
-  },
-  error::CommandResult,
-  state::{HistoryState, PatternKey, PatternsState},
-};
+use crate::core::actions::{Action, AddStitchAction, RemoveStitchAction};
+use crate::core::pattern::Stitch;
+use crate::error::CommandResult;
+use crate::state::{HistoryState, PatternKey, PatternsState};
 
 #[tauri::command]
 pub fn add_stitch<R: tauri::Runtime>(

@@ -1,12 +1,10 @@
-use crate::{
-  core::{
-    parser::{self, PatternFormat},
-    pattern::{display::DisplaySettings, print::PrintSettings, Pattern, PatternProject},
-  },
-  error::CommandResult,
-  state::{PatternKey, PatternsState},
-  utils::path::app_document_dir,
-};
+use crate::core::parser::{self, PatternFormat};
+use crate::core::pattern::display::DisplaySettings;
+use crate::core::pattern::print::PrintSettings;
+use crate::core::pattern::{Pattern, PatternProject};
+use crate::error::CommandResult;
+use crate::state::{PatternKey, PatternsState};
+use crate::utils::path::app_document_dir;
 
 #[tauri::command]
 pub fn load_pattern(file_path: std::path::PathBuf, patterns: tauri::State<PatternsState>) -> CommandResult<Vec<u8>> {

@@ -1,9 +1,7 @@
 use tauri::WebviewWindow;
 
-use crate::{
-  error::CommandResult,
-  state::{HistoryState, PatternKey, PatternsState},
-};
+use crate::error::CommandResult;
+use crate::state::{HistoryState, PatternKey, PatternsState};
 
 #[tauri::command]
 pub fn undo<R: tauri::Runtime>(

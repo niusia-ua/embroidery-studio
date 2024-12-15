@@ -1,12 +1,7 @@
-use tauri::{
-  test::{mock_builder, MockRuntime},
-  Manager,
-};
-
-use embroidery_studio::{
-  commands, setup_app,
-  state::{PatternKey, PatternsState},
-};
+use embroidery_studio::state::{PatternKey, PatternsState};
+use embroidery_studio::{commands, setup_app};
+use tauri::test::{mock_builder, MockRuntime};
+use tauri::Manager;
 
 fn get_all_test_patterns() -> Vec<std::io::Result<std::fs::DirEntry>> {
   let sample_patterns = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("resources/patterns");

@@ -1,13 +1,9 @@
 use ordered_float::NotNan;
-use tauri::{
-  generate_context,
-  test::{mock_builder, MockRuntime},
-  App, Listener, WebviewUrl, WebviewWindowBuilder,
-};
-
-use crate::core::pattern::*;
+use tauri::test::{mock_builder, MockRuntime};
+use tauri::{generate_context, App, Listener, WebviewUrl, WebviewWindowBuilder};
 
 use super::{Action, AddStitchAction, RemoveStitchAction};
+use crate::core::pattern::*;
 
 pub fn setup_app() -> App<MockRuntime> {
   mock_builder().build(generate_context!()).unwrap()

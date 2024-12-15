@@ -1,12 +1,9 @@
 use anyhow::{bail, Result};
 use quick_xml::events::Event;
 
+use super::utils::{process_attributes, OxsVersion, Software};
+use super::v1_0;
 use crate::core::pattern::PatternProject;
-
-use super::{
-  utils::{process_attributes, OxsVersion, Software},
-  v1_0,
-};
 
 pub fn parse_pattern(file_path: std::path::PathBuf) -> Result<PatternProject> {
   log::info!("Parsing the OXS pattern");
