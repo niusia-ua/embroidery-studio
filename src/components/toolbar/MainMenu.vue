@@ -18,8 +18,7 @@
   import { Button, TieredMenu } from "primevue";
   import type { MenuItem } from "primevue/menuitem";
   import { open, save } from "@tauri-apps/plugin-dialog";
-  import { getAppDocumentDir } from "#/api/path";
-  import { getPatternFilePath } from "#/api/pattern";
+  import { PathApi, PatternApi } from "#/api";
   import { useAppStateStore } from "#/stores/state";
   import { usePreferencesStore } from "#/stores/preferences";
   import { usePatternProjectStore } from "#/stores/patproj";
@@ -93,7 +92,7 @@
 
   async function loadPattern() {
     const path = await open({
-      defaultPath: await getAppDocumentDir(),
+      defaultPath: await PathApi.getAppDocumentDir(),
       multiple: false,
       filters: [
         {
@@ -110,7 +109,7 @@
     const currentPattern = appStateStore.state.currentPattern;
     if (!currentPattern) return;
     const path = await save({
-      defaultPath: await getPatternFilePath(currentPattern.key),
+      defaultPath: await PatternApi.getPatternFilePath(currentPattern.key),
       filters: [
         {
           name: "Cross-Stitch Pattern",

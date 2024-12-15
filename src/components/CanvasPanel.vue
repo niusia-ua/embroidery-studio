@@ -16,8 +16,7 @@
   import { AddStitchEventStage, EventType } from "#/services/canvas/events.types";
   import type { AddStitchData, RemoveStitchData } from "#/services/canvas/events.types";
   import { useAppStateStore } from "#/stores/state";
-  import * as stitchesApi from "#/api/stitches";
-  import * as historyApi from "#/api/history";
+  import { StitchesApi, HistoryApi } from "#/api";
   import {
     PartStitchDirection,
     FullStitch,
@@ -32,7 +31,6 @@
     type StitchKind,
   } from "#/schemas/pattern/pattern";
   import { PatternProject } from "#/schemas/pattern/project";
-  import type {} from "#/types/pattern/pattern";
 
   interface CanvasPanelProps {
     patproj: PatternProject;
@@ -72,7 +70,7 @@
           full.x = Math.trunc(x) + (prevStitchState.full.x - Math.trunc(prevStitchState.full.x));
           full.y = Math.trunc(y) + (prevStitchState.full.y - Math.trunc(prevStitchState.full.y));
         }
-        await stitchesApi.addStitch(patternKey, { full });
+        await StitchesApi.addStitch(patternKey, { full });
         break;
       }
 
@@ -92,7 +90,7 @@
             part.y = Math.trunc(y) + (prevStitchState.part.y - Math.trunc(prevStitchState.part.y));
           }
         }
-        await stitchesApi.addStitch(patternKey, { part });
+        await StitchesApi.addStitch(patternKey, { part });
         break;
       }
 
@@ -106,7 +104,7 @@
         }
         if (line.x[0] === line.x[1] && line.y[0] === line.y[1]) return;
         prevStitchState = { line };
-        if (stage === AddStitchEventStage.Continue) await stitchesApi.addStitch(patternKey, { line });
+        if (stage === AddStitchEventStage.Continue) await StitchesApi.addStitch(patternKey, { line });
         break;
       }
 
@@ -115,7 +113,7 @@
         const { x: x1, y: y1 } = adjustStitchCoordinate(_start, tool);
         const { x: x2, y: y2 } = adjustStitchCoordinate(_end, tool);
         const line: LineStitch = { x: [x1, x2], y: [y1, y2], palindex, kind: tool };
-        if (stage === AddStitchEventStage.End) await stitchesApi.addStitch(patternKey, { line });
+        if (stage === AddStitchEventStage.End) await StitchesApi.addStitch(patternKey, { line });
         else canvasService.drawLine(line, props.patproj.pattern.palette[palindex]!, true);
         break;
       }
@@ -129,7 +127,7 @@
           kind: tool,
           rotated: alt,
         };
-        if (stage === AddStitchEventStage.End) await stitchesApi.addStitch(patternKey, { node });
+        if (stage === AddStitchEventStage.End) await StitchesApi.addStitch(patternKey, { node });
         else canvasService.drawNode(node, props.patproj.pattern.palette[palindex]!, true);
         break;
       }
@@ -141,7 +139,7 @@
   canvasService.addEventListener(EventType.RemoveStitch, async (e) => {
     const data: RemoveStitchData = (e as CustomEvent).detail;
     const patternKey = appStateStore.state.currentPattern!.key;
-    await stitchesApi.removeStitch(patternKey, data);
+    await StitchesApi.removeStitch(patternKey, data);
   });
 
   function adjustStitchCoordinate({ x, y }: Point, tool: StitchKind): Point {
@@ -222,8 +220,8 @@
   });
 
   const keys = useMagicKeys();
-  whenever(keys.ctrl_z!, async () => await historyApi.undo(appStateStore.state.currentPattern!.key));
-  whenever(keys.ctrl_y!, async () => await historyApi.redo(appStateStore.state.currentPattern!.key));
+  whenever(keys.ctrl_z!, async () => await HistoryApi.undo(appStateStore.state.currentPattern!.key));
+  whenever(keys.ctrl_y!, async () => await HistoryApi.redo(appStateStore.state.currentPattern!.key));
 
   onMounted(async () => {
     const { width, height } = canvas.value!.getBoundingClientRect();
