@@ -3,8 +3,7 @@ import { defineStore } from "pinia";
 import { useConfirm } from "primevue";
 import { useAppStateStore } from "./state";
 import { PatternApi } from "#/api";
-import type { PatternProject } from "#/schemas/pattern/project";
-import type { PaletteItem } from "#/types/pattern/pattern";
+import type { PatternKey, PatternProject, PaletteItem } from "#/schemas/pattern";
 
 export const usePatternProjectStore = defineStore("pattern-project", () => {
   const confirm = useConfirm();
@@ -41,16 +40,15 @@ export const usePatternProjectStore = defineStore("pattern-project", () => {
   const loadPattern = (path: string) =>
     handleCommand(async () => {
       patproj.value = await PatternApi.loadPattern(path);
-      appStateStore.addOpenedPattern(patproj.value.pattern.info.title, path);
+      appStateStore.addOpenedPattern(patproj.value.pattern.info.title, patproj.value.key);
     });
   const createPattern = () =>
     handleCommand(async () => {
-      const { key, pattern } = await PatternApi.createPattern();
-      patproj.value = pattern;
-      appStateStore.addOpenedPattern(patproj.value.pattern.info.title, key);
+      patproj.value = await PatternApi.createPattern();
+      appStateStore.addOpenedPattern(patproj.value.pattern.info.title, patproj.value.key);
     });
-  const savePattern = (key: string, path: string) => handleCommand(() => PatternApi.savePattern(key, path));
-  const closePattern = (key: string) =>
+  const savePattern = (key: PatternKey, path: string) => handleCommand(() => PatternApi.savePattern(key, path));
+  const closePattern = (key: PatternKey) =>
     handleCommand(async () => {
       await PatternApi.closePattern(key);
       appStateStore.removeCurrentPattern();

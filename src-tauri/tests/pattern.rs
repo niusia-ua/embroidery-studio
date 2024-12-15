@@ -29,7 +29,7 @@ fn parses_supported_pattern_formats() {
     assert!(patterns_state
       .read()
       .unwrap()
-      .contains_key(&PatternKey::from(file_path)));
+      .contains_key(&PatternKey::from(&file_path)));
   }
 }
 
@@ -39,8 +39,9 @@ fn creates_new_pattern() {
   let app_handle = app.handle();
   let patterns_state = app_handle.state::<PatternsState>();
 
-  let (pattern_key, _) = commands::pattern::create_pattern(app_handle.clone(), patterns_state.clone()).unwrap();
-  assert!(patterns_state.read().unwrap().contains_key(&pattern_key));
+  assert!(patterns_state.read().unwrap().is_empty());
+  commands::pattern::create_pattern(app_handle.clone(), patterns_state.clone()).unwrap();
+  assert_eq!(patterns_state.read().unwrap().len(), 1);
 }
 
 #[test]
@@ -52,7 +53,7 @@ fn saves_pattern() {
   for file_path in get_all_test_patterns().into_iter() {
     let file_path = file_path.unwrap().path();
     commands::pattern::load_pattern(file_path.clone(), patterns_state.clone()).unwrap();
-    let pattern_key = PatternKey::from(file_path);
+    let pattern_key = PatternKey::from(&file_path);
 
     for extension in ["oxs", "embproj"] {
       let file_path = std::env::temp_dir().join(format!("pattern.{}", extension));
@@ -69,7 +70,19 @@ fn closes_pattern() {
   let app_handle = app.handle();
   let patterns_state = app_handle.state::<PatternsState>();
 
-  let (pattern_key, _) = commands::pattern::create_pattern(app_handle.clone(), patterns_state.clone()).unwrap();
-  commands::pattern::close_pattern(pattern_key.clone(), patterns_state.clone());
-  assert!(patterns_state.read().unwrap().get(&pattern_key).is_none());
+  assert!(patterns_state.read().unwrap().is_empty());
+  commands::pattern::create_pattern(app_handle.clone(), patterns_state.clone()).unwrap();
+  assert_eq!(patterns_state.read().unwrap().len(), 1);
+
+  let pattern_key = patterns_state
+    .read()
+    .unwrap()
+    .keys()
+    .cloned()
+    .collect::<Vec<PatternKey>>()
+    .first()
+    .unwrap()
+    .to_owned();
+  commands::pattern::close_pattern(pattern_key, patterns_state.clone());
+  assert!(patterns_state.read().unwrap().is_empty());
 }

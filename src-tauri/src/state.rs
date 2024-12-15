@@ -9,8 +9,8 @@ use crate::core::{history::History, pattern::PatternProject};
 #[repr(transparent)]
 pub struct PatternKey(String);
 
-impl From<PathBuf> for PatternKey {
-  fn from(value: PathBuf) -> Self {
+impl From<&PathBuf> for PatternKey {
+  fn from(value: &PathBuf) -> Self {
     Self(value.to_string_lossy().to_string())
   }
 }

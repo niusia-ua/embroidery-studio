@@ -12,25 +12,27 @@ use crate::{
 pub fn load_pattern(file_path: std::path::PathBuf, patterns: tauri::State<PatternsState>) -> CommandResult<Vec<u8>> {
   log::trace!("Loading pattern");
   let mut patterns = patterns.write().unwrap();
-  let pattern_key = PatternKey::from(file_path.clone());
-  let result = match patterns.get(&pattern_key) {
-    Some(pattern) => borsh::to_vec(pattern)?,
-    None => {
-      let mut new_file_path = file_path.clone();
-      new_file_path.set_extension(PatternFormat::default().to_string());
 
-      let mut patproj = match PatternFormat::try_from(file_path.extension())? {
-        PatternFormat::Xsd => parser::xsd::parse_pattern(file_path)?,
-        PatternFormat::Oxs => parser::oxs::parse_pattern(file_path)?,
-        PatternFormat::EmbProj => parser::embproj::parse_pattern(file_path)?,
-      };
-      patproj.file_path = new_file_path;
+  let pattern_key = PatternKey::from(&file_path);
+  if let Some(pattern) = patterns.get(&pattern_key) {
+    log::trace!("Pattern loaded");
+    return Ok(borsh::to_vec(&(pattern_key, pattern))?);
+  }
 
-      let result = borsh::to_vec(&patproj)?;
-      patterns.insert(pattern_key, patproj);
-      result
-    }
+  // Change the original file path with the path to `.embproj` file.
+  let mut new_file_path = file_path.clone();
+  new_file_path.set_extension(PatternFormat::default().to_string());
+
+  let mut pattern = match PatternFormat::try_from(file_path.extension())? {
+    PatternFormat::Xsd => parser::xsd::parse_pattern(file_path)?,
+    PatternFormat::Oxs => parser::oxs::parse_pattern(file_path)?,
+    PatternFormat::EmbProj => parser::embproj::parse_pattern(file_path)?,
   };
+  pattern.file_path = new_file_path;
+
+  let result = borsh::to_vec(&(&pattern_key, &pattern))?;
+  patterns.insert(pattern_key, pattern);
+
   log::trace!("Pattern loaded");
   Ok(result)
 }
@@ -39,7 +41,7 @@ pub fn load_pattern(file_path: std::path::PathBuf, patterns: tauri::State<Patter
 pub fn create_pattern<R: tauri::Runtime>(
   app_handle: tauri::AppHandle<R>,
   patterns: tauri::State<PatternsState>,
-) -> CommandResult<(PatternKey, Vec<u8>)> {
+) -> CommandResult<Vec<u8>> {
   log::trace!("Creating new pattern");
   let mut patterns = patterns.write().unwrap();
 
@@ -51,13 +53,11 @@ pub fn create_pattern<R: tauri::Runtime>(
     print_settings: PrintSettings::default(),
   };
 
-  let pattern_key = PatternKey::from(patproj.file_path.clone());
-  // It is safe to unwrap here, because the pattern is always serializable.
-  let result = (pattern_key.clone(), borsh::to_vec(&patproj).unwrap());
-
+  let pattern_key = PatternKey::from(&patproj.file_path);
+  let result = borsh::to_vec(&(&pattern_key, &patproj))?;
   patterns.insert(pattern_key, patproj);
-  log::trace!("Pattern has been created");
 
+  log::trace!("Pattern has been created");
   Ok(result)
 }
 

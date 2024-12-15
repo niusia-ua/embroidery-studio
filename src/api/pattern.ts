@@ -1,26 +1,24 @@
 import { invoke } from "@tauri-apps/api/core";
-import { deserialize } from "@dao-xyz/borsh";
-import { PatternProject } from "#/schemas/pattern/project";
-import { PaletteItem } from "#/schemas/pattern/pattern";
+import { PatternProject, PaletteItem, type PatternKey } from "#/schemas/pattern";
 
 export const loadPattern = async (filePath: string) => {
-  const bytes = await invoke<[number]>("load_pattern", { filePath });
-  return deserialize(new Uint8Array(bytes), PatternProject);
+  const bytes = await invoke<number[]>("load_pattern", { filePath });
+  return PatternProject.deserialize(new Uint8Array(bytes));
 };
 
 export const createPattern = async () => {
-  const [key, bytes] = await invoke<[string, number[]]>("create_pattern");
-  return { key, pattern: deserialize(new Uint8Array(bytes), PatternProject) };
+  const bytes = await invoke<number[]>("create_pattern");
+  return PatternProject.deserialize(new Uint8Array(bytes));
 };
 
-export const savePattern = (patternKey: string, filePath: string) => {
+export const savePattern = (patternKey: PatternKey, filePath: string) => {
   return invoke<void>("save_pattern", { patternKey, filePath });
 };
 
-export const closePattern = (patternKey: string) => invoke<void>("close_pattern", { patternKey });
+export const closePattern = (patternKey: PatternKey) => invoke<void>("close_pattern", { patternKey });
 
-export const getPatternFilePath = (patternKey: string) => invoke<string>("get_pattern_file_path", { patternKey });
+export const getPatternFilePath = (patternKey: PatternKey) => invoke<string>("get_pattern_file_path", { patternKey });
 
-export const addPaletteItem = (patternKey: string, paletteItem: PaletteItem) => {
+export const addPaletteItem = (patternKey: PatternKey, paletteItem: PaletteItem) => {
   return invoke<void>("add_palette_item", { patternKey, paletteItem });
 };

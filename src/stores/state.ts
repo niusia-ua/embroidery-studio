@@ -1,10 +1,10 @@
 import { reactive } from "vue";
 import { defineStore } from "pinia";
-import { FullStitchKind, type StitchKind } from "#/schemas/pattern/pattern";
+import { FullStitchKind, type StitchKind, type PatternKey } from "#/schemas/pattern";
 
 interface OpenedPattern {
   title: string;
-  key: string;
+  key: PatternKey;
 }
 
 export interface AppState {
@@ -28,7 +28,7 @@ export const useAppStateStore = defineStore(
      * @param title The title of the pattern.
      * @param key The key of the pattern. Actually, the key is the file path of the pattern.
      */
-    function addOpenedPattern(title: string, key: string) {
+    function addOpenedPattern(title: string, key: PatternKey) {
       if (!state.openedPatterns) state.openedPatterns = [];
       const openedPattern: OpenedPattern = { title, key };
       if (state.openedPatterns.findIndex((p) => p.key === key) < 0) state.openedPatterns.push(openedPattern);
