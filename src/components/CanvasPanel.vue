@@ -178,33 +178,24 @@
     else return [end, start];
   }
 
-  export interface StitchesRemoveManyPayload {
-    fullstitches: FullStitch[];
-    partstitches: PartStitch[];
-    line?: LineStitch;
-    node?: NodeStitch;
-  }
-
   const appWindow = getCurrentWindow();
-  const unlistenRemoveManyStitches = await appWindow.listen<StitchesRemoveManyPayload>(
-    "stitches:remove_many",
-    ({ payload }) => {
-      canvasService.removeFullStitches(payload.fullstitches);
-      canvasService.removePartStitches(payload.partstitches);
-      if (payload.line) canvasService.removeLine(payload.line);
-      if (payload.node) canvasService.removeNode(payload.node);
-    },
-  );
-  const unlistenAddManyStitches = await appWindow.listen<StitchesRemoveManyPayload>(
-    "stitches:add_many",
-    ({ payload }) => {
-      const palette = props.patproj.pattern.palette;
-      for (const full of payload.fullstitches) canvasService.drawFullStitch(full, palette[full.palindex]!);
-      for (const part of payload.partstitches) canvasService.drawPartStitch(part, palette[part.palindex]!);
-      if (payload.line) canvasService.drawLine(payload.line, palette[payload.line.palindex]!);
-      if (payload.node) canvasService.drawNode(payload.node, palette[payload.node.palindex]!);
-    },
-  );
+  const unlistenRemoveManyStitches = await appWindow.listen<Stitch[]>("stitches:remove_many", ({ payload }) => {
+    for (const stitch of payload) {
+      if ("full" in stitch) canvasService.removeFullStitch(stitch.full);
+      if ("part" in stitch) canvasService.removePartStitch(stitch.part);
+      if ("line" in stitch) canvasService.removeLine(stitch.line);
+      if ("node" in stitch) canvasService.removeNode(stitch.node);
+    }
+  });
+  const unlistenAddManyStitches = await appWindow.listen<Stitch[]>("stitches:add_many", ({ payload }) => {
+    const palette = props.patproj.pattern.palette;
+    for (const stitch of payload) {
+      if ("full" in stitch) canvasService.drawFullStitch(stitch.full, palette[stitch.full.palindex]!);
+      if ("part" in stitch) canvasService.drawPartStitch(stitch.part, palette[stitch.part.palindex]!);
+      if ("line" in stitch) canvasService.drawLine(stitch.line, palette[stitch.line.palindex]!);
+      if ("node" in stitch) canvasService.drawNode(stitch.node, palette[stitch.node.palindex]!);
+    }
+  });
   const unlistenRemoveOneStitch = await appWindow.listen<Stitch>("stitches:remove_one", ({ payload }) => {
     if ("full" in payload) canvasService.removeFullStitch(payload.full);
     if ("part" in payload) canvasService.removePartStitch(payload.part);

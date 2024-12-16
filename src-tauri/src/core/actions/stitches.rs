@@ -4,7 +4,7 @@ use anyhow::Result;
 use tauri::{Emitter, WebviewWindow};
 
 use super::Action;
-use crate::core::pattern::{PatternProject, Stitch, StitchConflicts};
+use crate::core::pattern::{PatternProject, Stitch, StitchBundle};
 
 #[cfg(test)]
 #[path = "stitches.test.rs"]
@@ -13,7 +13,7 @@ mod tests;
 #[derive(Clone)]
 pub struct AddStitchAction {
   stitch: Stitch,
-  conflicts: OnceLock<StitchConflicts>,
+  conflicts: OnceLock<StitchBundle>,
 }
 
 impl AddStitchAction {
@@ -50,8 +50,8 @@ impl<R: tauri::Runtime> Action<R> for AddStitchAction {
   fn revoke(&self, window: &WebviewWindow<R>, patproj: &mut PatternProject) -> Result<()> {
     let conflicts = self.conflicts.get().unwrap();
     patproj.pattern.remove_stitch(self.stitch);
-    for stitch in conflicts.chain() {
-      patproj.pattern.add_stitch(stitch);
+    for stitch in conflicts.iter() {
+      patproj.pattern.add_stitch(stitch.to_owned());
     }
     window.emit("stitches:remove_one", self.stitch)?;
     window.emit("stitches:add_many", conflicts)?;

@@ -29,15 +29,15 @@ impl Pattern {
   }
 
   /// Adds a stitch to the pattern and returns any conflicts that may have arisen.
-  pub fn add_stitch(&mut self, stitch: Stitch) -> StitchConflicts {
+  pub fn add_stitch(&mut self, stitch: Stitch) -> StitchBundle {
     log::trace!("Adding stitch");
     match stitch {
       Stitch::Full(fullstitch) => {
         let conflicts = match fullstitch.kind {
-          FullStitchKind::Full => StitchConflicts::default()
+          FullStitchKind::Full => StitchBundle::default()
             .with_fullstitches(self.fullstitches.remove_conflicts_with_full_stitch(&fullstitch))
             .with_partstitches(self.partstitches.remove_conflicts_with_full_stitch(&fullstitch)),
-          FullStitchKind::Petite => StitchConflicts::default()
+          FullStitchKind::Petite => StitchBundle::default()
             .with_fullstitches(self.fullstitches.remove_conflicts_with_petite_stitch(&fullstitch))
             .with_partstitches(self.partstitches.remove_conflicts_with_petite_stitch(&fullstitch)),
         };
@@ -45,17 +45,17 @@ impl Pattern {
       }
       Stitch::Part(partstitch) => {
         let conflicts = match partstitch.kind {
-          PartStitchKind::Half => StitchConflicts::default()
+          PartStitchKind::Half => StitchBundle::default()
             .with_fullstitches(self.fullstitches.remove_conflicts_with_half_stitch(&partstitch))
             .with_partstitches(self.partstitches.remove_conflicts_with_half_stitch(&partstitch)),
-          PartStitchKind::Quarter => StitchConflicts::default()
+          PartStitchKind::Quarter => StitchBundle::default()
             .with_fullstitches(self.fullstitches.remove_conflicts_with_quarter_stitch(&partstitch))
             .with_partstitches(self.partstitches.remove_conflicts_with_quarter_stitch(&partstitch)),
         };
         conflicts.with_partstitch(self.partstitches.insert(partstitch))
       }
-      Stitch::Node(node) => StitchConflicts::default().with_node(self.nodes.insert(node)),
-      Stitch::Line(line) => StitchConflicts::default().with_line(self.lines.insert(line)),
+      Stitch::Node(node) => StitchBundle::default().with_node(self.nodes.insert(node)),
+      Stitch::Line(line) => StitchBundle::default().with_line(self.lines.insert(line)),
     }
   }
 

@@ -12,13 +12,13 @@ mod tests;
 
 pub type Coord = ordered_float::NotNan<f32>;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Stitch {
   Full(FullStitch),
   Part(PartStitch),
-  Node(Node),
   Line(Line),
+  Node(Node),
 }
 
 impl From<FullStitch> for Stitch {
@@ -45,67 +45,60 @@ impl From<Line> for Stitch {
   }
 }
 
-#[derive(Debug, Default, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
-pub struct StitchConflicts {
-  pub fullstitches: Vec<FullStitch>,
-  pub partstitches: Vec<PartStitch>,
-  pub node: Option<Node>,
-  pub line: Option<Line>,
-}
+/// A bundle of stitches.
+/// It is used to create a bundle of stitches to be added to or removed from the pattern.
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct StitchBundle(Vec<Stitch>);
 
-impl StitchConflicts {
+impl StitchBundle {
   pub fn with_fullstitches(mut self, fullstitches: Vec<FullStitch>) -> Self {
-    self.fullstitches = fullstitches;
+    self.0.extend(fullstitches.into_iter().map(Stitch::Full));
     self
   }
 
   pub fn with_fullstitch(mut self, fullstitch: Option<FullStitch>) -> Self {
     if let Some(fullstitch) = fullstitch {
-      self.fullstitches.push(fullstitch);
+      self.0.push(Stitch::Full(fullstitch));
     }
     self
   }
 
   pub fn with_partstitches(mut self, partstitches: Vec<PartStitch>) -> Self {
-    self.partstitches = partstitches;
+    self.0.extend(partstitches.into_iter().map(Stitch::Part));
     self
   }
 
   pub fn with_partstitch(mut self, partstitch: Option<PartStitch>) -> Self {
     if let Some(partstitch) = partstitch {
-      self.partstitches.push(partstitch);
+      self.0.push(Stitch::Part(partstitch));
     }
     self
   }
 
   pub fn with_node(mut self, node: Option<Node>) -> Self {
-    self.node = node;
+    if let Some(node) = node {
+      self.0.push(Stitch::Node(node));
+    }
     self
   }
 
   pub fn with_line(mut self, line: Option<Line>) -> Self {
-    self.line = line;
+    if let Some(line) = line {
+      self.0.push(Stitch::Line(line));
+    }
     self
   }
 
-  /// Returns `true` if there are no conflicts.
   pub fn is_empty(&self) -> bool {
-    self.fullstitches.is_empty() && self.partstitches.is_empty() && self.node.is_none() && self.line.is_none()
+    self.0.is_empty()
   }
 
-  /// Returns an iterator over all the stitches.
-  pub fn chain(&self) -> impl Iterator<Item = Stitch> + '_ {
-    self
-      .fullstitches
-      .iter()
-      .cloned()
-      .map(Stitch::Full)
-      .chain(self.partstitches.iter().cloned().map(Stitch::Part))
-      .chain(self.node.iter().cloned().map(Stitch::Node))
-      .chain(self.line.iter().cloned().map(Stitch::Line))
+  pub fn iter(&self) -> std::slice::Iter<'_, Stitch> {
+    self.0.iter()
   }
 }
 
+/// A set of stitches.
 #[derive(Debug, Clone, BorshSerialize, BorshDeserialize)]
 pub struct Stitches<T: Ord> {
   inner: BTreeSet<T>,

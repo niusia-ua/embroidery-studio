@@ -68,9 +68,8 @@ fn test_add_stitch() {
     });
 
     window.listen("stitches:remove_many", |e| {
-      let conflicts: StitchConflicts = serde_json::from_str(e.payload()).unwrap();
-      assert_eq!(conflicts.fullstitches.len(), 2);
-      assert_eq!(conflicts.partstitches.len(), 2);
+      let conflicts: Vec<Stitch> = serde_json::from_str(e.payload()).unwrap();
+      assert_eq!(conflicts.len(), 4);
     });
 
     let mut patproj = patproj.clone();
@@ -87,9 +86,8 @@ fn test_add_stitch() {
     });
 
     window.listen("stitches:add_many", |e| {
-      let conflicts: StitchConflicts = serde_json::from_str(e.payload()).unwrap();
-      assert_eq!(conflicts.fullstitches.len(), 2);
-      assert_eq!(conflicts.partstitches.len(), 2);
+      let conflicts: Vec<Stitch> = serde_json::from_str(e.payload()).unwrap();
+      assert_eq!(conflicts.len(), 4);
     });
 
     let mut patproj = patproj.clone();
