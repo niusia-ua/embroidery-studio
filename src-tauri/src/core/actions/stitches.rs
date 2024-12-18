@@ -4,7 +4,7 @@ use anyhow::Result;
 use tauri::{Emitter, WebviewWindow};
 
 use super::Action;
-use crate::core::pattern::{PatternProject, Stitch, StitchBundle};
+use crate::core::pattern::{PatternProject, Stitch};
 
 #[cfg(test)]
 #[path = "stitches.test.rs"]
@@ -13,12 +13,12 @@ mod tests;
 #[derive(Clone)]
 pub struct AddStitchAction {
   stitch: Stitch,
-  conflicts: OnceLock<StitchBundle>,
+  // We need to use the `OnceLock` here because we can't directly mutate the internal state of the action.
+  conflicts: OnceLock<Vec<Stitch>>,
 }
 
 impl AddStitchAction {
   pub fn new(stitch: Stitch) -> Self {
-    // We need to use the `OnceLock` here because we can't directly mutate the internal state of the action.
     Self {
       stitch,
       conflicts: OnceLock::new(),
@@ -34,11 +34,11 @@ impl<R: tauri::Runtime> Action<R> for AddStitchAction {
   /// - `stitches:remove_many` with the removed stitches that conflict with the new stitch
   fn perform(&self, window: &WebviewWindow<R>, patproj: &mut PatternProject) -> Result<()> {
     let conflicts = patproj.pattern.add_stitch(self.stitch);
-    if self.conflicts.get().is_none() {
-      self.conflicts.set(conflicts.clone()).unwrap();
-    }
     window.emit("stitches:add_one", self.stitch)?;
-    window.emit("stitches:remove_many", conflicts)?;
+    window.emit("stitches:remove_many", &conflicts)?;
+    if self.conflicts.get().is_none() {
+      self.conflicts.set(conflicts).unwrap();
+    }
     Ok(())
   }
 
@@ -50,11 +50,9 @@ impl<R: tauri::Runtime> Action<R> for AddStitchAction {
   fn revoke(&self, window: &WebviewWindow<R>, patproj: &mut PatternProject) -> Result<()> {
     let conflicts = self.conflicts.get().unwrap();
     patproj.pattern.remove_stitch(self.stitch);
-    for stitch in conflicts.iter() {
-      patproj.pattern.add_stitch(stitch.to_owned());
-    }
+    patproj.pattern.add_stitches(conflicts.clone());
     window.emit("stitches:remove_one", self.stitch)?;
-    window.emit("stitches:add_many", conflicts)?;
+    window.emit("stitches:add_many", &conflicts)?;
     Ok(())
   }
 }

@@ -15,6 +15,7 @@
         gridTemplateColumns: `repeat(${props.palette?.length ? paletteDisplayOptions.columnsNumber : 1}, minmax(0px, 1fr))`,
       }"
       pt:option:class="p-0"
+      @option-dblclick="({ value }) => emit('removePaletteItem', value)"
     >
       <template #header>
         <div class="flex min-h-9 w-full items-center justify-between">

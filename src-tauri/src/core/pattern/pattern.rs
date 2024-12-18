@@ -28,34 +28,114 @@ impl Pattern {
     }
   }
 
+  /// Adds many stitches to the pattern.
+  pub fn add_stitches(&mut self, stitches: Vec<Stitch>) {
+    for stitch in stitches {
+      self.add_stitch(stitch);
+    }
+  }
+
   /// Adds a stitch to the pattern and returns any conflicts that may have arisen.
-  pub fn add_stitch(&mut self, stitch: Stitch) -> StitchBundle {
+  pub fn add_stitch(&mut self, stitch: Stitch) -> Vec<Stitch> {
     log::trace!("Adding stitch");
+    let mut conflicts = Vec::new();
     match stitch {
       Stitch::Full(fullstitch) => {
-        let conflicts = match fullstitch.kind {
-          FullStitchKind::Full => StitchBundle::default()
-            .with_fullstitches(self.fullstitches.remove_conflicts_with_full_stitch(&fullstitch))
-            .with_partstitches(self.partstitches.remove_conflicts_with_full_stitch(&fullstitch)),
-          FullStitchKind::Petite => StitchBundle::default()
-            .with_fullstitches(self.fullstitches.remove_conflicts_with_petite_stitch(&fullstitch))
-            .with_partstitches(self.partstitches.remove_conflicts_with_petite_stitch(&fullstitch)),
+        match fullstitch.kind {
+          FullStitchKind::Full => {
+            conflicts.extend(
+              self
+                .fullstitches
+                .remove_conflicts_with_full_stitch(&fullstitch)
+                .into_iter()
+                .map(Stitch::Full),
+            );
+            conflicts.extend(
+              self
+                .partstitches
+                .remove_conflicts_with_full_stitch(&fullstitch)
+                .into_iter()
+                .map(Stitch::Part),
+            );
+          }
+          FullStitchKind::Petite => {
+            conflicts.extend(
+              self
+                .fullstitches
+                .remove_conflicts_with_petite_stitch(&fullstitch)
+                .into_iter()
+                .map(Stitch::Full),
+            );
+            conflicts.extend(
+              self
+                .partstitches
+                .remove_conflicts_with_petite_stitch(&fullstitch)
+                .into_iter()
+                .map(Stitch::Part),
+            );
+          }
         };
-        conflicts.with_fullstitch(self.fullstitches.insert(fullstitch))
+        if let Some(fullstitch) = self.fullstitches.insert(fullstitch) {
+          conflicts.push(Stitch::Full(fullstitch));
+        }
       }
       Stitch::Part(partstitch) => {
-        let conflicts = match partstitch.kind {
-          PartStitchKind::Half => StitchBundle::default()
-            .with_fullstitches(self.fullstitches.remove_conflicts_with_half_stitch(&partstitch))
-            .with_partstitches(self.partstitches.remove_conflicts_with_half_stitch(&partstitch)),
-          PartStitchKind::Quarter => StitchBundle::default()
-            .with_fullstitches(self.fullstitches.remove_conflicts_with_quarter_stitch(&partstitch))
-            .with_partstitches(self.partstitches.remove_conflicts_with_quarter_stitch(&partstitch)),
+        match partstitch.kind {
+          PartStitchKind::Half => {
+            conflicts.extend(
+              self
+                .fullstitches
+                .remove_conflicts_with_half_stitch(&partstitch)
+                .into_iter()
+                .map(Stitch::Full),
+            );
+            conflicts.extend(
+              self
+                .partstitches
+                .remove_conflicts_with_half_stitch(&partstitch)
+                .into_iter()
+                .map(Stitch::Part),
+            );
+          }
+          PartStitchKind::Quarter => {
+            conflicts.extend(
+              self
+                .fullstitches
+                .remove_conflicts_with_quarter_stitch(&partstitch)
+                .into_iter()
+                .map(Stitch::Full),
+            );
+            conflicts.extend(
+              self
+                .partstitches
+                .remove_conflicts_with_quarter_stitch(&partstitch)
+                .into_iter()
+                .map(Stitch::Part),
+            );
+          }
         };
-        conflicts.with_partstitch(self.partstitches.insert(partstitch))
+        if let Some(partstitch) = self.partstitches.insert(partstitch) {
+          conflicts.push(Stitch::Part(partstitch));
+        }
       }
-      Stitch::Node(node) => StitchBundle::default().with_node(self.nodes.insert(node)),
-      Stitch::Line(line) => StitchBundle::default().with_line(self.lines.insert(line)),
+      Stitch::Node(node) => {
+        if let Some(node) = self.nodes.insert(node) {
+          conflicts.push(Stitch::Node(node));
+        }
+      }
+      Stitch::Line(line) => {
+        if let Some(line) = self.lines.insert(line) {
+          conflicts.push(Stitch::Line(line));
+        }
+      }
+    };
+    conflicts
+  }
+
+  /// Removes many stitches from the pattern.
+  pub fn remove_stitches(&mut self, stitches: Vec<Stitch>) {
+    for stitch in stitches {
+      self.remove_stitch(stitch);
     }
   }
 
@@ -68,6 +148,61 @@ impl Pattern {
       Stitch::Node(node) => self.nodes.remove(&node).map(|node| node.into()),
       Stitch::Line(line) => self.lines.remove(&line).map(|line| line.into()),
     }
+  }
+
+  /// Removes and returns all stitches with a given palette index from the pattern.
+  pub fn remove_stitches_by_palindex(&mut self, palindex: u8) -> Vec<Stitch> {
+    log::trace!("Removing stitches by palette index");
+    let mut conflicts = Vec::new();
+    conflicts.extend(
+      self
+        .fullstitches
+        .remove_stitches_by_palindex(palindex)
+        .into_iter()
+        .map(Stitch::Full),
+    );
+    conflicts.extend(
+      self
+        .partstitches
+        .remove_stitches_by_palindex(palindex)
+        .into_iter()
+        .map(Stitch::Part),
+    );
+    conflicts.extend(
+      self
+        .lines
+        .remove_stitches_by_palindex(palindex)
+        .into_iter()
+        .map(Stitch::Line),
+    );
+    conflicts.extend(
+      self
+        .nodes
+        .remove_stitches_by_palindex(palindex)
+        .into_iter()
+        .map(Stitch::Node),
+    );
+    conflicts
+  }
+
+  pub fn restore_stitches(&mut self, stitches: Vec<Stitch>, palindex: u8) {
+    let mut fullstitches = Vec::new();
+    let mut partstitches = Vec::new();
+    let mut lines = Vec::new();
+    let mut nodes = Vec::new();
+    for stitch in stitches.into_iter() {
+      match stitch {
+        Stitch::Full(fullstitch) => fullstitches.push(fullstitch),
+        Stitch::Part(partstitch) => partstitches.push(partstitch),
+        Stitch::Line(line) => lines.push(line),
+        Stitch::Node(node) => nodes.push(node),
+      }
+    }
+
+    self.fullstitches.restore_stitches(fullstitches, palindex);
+    self.partstitches.restore_stitches(partstitches, palindex);
+    self.lines.restore_stitches(lines, palindex);
+    self.nodes.restore_stitches(nodes, palindex);
   }
 }
 

@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::collections::BTreeSet;
 
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -42,59 +43,6 @@ impl From<Node> for Stitch {
 impl From<Line> for Stitch {
   fn from(line: Line) -> Self {
     Self::Line(line)
-  }
-}
-
-/// A bundle of stitches.
-/// It is used to create a bundle of stitches to be added to or removed from the pattern.
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
-pub struct StitchBundle(Vec<Stitch>);
-
-impl StitchBundle {
-  pub fn with_fullstitches(mut self, fullstitches: Vec<FullStitch>) -> Self {
-    self.0.extend(fullstitches.into_iter().map(Stitch::Full));
-    self
-  }
-
-  pub fn with_fullstitch(mut self, fullstitch: Option<FullStitch>) -> Self {
-    if let Some(fullstitch) = fullstitch {
-      self.0.push(Stitch::Full(fullstitch));
-    }
-    self
-  }
-
-  pub fn with_partstitches(mut self, partstitches: Vec<PartStitch>) -> Self {
-    self.0.extend(partstitches.into_iter().map(Stitch::Part));
-    self
-  }
-
-  pub fn with_partstitch(mut self, partstitch: Option<PartStitch>) -> Self {
-    if let Some(partstitch) = partstitch {
-      self.0.push(Stitch::Part(partstitch));
-    }
-    self
-  }
-
-  pub fn with_node(mut self, node: Option<Node>) -> Self {
-    if let Some(node) = node {
-      self.0.push(Stitch::Node(node));
-    }
-    self
-  }
-
-  pub fn with_line(mut self, line: Option<Line>) -> Self {
-    if let Some(line) = line {
-      self.0.push(Stitch::Line(line));
-    }
-    self
-  }
-
-  pub fn is_empty(&self) -> bool {
-    self.0.is_empty()
-  }
-
-  pub fn iter(&self) -> std::slice::Iter<'_, Stitch> {
-    self.0.iter()
   }
 }
 
@@ -417,5 +365,44 @@ impl Stitches<PartStitch> {
     self.remove(&half).inspect(|&half| conflicts.push(half));
 
     conflicts
+  }
+}
+
+// TODO: rewrite
+// Just defines some common methods to work with the palette indices.
+// That allows to share some logic across different stitch types.
+pub trait PaletteIndex {
+  fn palindex(&self) -> u8;
+  fn set_palindex(&mut self, palindex: u8);
+}
+
+impl<T: Ord + PaletteIndex> Stitches<T> {
+  pub fn remove_stitches_by_palindex(&mut self, palindex: u8) -> Vec<T> {
+    let mut conflicts = Vec::new();
+    for mut stitch in std::mem::take(&mut self.inner).into_iter() {
+      match stitch.palindex().cmp(&palindex) {
+        Ordering::Less => {
+          self.inner.insert(stitch);
+        }
+        Ordering::Equal => {
+          conflicts.push(stitch);
+        }
+        Ordering::Greater => {
+          stitch.set_palindex(stitch.palindex() - 1);
+          self.inner.insert(stitch);
+        }
+      };
+    }
+    conflicts
+  }
+
+  pub fn restore_stitches(&mut self, stitches: Vec<T>, palindex: u8) {
+    for mut stitch in std::mem::take(&mut self.inner).into_iter() {
+      if stitch.palindex() >= palindex {
+        stitch.set_palindex(stitch.palindex() + 1);
+      }
+      self.inner.insert(stitch);
+    }
+    self.inner.extend(stitches);
   }
 }

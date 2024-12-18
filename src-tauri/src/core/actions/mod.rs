@@ -16,6 +16,9 @@ use super::pattern::PatternProject;
 mod stitches;
 pub use stitches::*;
 
+mod palette;
+pub use palette::*;
+
 /// An action that can be executed and revoked.
 pub trait Action<R: tauri::Runtime>: Send + Sync + dyn_clone::DynClone {
   /// Perform the action.

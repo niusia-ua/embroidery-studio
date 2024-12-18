@@ -1,6 +1,7 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 
+use super::PaletteIndex;
 use crate::core::pattern::Coord;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
@@ -21,6 +22,16 @@ impl PartialOrd for Node {
 impl Ord for Node {
   fn cmp(&self, other: &Self) -> std::cmp::Ordering {
     self.y.cmp(&other.y).then(self.x.cmp(&other.x))
+  }
+}
+
+impl PaletteIndex for Node {
+  fn palindex(&self) -> u8 {
+    self.palindex
+  }
+
+  fn set_palindex(&mut self, palindex: u8) {
+    self.palindex = palindex;
   }
 }
 

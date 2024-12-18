@@ -22,3 +22,6 @@ export const getPatternFilePath = (patternKey: PatternKey) => invoke<string>("ge
 export const addPaletteItem = (patternKey: PatternKey, paletteItem: PaletteItem) => {
   return invoke<void>("add_palette_item", { patternKey, paletteItem });
 };
+export const removePaletteItem = (patternKey: PatternKey, paletteItem: PaletteItem) => {
+  return invoke<void>("remove_palette_item", { patternKey, paletteItem });
+};

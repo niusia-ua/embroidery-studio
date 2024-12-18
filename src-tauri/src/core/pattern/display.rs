@@ -1,4 +1,5 @@
 use borsh::{BorshDeserialize, BorshSerialize};
+use serde::Serialize;
 
 use super::DefaultStitchStrands;
 
@@ -53,7 +54,8 @@ impl DisplaySettings {
   }
 }
 
-#[derive(Debug, Default, Clone, PartialEq, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Serialize, BorshSerialize, BorshDeserialize)]
+#[cfg_attr(test, derive(serde::Deserialize))]
 pub struct Symbols {
   pub full: Option<u16>,
   pub petite: Option<u16>,
@@ -94,7 +96,8 @@ impl Default for SymbolSettings {
   }
 }
 
-#[derive(Debug, Default, Clone, PartialEq, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Serialize, BorshSerialize, BorshDeserialize)]
+#[cfg_attr(test, derive(serde::Deserialize))]
 pub struct Formats {
   pub symbol: SymbolFormat,
   pub back: LineFormat,
@@ -105,7 +108,8 @@ pub struct Formats {
   pub font: FontFormat,
 }
 
-#[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, BorshSerialize, BorshDeserialize)]
+#[cfg_attr(test, derive(serde::Deserialize))]
 pub struct SymbolFormat {
   pub use_alt_bg_color: bool,
   pub bg_color: String,
@@ -122,7 +126,8 @@ impl Default for SymbolFormat {
   }
 }
 
-#[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, BorshSerialize, BorshDeserialize)]
+#[cfg_attr(test, derive(serde::Deserialize))]
 pub struct LineFormat {
   pub use_alt_color: bool,
   pub color: String,
@@ -141,7 +146,8 @@ impl Default for LineFormat {
   }
 }
 
-#[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, BorshSerialize, BorshDeserialize)]
+#[cfg_attr(test, derive(serde::Deserialize))]
 #[borsh(use_discriminant = true)]
 pub enum LineStyle {
   Solid = 0,
@@ -173,7 +179,8 @@ impl From<u16> for LineStyle {
   }
 }
 
-#[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, BorshSerialize, BorshDeserialize)]
+#[cfg_attr(test, derive(serde::Deserialize))]
 pub struct NodeFormat {
   pub use_dot_style: bool,
   pub use_alt_color: bool,
@@ -192,7 +199,8 @@ impl Default for NodeFormat {
   }
 }
 
-#[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, BorshSerialize, BorshDeserialize)]
+#[cfg_attr(test, derive(serde::Deserialize))]
 pub struct FontFormat {
   pub font_name: Option<String>,
   pub bold: bool,
@@ -332,12 +340,12 @@ impl Default for StitchSettings {
 
 #[nutype::nutype(
   sanitize(with = |raw| raw.clamp(0.1, 10.0)),
-  derive(Debug, Clone, Copy, PartialEq, BorshSerialize, BorshDeserialize)
+  derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)
 )]
 pub struct StitchThickness(f32);
 
 #[nutype::nutype(
   sanitize(with = |raw| raw.clamp(1, 100)),
-  derive(Debug, Clone, Copy, PartialEq, BorshSerialize, BorshDeserialize)
+  derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)
 )]
 pub struct Percentage(u8);

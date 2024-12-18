@@ -5,7 +5,7 @@ use tauri::{generate_context, App, Listener, WebviewUrl, WebviewWindowBuilder};
 use super::{Action, AddStitchAction, RemoveStitchAction};
 use crate::core::pattern::*;
 
-pub fn setup_app() -> App<MockRuntime> {
+fn setup_app() -> App<MockRuntime> {
   mock_builder().build(generate_context!()).unwrap()
 }
 
@@ -52,7 +52,8 @@ fn test_add_stitch() {
   let window = WebviewWindowBuilder::new(&app, "main", WebviewUrl::default())
     .build()
     .unwrap();
-  let patproj = create_pattern_project();
+
+  let mut patproj = create_pattern_project();
   let stitch = Stitch::Full(FullStitch {
     x: NotNan::new(0.0).unwrap(),
     y: NotNan::new(0.0).unwrap(),
@@ -66,15 +67,12 @@ fn test_add_stitch() {
     window.listen("stitches:add_one", move |e| {
       assert_eq!(serde_json::from_str::<Stitch>(e.payload()).unwrap(), stitch);
     });
-
     window.listen("stitches:remove_many", |e| {
       let conflicts: Vec<Stitch> = serde_json::from_str(e.payload()).unwrap();
       assert_eq!(conflicts.len(), 4);
     });
 
-    let mut patproj = patproj.clone();
     action.perform(&window, &mut patproj).unwrap();
-
     assert_eq!(patproj.pattern.fullstitches.len(), 1);
     assert_eq!(patproj.pattern.partstitches.len(), 0);
   }
@@ -84,15 +82,12 @@ fn test_add_stitch() {
     window.listen("stitches:remove_one", move |e| {
       assert_eq!(serde_json::from_str::<Stitch>(e.payload()).unwrap(), stitch);
     });
-
     window.listen("stitches:add_many", |e| {
       let conflicts: Vec<Stitch> = serde_json::from_str(e.payload()).unwrap();
       assert_eq!(conflicts.len(), 4);
     });
 
-    let mut patproj = patproj.clone();
     action.revoke(&window, &mut patproj).unwrap();
-
     assert_eq!(patproj.pattern.fullstitches.len(), 2);
     assert_eq!(patproj.pattern.partstitches.len(), 2);
   }
@@ -104,7 +99,8 @@ fn test_remove_stitch() {
   let window = WebviewWindowBuilder::new(&app, "main", WebviewUrl::default())
     .build()
     .unwrap();
-  let patproj = create_pattern_project();
+
+  let mut patproj = create_pattern_project();
   let stitch = Stitch::Full(FullStitch {
     x: NotNan::new(0.0).unwrap(),
     y: NotNan::new(0.0).unwrap(),
@@ -119,9 +115,7 @@ fn test_remove_stitch() {
       assert_eq!(serde_json::from_str::<Stitch>(e.payload()).unwrap(), stitch);
     });
 
-    let mut patproj = patproj.clone();
     action.perform(&window, &mut patproj).unwrap();
-
     assert_eq!(patproj.pattern.fullstitches.len(), 1);
     assert_eq!(patproj.pattern.partstitches.len(), 2);
   }
@@ -132,9 +126,7 @@ fn test_remove_stitch() {
       assert_eq!(serde_json::from_str::<Stitch>(e.payload()).unwrap(), stitch);
     });
 
-    let mut patproj = patproj.clone();
     action.revoke(&window, &mut patproj).unwrap();
-
     assert_eq!(patproj.pattern.fullstitches.len(), 2);
     assert_eq!(patproj.pattern.partstitches.len(), 2);
   }
