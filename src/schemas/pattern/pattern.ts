@@ -138,9 +138,10 @@ export class PaletteItem {
   }
 }
 
+export type StitchesPerInch = [number, number];
 export class Fabric {
   @field({ type: fixedArray("u16", 2) })
-  spi: [number, number];
+  spi: StitchesPerInch;
 
   @field({ type: "string" })
   kind: string;

@@ -1,5 +1,6 @@
 <template>
   <ConfirmDialog />
+  <DynamicDialog />
   <BlockUI :blocked="loading" full-screen />
   <div class="flex h-full flex-col">
     <Toolbar data-tauri-drag-region class="rounded-none border-0 border-b p-0">
@@ -61,7 +62,16 @@
 <script lang="ts" setup>
   import { onMounted } from "vue";
   import { storeToRefs } from "pinia";
-  import { BlockUI, Panel, ConfirmDialog, ProgressSpinner, Splitter, SplitterPanel, Toolbar } from "primevue";
+  import {
+    BlockUI,
+    Panel,
+    ConfirmDialog,
+    ProgressSpinner,
+    Splitter,
+    SplitterPanel,
+    Toolbar,
+    DynamicDialog,
+  } from "primevue";
   import { getCurrentWindow } from "@tauri-apps/api/window";
   import MainMenu from "./components/toolbar/MainMenu.vue";
   import CanvasPanel from "./components/CanvasPanel.vue";

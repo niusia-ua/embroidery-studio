@@ -2,6 +2,7 @@ import { Application, Container, Graphics, GraphicsContext, Point } from "pixi.j
 import type { FederatedMouseEvent, ColorSource, ApplicationOptions, StrokeInput } from "pixi.js";
 import { Viewport } from "pixi-viewport";
 import { SpatialHash as Culler } from "pixi-cull";
+import { mm2px } from "#/utils/measurement";
 import { AddStitchEventStage, EventType } from "./events.types";
 import type { AddStitchData, RemoveStitchData } from "./events.types";
 import type { PatternProject } from "#/schemas/pattern/project";
@@ -426,10 +427,6 @@ export class CanvasService extends EventTarget {
     const { width, height } = this.#stages.fabric.getLocalBounds();
     return x <= 0 || y <= 0 || x >= width || y >= height;
   }
-}
-
-function mm2px(mm: number) {
-  return mm * 3.7795275591;
 }
 
 export interface CanvasSize {
