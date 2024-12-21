@@ -8,14 +8,14 @@
           :show-buttons="true"
           :allow-empty="false"
           :min="1"
-          :input-style="{ background: dt('dialog.background') }"
+          :input-style="{ background }"
           @value-change="
             (value) => {
               if (squareStitches) fabric.spi[1] = value;
             }
           "
         />
-        <label for="stitches-horizontally">Horizontally</label>
+        <label for="stitches-horizontally" :style="{ background }">Horizontally</label>
       </FloatLabel>
 
       <FloatLabel variant="on">
@@ -26,9 +26,9 @@
           :show-buttons="true"
           :allow-empty="false"
           :min="1"
-          :input-style="{ background: dt('dialog.background') }"
+          :input-style="{ background }"
         />
-        <label for="stitches-vertically">Vertically</label>
+        <label for="stitches-vertically" :style="{ background }">Vertically</label>
       </FloatLabel>
 
       <label class="flex items-center gap-2">
@@ -54,9 +54,9 @@
               :allow-empty="false"
               :min="0.1"
               :step="fabricSizeMeasurement === 'inches' ? 0.1 : 1"
-              :input-style="{ background: dt('dialog.background') }"
+              :input-style="{ background }"
             />
-            <label for="size-width">Width</label>
+            <label for="size-width" :style="{ background }">Width</label>
           </FloatLabel>
 
           by
@@ -68,9 +68,9 @@
               :allow-empty="false"
               :min="0.1"
               :step="fabricSizeMeasurement === 'inches' ? 0.1 : 1"
-              :input-style="{ background: dt('dialog.background') }"
+              :input-style="{ background }"
             />
-            <label for="size-height">Height</label>
+            <label for="size-height" :style="{ background }">Height</label>
           </FloatLabel>
 
           <label class="flex items-center gap-2">
@@ -98,9 +98,9 @@
               v-model="fabricSizeStitches.width"
               :allow-empty="false"
               :min="1"
-              :input-style="{ background: dt('dialog.background') }"
+              :input-style="{ background }"
             />
-            <label for="size-width">Width</label>
+            <label for="size-width" :style="{ background }">Width</label>
           </FloatLabel>
 
           by
@@ -111,9 +111,9 @@
               v-model="fabricSizeStitches.height"
               :allow-empty="false"
               :min="1"
-              :input-style="{ background: dt('dialog.background') }"
+              :input-style="{ background }"
             />
-            <label for="size-height">Height</label>
+            <label for="size-height" :style="{ background }">Height</label>
           </FloatLabel>
 
           stitches
@@ -141,7 +141,7 @@
         empty-message="No fabric colors found"
         :dt="{ list: { header: { padding: '4px 8px' } } }"
         pt:root:class="flex flex-col h-full rounded-none border-0"
-        :pt:root:style="{ background: dt('dialog.background') }"
+        :pt:root:style="{ background }"
         pt:list-container:class="grow"
         pt:list:class="grid gap-1"
         :pt:list:style="{ gridTemplateColumns: `repeat(8, minmax(0px, 1fr))` }"
@@ -171,12 +171,7 @@
     </Fieldset>
 
     <Fieldset legend="Kind">
-      <Select
-        v-model="fabric.kind"
-        editable
-        :options="fabricKinds"
-        :pt:root:style="{ background: dt('dialog.background') }"
-      />
+      <Select v-model="fabric.kind" editable :options="fabricKinds" :pt:root:style="{ background }" />
     </Fieldset>
   </div>
 </template>
@@ -191,6 +186,9 @@
   import { inches2mm, mm2inches, size2stitches, stitches2inches, stitches2mm } from "#/utils/measurement";
   import { contrastColor } from "#/utils/color";
   import type { Fabric, PatternProperties } from "#/schemas/pattern";
+
+  // Is used to set the background color of the input fields.
+  const background = dt("dialog.background");
 
   const dialogRef = inject<Ref<DynamicDialogInstance>>("dialogRef")!;
 
