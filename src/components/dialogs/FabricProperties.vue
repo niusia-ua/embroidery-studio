@@ -8,6 +8,7 @@
           :show-buttons="true"
           :allow-empty="false"
           :min="1"
+          :input-style="{ background: dt('dialog.background') }"
           @value-change="
             (value) => {
               if (squareStitches) fabric.spi[1] = value;
@@ -24,8 +25,8 @@
           :disabled="squareStitches"
           :show-buttons="true"
           :allow-empty="false"
-          :default-value="1"
           :min="1"
+          :input-style="{ background: dt('dialog.background') }"
         />
         <label for="stitches-vertically">Vertically</label>
       </FloatLabel>
@@ -53,6 +54,7 @@
               :allow-empty="false"
               :min="0.1"
               :step="fabricSizeMeasurement === 'inches' ? 0.1 : 1"
+              :input-style="{ background: dt('dialog.background') }"
             />
             <label for="size-width">Width</label>
           </FloatLabel>
@@ -66,6 +68,7 @@
               :allow-empty="false"
               :min="0.1"
               :step="fabricSizeMeasurement === 'inches' ? 0.1 : 1"
+              :input-style="{ background: dt('dialog.background') }"
             />
             <label for="size-height">Height</label>
           </FloatLabel>
@@ -90,14 +93,26 @@
 
         <div class="mx-8 my-4 flex items-center gap-2">
           <FloatLabel variant="on">
-            <InputNumber id="size-width" v-model="fabricSizeStitches.width" :allow-empty="false" :min="1" />
+            <InputNumber
+              id="size-width"
+              v-model="fabricSizeStitches.width"
+              :allow-empty="false"
+              :min="1"
+              :input-style="{ background: dt('dialog.background') }"
+            />
             <label for="size-width">Width</label>
           </FloatLabel>
 
           by
 
           <FloatLabel variant="on">
-            <InputNumber id="size-height" v-model="fabricSizeStitches.height" :allow-empty="false" :min="1" />
+            <InputNumber
+              id="size-height"
+              v-model="fabricSizeStitches.height"
+              :allow-empty="false"
+              :min="1"
+              :input-style="{ background: dt('dialog.background') }"
+            />
             <label for="size-height">Height</label>
           </FloatLabel>
 
@@ -118,17 +133,64 @@
       </p>
     </Fieldset>
 
-    <!-- <Fieldset legend="Color"></Fieldset> -->
-    <!-- <Fieldset legend="Type"></Fieldset> -->
+    <Fieldset legend="Color">
+      <Listbox
+        :model-value="{ name: fabric.name, color: fabric.color }"
+        :options="fabricColors"
+        scroll-height="100%"
+        empty-message="No fabric colors found"
+        :dt="{ list: { header: { padding: '4px 8px' } } }"
+        pt:root:class="flex flex-col h-full rounded-none border-0"
+        :pt:root:style="{ background: dt('dialog.background') }"
+        pt:list-container:class="grow"
+        pt:list:class="grid gap-1"
+        :pt:list:style="{ gridTemplateColumns: `repeat(8, minmax(0px, 1fr))` }"
+        pt:option:class="p-0"
+        @value-change="
+          ({ name, color }) => {
+            fabric.name = name;
+            fabric.color = color;
+          }
+        "
+      >
+        <template #option="{ option, selected }">
+          <div
+            v-tooltip="{ value: option.name, showDelay: 200 }"
+            class="h-8 w-full"
+            :style="{
+              backgroundColor: `#${option.color}`,
+              boxShadow: selected
+                ? `inset 0 0 0 2px #${option.color}, inset 0 0 0 4px ${contrastColor(option.color)}`
+                : '',
+            }"
+          ></div>
+        </template>
+      </Listbox>
+
+      <p>Selected color: {{ fabric.name }}</p>
+    </Fieldset>
+
+    <Fieldset legend="Kind">
+      <Select
+        v-model="fabric.kind"
+        editable
+        :options="fabricKinds"
+        :pt:root:style="{ background: dt('dialog.background') }"
+      />
+    </Fieldset>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { computed, inject, reactive, ref, watch, type Ref } from "vue";
-  import { Checkbox, Fieldset, FloatLabel, InputNumber, RadioButton } from "primevue";
+  import { path } from "@tauri-apps/api";
+  import { readTextFile } from "@tauri-apps/plugin-fs";
+  import { computed, inject, onMounted, reactive, ref, watch, type Ref } from "vue";
+  import { dt } from "@primevue/themes";
+  import { Checkbox, Fieldset, FloatLabel, InputNumber, Listbox, RadioButton, Select } from "primevue";
   import type { DynamicDialogInstance } from "primevue/dynamicdialogoptions";
-  import type { Fabric, PatternProperties } from "#/schemas/pattern";
   import { inches2mm, mm2inches, size2stitches, stitches2inches, stitches2mm } from "#/utils/measurement";
+  import { contrastColor } from "#/utils/color";
+  import type { Fabric, PatternProperties } from "#/schemas/pattern";
 
   const dialogRef = inject<Ref<DynamicDialogInstance>>("dialogRef")!;
 
@@ -176,5 +238,12 @@
     const { width, height } = fabricSizeFinal;
     fabricSizeFinal.width = measurement === "inches" ? mm2inches(width) : inches2mm(width);
     fabricSizeFinal.height = measurement === "inches" ? mm2inches(height) : inches2mm(height);
+  });
+
+  const fabricColors = ref<{ name: string; color: string }[]>([]);
+  const fabricKinds = ref(["Aida", "Evenweave", "Linen"]);
+
+  onMounted(async () => {
+    fabricColors.value = JSON.parse(await readTextFile(await path.resolveResource("resources/fabric-colors.json")));
   });
 </script>
