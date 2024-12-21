@@ -18,6 +18,14 @@ pub struct Pattern {
 }
 
 impl Pattern {
+  pub fn new(properties: PatternProperties, fabric: Fabric) -> Self {
+    Pattern {
+      properties,
+      fabric,
+      ..Pattern::default()
+    }
+  }
+
   /// Check if the pattern contains a stitch.
   pub fn contains_stitch(&self, stitch: &Stitch) -> bool {
     match stitch {
@@ -206,7 +214,7 @@ impl Pattern {
   }
 }
 
-#[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, BorshSerialize, BorshDeserialize)]
 pub struct PatternProperties {
   pub width: u16,
   pub height: u16,
@@ -305,7 +313,7 @@ impl Default for DefaultStitchStrands {
   }
 }
 
-#[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, BorshSerialize, BorshDeserialize)]
 pub struct Fabric {
   pub spi: StitchesPerInch,
   pub kind: String,

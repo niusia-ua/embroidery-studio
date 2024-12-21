@@ -2,7 +2,7 @@ import { createApp } from "vue";
 import { createPinia } from "pinia";
 import piniaPluginPersistedState from "pinia-plugin-persistedstate";
 import { PrimeVue } from "@primevue/core";
-import { Tooltip, ConfirmationService } from "primevue";
+import { Tooltip, ConfirmationService, DialogService } from "primevue";
 import Aura from "@primevue/themes/aura";
 
 import "primeicons/primeicons.css";
@@ -27,6 +27,7 @@ app.use(PrimeVue, {
   },
 });
 app.use(ConfirmationService);
+app.use(DialogService);
 app.directive("tooltip", Tooltip);
 
 app.mount("#app");

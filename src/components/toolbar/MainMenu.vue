@@ -13,19 +13,24 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, useTemplateRef } from "vue";
+  import { defineAsyncComponent, ref, useTemplateRef } from "vue";
   import { useMagicKeys, whenever } from "@vueuse/core";
-  import { Button, TieredMenu } from "primevue";
+  import { Button, TieredMenu, useDialog } from "primevue";
   import type { MenuItem } from "primevue/menuitem";
   import { open, save } from "@tauri-apps/plugin-dialog";
   import { PathApi, PatternApi } from "#/api";
   import { useAppStateStore } from "#/stores/state";
   import { usePreferencesStore } from "#/stores/preferences";
   import { usePatternProjectStore } from "#/stores/patproj";
+  import { storeToRefs } from "pinia";
+
+  const dialog = useDialog();
+  const FabricProperties = defineAsyncComponent(() => import("#/components/dialogs/FabricProperties.vue"));
 
   const appStateStore = useAppStateStore();
   const preferencesStore = usePreferencesStore();
   const patternProjectStore = usePatternProjectStore();
+  const { patproj } = storeToRefs(patternProjectStore);
 
   const menu = useTemplateRef("menu");
 
@@ -61,6 +66,32 @@
       },
     ],
   };
+  const editOptions: MenuItem = {
+    label: "Edit",
+    icon: "pi pi-pencil",
+    visible: () => patproj.value !== undefined,
+    items: [
+      {
+        label: "Fabric Properties",
+        command: () =>
+          dialog.open(FabricProperties, {
+            props: {
+              header: "Fabric Properties",
+              modal: true,
+            },
+            data: {
+              patternProperties: patproj.value!.pattern.properties,
+              fabric: patproj.value!.pattern.fabric,
+            },
+            onClose: (options) => {
+              const data = options?.data;
+              if (!data) return;
+              console.log(data);
+            },
+          }),
+      },
+    ],
+  };
   const preferencesOptions: MenuItem = {
     label: "Preferences",
     icon: "pi pi-cog",
@@ -88,7 +119,7 @@
       },
     ],
   };
-  const menuOptions = ref<MenuItem[]>([fileOptions, preferencesOptions]);
+  const menuOptions = ref<MenuItem[]>([fileOptions, editOptions, preferencesOptions]);
 
   async function loadPattern() {
     const path = await open({
