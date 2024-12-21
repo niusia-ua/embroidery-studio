@@ -174,6 +174,8 @@
       <Select v-model="fabric.kind" editable :options="fabricKinds" :pt:root:style="{ background }" />
     </Fieldset>
   </div>
+
+  <DialogFooter :save="() => dialogRef.close({ patternProperties, fabric })" class="mt-5" />
 </template>
 
 <script setup lang="ts">
@@ -183,6 +185,7 @@
   import { dt } from "@primevue/themes";
   import { Checkbox, Fieldset, FloatLabel, InputNumber, Listbox, RadioButton, Select } from "primevue";
   import type { DynamicDialogInstance } from "primevue/dynamicdialogoptions";
+  import DialogFooter from "./DialogFooter.vue";
   import { inches2mm, mm2inches, size2stitches, stitches2inches, stitches2mm } from "#/utils/measurement";
   import { contrastColor } from "#/utils/color";
   import type { Fabric, PatternProperties } from "#/schemas/pattern";
@@ -192,19 +195,21 @@
 
   const dialogRef = inject<Ref<DynamicDialogInstance>>("dialogRef")!;
 
+  const DEFAULT_PATTERN_PROPERTIES: PatternProperties = { width: 60, height: 80 };
+  const DEFAULT_FABRIC: Fabric = { name: "White", color: "FFFFFF", kind: "Aida", spi: [14, 14] };
+
   // Copy the data from the dialog reference to a reactive objects.
-  const patternProperties = reactive<PatternProperties>({ ...dialogRef.value.data.patternProperties });
-  const fabric = reactive<Fabric>({ ...dialogRef.value.data.fabric });
+  const patternProperties = reactive<PatternProperties>(
+    Object.assign({}, DEFAULT_PATTERN_PROPERTIES, dialogRef.value.data?.patternProperties),
+  );
+  const fabric = reactive<Fabric>(Object.assign({}, DEFAULT_FABRIC, dialogRef.value.data?.fabric));
 
   const squareStitches = ref(true);
 
-  const fabricSizeOption = ref<"final-size" | "stitches">("final-size");
+  const fabricSizeOption = ref<"final-size" | "stitches">("stitches");
   const fabricSizeMeasurement = ref<"inches" | "mm">("inches");
   const fabricSizeFinal = reactive({ width: 4.29, height: 5.71 }); // 60x80 stitches in inches
-  const fabricSizeStitches = reactive({
-    width: patternProperties.width ?? 60,
-    height: patternProperties.height ?? 80,
-  });
+  const fabricSizeStitches = reactive({ width: patternProperties.width, height: patternProperties.height });
 
   const fabricSize = computed(() => {
     const width = fabricSizeMeasurement.value === "inches" ? fabricSizeFinal.width : mm2inches(fabricSizeFinal.width);

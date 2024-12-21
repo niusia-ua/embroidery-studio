@@ -1,12 +1,15 @@
-import { ref } from "vue";
+import { defineAsyncComponent, ref } from "vue";
 import { defineStore } from "pinia";
-import { useConfirm } from "primevue";
+import { useConfirm, useDialog } from "primevue";
 import { useAppStateStore } from "./state";
 import { PatternApi } from "#/api";
 import type { PatternKey, PatternProject, PaletteItem } from "#/schemas/pattern";
 
 export const usePatternProjectStore = defineStore("pattern-project", () => {
   const confirm = useConfirm();
+  const dialog = useDialog();
+  const FabricProperties = defineAsyncComponent(() => import("#/components/dialogs/FabricProperties.vue"));
+
   const appStateStore = useAppStateStore();
 
   const loading = ref(false);
@@ -42,11 +45,22 @@ export const usePatternProjectStore = defineStore("pattern-project", () => {
       patproj.value = await PatternApi.loadPattern(path);
       appStateStore.addOpenedPattern(patproj.value.pattern.info.title, patproj.value.key);
     });
-  const createPattern = () =>
-    handleCommand(async () => {
-      patproj.value = await PatternApi.createPattern();
-      appStateStore.addOpenedPattern(patproj.value.pattern.info.title, patproj.value.key);
+  const createPattern = () => {
+    dialog.open(FabricProperties, {
+      props: {
+        header: "Fabric Properties",
+        modal: true,
+      },
+      onClose: (options) => {
+        if (!options?.data) return;
+        const { patternProperties, fabric } = options.data;
+        handleCommand(async () => {
+          patproj.value = await PatternApi.createPattern(patternProperties, fabric);
+          appStateStore.addOpenedPattern(patproj.value.pattern.info.title, patproj.value.key);
+        });
+      },
     });
+  };
   const savePattern = (key: PatternKey, path: string) => handleCommand(() => PatternApi.savePattern(key, path));
   const closePattern = (key: PatternKey) =>
     handleCommand(async () => {

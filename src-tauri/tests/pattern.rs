@@ -35,7 +35,13 @@ fn creates_new_pattern() {
   let patterns_state = app_handle.state::<PatternsState>();
 
   assert!(patterns_state.read().unwrap().is_empty());
-  commands::pattern::create_pattern(app_handle.clone(), patterns_state.clone()).unwrap();
+  commands::pattern::create_pattern(
+    Default::default(),
+    Default::default(),
+    app_handle.clone(),
+    patterns_state.clone(),
+  )
+  .unwrap();
   assert_eq!(patterns_state.read().unwrap().len(), 1);
 }
 
@@ -66,7 +72,13 @@ fn closes_pattern() {
   let patterns_state = app_handle.state::<PatternsState>();
 
   assert!(patterns_state.read().unwrap().is_empty());
-  commands::pattern::create_pattern(app_handle.clone(), patterns_state.clone()).unwrap();
+  commands::pattern::create_pattern(
+    Default::default(),
+    Default::default(),
+    app_handle.clone(),
+    patterns_state.clone(),
+  )
+  .unwrap();
   assert_eq!(patterns_state.read().unwrap().len(), 1);
 
   let pattern_key = patterns_state

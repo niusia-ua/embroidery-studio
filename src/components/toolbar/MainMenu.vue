@@ -83,6 +83,11 @@
               patternProperties: patproj.value!.pattern.properties,
               fabric: patproj.value!.pattern.fabric,
             },
+            onClose: (options) => {
+              const data = options?.data;
+              if (!data) return;
+              console.log(data);
+            },
           }),
       },
     ],
