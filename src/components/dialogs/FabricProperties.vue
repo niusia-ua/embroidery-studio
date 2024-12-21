@@ -31,20 +31,20 @@
         <label for="stitches-vertically">Vertically</label>
       </FloatLabel>
 
-      <div class="flex items-center gap-2">
+      <label class="flex items-center gap-2">
         <!-- TODO: add support for non-square stitches. -->
         <!-- Currently, we are not supporting non-square stitches. -->
-        <Checkbox id="square-stitches" v-model="squareStitches" binary :disabled="true" />
-        <label for="square-stitches">Square stitches</label>
-      </div>
+        <Checkbox v-model="squareStitches" binary :disabled="true" />
+        Square stitches
+      </label>
     </Fieldset>
 
     <Fieldset legend="Size">
       <div>
-        <div class="flex items-center gap-2">
-          <RadioButton id="final-size" v-model="fabricSizeOption" value="final-size" />
-          <label for="final-size">Specify the final size:</label>
-        </div>
+        <label class="flex items-center gap-2">
+          <RadioButton v-model="fabricSizeOption" value="final-size" />
+          Specify the final size:
+        </label>
 
         <div class="mx-8 my-4 flex items-center gap-2">
           <FloatLabel variant="on">
@@ -73,12 +73,12 @@
             <label for="size-height">Height</label>
           </FloatLabel>
 
-          <label>
+          <label class="flex items-center gap-2">
             <RadioButton v-model="fabricSizeMeasurement" value="inches" />
             inches
           </label>
 
-          <label>
+          <label class="flex items-center gap-2">
             <RadioButton v-model="fabricSizeMeasurement" value="mm" />
             mm
           </label>
@@ -86,10 +86,10 @@
       </div>
 
       <div>
-        <div class="flex items-center gap-2">
-          <RadioButton id="stitches" v-model="fabricSizeOption" value="stitches" />
-          <label for="stitches">Specify the size in stitches:</label>
-        </div>
+        <label class="flex items-center gap-2">
+          <RadioButton v-model="fabricSizeOption" value="stitches" />
+          Specify the size in stitches:
+        </label>
 
         <div class="mx-8 my-4 flex items-center gap-2">
           <FloatLabel variant="on">
